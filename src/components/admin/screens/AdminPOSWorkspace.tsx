@@ -745,7 +745,7 @@ export function AdminPOSWorkspace() {
    * till's data is being protected. Manager-only, so a cashier just sees it
    * hidden rather than an error.
    */
-  const [lastBackup, setLastBackup] = useState<{ exists: boolean; createdAt: string | null; ageHours: number | null; due: boolean } | null>(null);
+  const [lastBackup, setLastBackup] = useState<{ exists: boolean; createdAt: string | null; ageHours: number | null; due: boolean; managedBy?: string | null } | null>(null);
   const isManager = adminSession.adminRole === 'Super Admin' || adminSession.adminRole === 'Store Manager';
   useEffect(() => {
     if (!isManager) return;
@@ -1524,12 +1524,16 @@ return (
               {/* Last backup, managers only. */}
               {isManager && lastBackup && (
                 <p className="flex items-center gap-1.5 text-[11px] text-[var(--text-subtle)]" title={
-                  lastBackup.exists
+                  lastBackup.managedBy
+                    ? `Persistent cloud storage is managed by ${lastBackup.managedBy}`
+                    : lastBackup.exists
                     ? `Last backup: ${new Date(lastBackup.createdAt!).toLocaleString()}`
                     : 'No backup has been taken yet'
                 }>
                   <Clock className="h-3 w-3" />
-                  {lastBackup.exists
+                  {lastBackup.managedBy
+                    ? `Cloud storage: ${lastBackup.managedBy}`
+                    : lastBackup.exists
                     ? <>Last backup {lastBackup.ageHours !== null && lastBackup.ageHours < 24
                       ? `${Math.max(1, Math.round(lastBackup.ageHours))}h ago`
                       : new Date(lastBackup.createdAt!).toLocaleDateString()}</>
