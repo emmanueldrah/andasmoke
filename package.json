@@ -75,7 +75,7 @@
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "public/brand-mark.ico",
       "uninstallerIcon": "public/brand-mark.ico",
-      "installerHeaderIcon": "public/brand-mark.ico"
+      "installerHeader": "public/brand-mark-header.bmp"
     }
   }
 }
