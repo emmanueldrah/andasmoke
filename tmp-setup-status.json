@@ -1,0 +1,4 @@
+{
+  "status": 404,
+  "text": "# Page not found\n\nThe requested Vercel resource does not exist or is not publicly accessible.\n\n- [Vercel agent index](https://vercel.com/llms.txt)\n- [Vercel documentation index](https://vercel.com/docs/sitemap.md)\n- [Vercel REST API](https://vercel.com/docs/rest-api.md)\n"
+}
