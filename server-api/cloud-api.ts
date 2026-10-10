@@ -805,12 +805,20 @@ async function promoHandler(req: ApiRequest, res: ApiResponse): Promise<unknown>
   return res.status(405).json({error:'Method not allowed'});
 }
 
+function resolveCloudRoute(req: ApiRequest): { resource: string; id?: string } {
+  const rawRoute = req.query.route;
+  const fromQuery = Array.isArray(rawRoute) ? rawRoute.join('/') : rawRoute || '';
+  const urlRoute = typeof req.url === 'string' ? req.url.split('?')[0] : '';
+  const fallbackRoute = urlRoute.replace(/^\/+|\/+$/g, '').replace(/^api\//, '');
+  const route = fromQuery || fallbackRoute || '';
+  const [resource, id] = route.split('/');
+  return { resource: resource || '', id: id || undefined };
+}
+
 export default async function cloudApi(req: ApiRequest, res: ApiResponse): Promise<unknown> {
   try {
-    const rawRoute = req.query.route;
-    const route = Array.isArray(rawRoute) ? rawRoute.join('/') : rawRoute || '';
-    const [resource, id] = route.split('/');
-    if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Cloud database is not configured.' });
+    const { resource, id } = resolveCloudRoute(req);
+    if (!process.env.DATABASE_URL && !process.env.DATABASE_POSTGRES_URL_NO_SSL && !process.env.DATABASE_URL_UNPOOLED && !process.env.DATABASE_POSTGRES_HOST) return res.status(503).json({ error: 'Cloud database is not configured.' });
     if (resource === 'health') return healthHandler(req, res);
     await ensureCloudSchema();
     if (resource === 'auth') return await authHandler(req, res);

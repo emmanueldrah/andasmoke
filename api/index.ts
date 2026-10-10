@@ -10,10 +10,18 @@ import settings from '../server-api/pos-settings.js';
 type Handler = (req: ApiRequest, res: ApiResponse) => unknown;
 const handlers: Record<string, Handler> = { auth, catalog, orders, 'pos-shifts': posShifts, products, 'promo-codes': promoCodes, settings };
 
-export default async function handler(req: ApiRequest, res: ApiResponse) {
+function resolveRoute(req: ApiRequest): { resource: string; id?: string } {
   const rawRoute = req.query.route;
-  const route = Array.isArray(rawRoute) ? rawRoute.join('/') : rawRoute;
-  const [resource, id] = typeof route === 'string' ? route.split('/') : [];
+  const fromQuery = Array.isArray(rawRoute) ? rawRoute.join('/') : rawRoute || '';
+  const urlRoute = typeof req.url === 'string' ? req.url.split('?')[0] : '';
+  const fallbackRoute = urlRoute.replace(/^\/+|\/+$/g, '').replace(/^api\//, '');
+  const route = fromQuery || fallbackRoute || '';
+  const [resource, id] = route.split('/');
+  return { resource: resource || '', id: id || undefined };
+}
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
+  const { resource, id } = resolveRoute(req);
   if (resource === 'brands') {
     req.query.resource = 'brands';
     return catalog(req, res);
