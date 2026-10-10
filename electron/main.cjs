@@ -80,6 +80,7 @@ app.whenReady().then(async () => {
     minWidth: 1024,
     minHeight: 700,
     title: 'Anda C Smoke Hub POS',
+    icon: path.join(DIST_DIR, 'brand-mark.ico'),
     backgroundColor: '#faf6f0',
     webPreferences: {
       contextIsolation: true,

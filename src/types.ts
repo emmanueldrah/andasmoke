@@ -109,6 +109,7 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedVariant?: ProductVariant;
+  priceType?: 'retail' | 'wholesale';
 }
 
 export type DeliveryMethod = 'store-pickup';

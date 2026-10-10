@@ -57,20 +57,25 @@
     "directories": {
       "output": "release"
     },
+    "electronDist": "node_modules/electron/dist",
     "files": [
       "electron/**/*",
       "dist/**/*",
-      "package.json",
-      "!**/node_modules/**/*"
+      "package.json"
     ],
+    "npmRebuild": false,
     "win": {
+      "icon": "public/brand-mark.ico",
       "target": [
         "nsis"
       ]
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/brand-mark.ico",
+      "uninstallerIcon": "public/brand-mark.ico",
+      "installerHeaderIcon": "public/brand-mark.ico"
     }
   }
 }

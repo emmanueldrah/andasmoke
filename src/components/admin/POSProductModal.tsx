@@ -127,6 +127,7 @@ useEffect(() => {
     id: `variant-${crypto.randomUUID()}`,
     name: '',
     price: Number(price) || 0,
+    wholesalePrice: Number(wholesalePrice) || undefined,
     inStock: true,
     stockCount: 0,
     image: image || undefined,
@@ -162,11 +163,18 @@ useEffect(() => {
     event.preventDefault();
     const cleanName = name.trim();
     const numericPrice = Number(price);
+    const numericWholesalePrice = wholesalePrice.trim() ? Number(wholesalePrice) : undefined;
     const numericStock = Math.max(0, Math.floor(Number(stockCount) || 0));
     if (!cleanName) return showToast('Enter a product name.');
     if (!Number.isFinite(numericPrice) || numericPrice <= 0) return showToast('Enter a selling price greater than zero.');
+    if (numericWholesalePrice !== undefined && (!Number.isFinite(numericWholesalePrice) || numericWholesalePrice <= 0 || numericWholesalePrice > numericPrice)) {
+      return showToast('Wholesale price must be greater than zero and no higher than the selling price.');
+    }
     if (variants.some(variant => !variant.name.trim() || !Number.isFinite(Number(variant.price)) || Number(variant.price) <= 0)) {
       return showToast('Each variation needs a name and valid price.');
+    }
+    if (variants.some(variant => variant.wholesalePrice != null && (!Number.isFinite(Number(variant.wholesalePrice)) || Number(variant.wholesalePrice) <= 0 || Number(variant.wholesalePrice) > Number(variant.price)))) {
+      return showToast('Each wholesale price must be greater than zero and no higher than its variation price.');
     }
 
     const scanCodes = [barcode.trim(), serialNumber.trim(), ...variants.flatMap(variant => [variant.barcode?.trim() || '', variant.serialNumber?.trim() || ''])].filter(Boolean);
@@ -179,6 +187,7 @@ useEffect(() => {
         ...variant,
         name: variant.name.trim(),
         price: Number(variant.price),
+        wholesalePrice: variant.wholesalePrice == null ? undefined : Number(variant.wholesalePrice),
         stockCount: quantity,
         inStock: quantity > 0,
         image: variant.image || image || undefined,
@@ -194,7 +203,7 @@ useEffect(() => {
       category,
       categoryLabel,
       price: numericPrice,
-      wholesalePrice: wholesalePrice ? Number(wholesalePrice) : undefined,
+      wholesalePrice: numericWholesalePrice,
       unit: unit.trim() || 'Each',
       barcode: barcode.trim() || undefined,
       serialNumber: serialNumber.trim() || undefined,
@@ -279,6 +288,11 @@ useEffect(() => {
             </label>
 
             <label>
+              <span className="lux-label">Wholesale price (GHS) <span className="font-medium normal-case tracking-normal">(optional)</span></span>
+              <input type="number" min="0.01" step="0.01" value={wholesalePrice} onChange={event => setWholesalePrice(event.target.value)} placeholder="Set a bulk price" className="lux-input tabular-nums" />
+            </label>
+
+            <label>
               <span className="lux-label">Opening stock</span>
               <input type="number" min="0" step="1" value={variants.length ? variantStock : stockCount} readOnly={variants.length > 0} onChange={event => setStockCount(event.target.value)} className="lux-input font-bold tabular-nums" />
               {variants.length > 0 && <span className="mt-1 block text-[11px] text-[var(--text-subtle)]">Total from variations.</span>}
@@ -326,9 +340,10 @@ useEffect(() => {
             <summary className="cursor-pointer text-sm font-bold text-[var(--text-primary)]">Variations <span className="font-normal text-[var(--text-subtle)]">(optional)</span></summary>
             <div className="mt-3 space-y-2">
               {variants.map((variant, index) => (
-                <div key={variant.id} className="grid gap-2 rounded-md border border-[var(--border-color)] bg-[var(--bg-card)] p-3 sm:grid-cols-[1.3fr_1fr_0.7fr_auto]">
+                <div key={variant.id} className="grid gap-2 rounded-md border border-[var(--border-color)] bg-[var(--bg-card)] p-3 sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.7fr_auto]">
                   <input aria-label={`Variation ${index + 1} name`} value={variant.name} onChange={event => updateVariant(variant.id, { name: event.target.value })} placeholder="Variation name" className="lux-input" />
                   <input aria-label={`Variation ${index + 1} price`} type="number" min="0.01" step="0.01" value={variant.price} onChange={event => updateVariant(variant.id, { price: Number(event.target.value) })} placeholder="Price" className="lux-input" />
+                  <input aria-label={`Variation ${index + 1} wholesale price`} type="number" min="0.01" step="0.01" value={variant.wholesalePrice ?? ''} onChange={event => updateVariant(variant.id, { wholesalePrice: event.target.value ? Number(event.target.value) : undefined })} placeholder="Wholesale" className="lux-input" />
                   <input aria-label={`Variation ${index + 1} stock`} type="number" min="0" step="1" value={variant.stockCount ?? 0} onChange={event => { const quantity = Math.max(0, Number(event.target.value) || 0); updateVariant(variant.id, { stockCount: quantity, inStock: quantity > 0 }); }} placeholder="Stock" className="lux-input" />
                   <button type="button" aria-label={`Remove variation ${index + 1}`} onClick={() => setVariants(previous => previous.filter(item => item.id !== variant.id))} className="lux-btn lux-btn--ghost lux-btn--sm px-2 text-[var(--danger)]"><Trash2 className="h-4 w-4" /></button>
                   {/* Same exemption as the product's own barcode field. */}

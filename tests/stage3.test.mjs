@@ -870,6 +870,38 @@ test('cost price is stored but never shown in a report, and reorder level drives
   rmSync(dir, { recursive: true, force: true });
 });
 
+test('wholesale checkout records wholesale units and deducts their full quantity from stock', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-wholesale-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const { ownerToken } = await seedTill(api);
+  const product = await makeProduct(api, ownerToken, {
+    price: '10.00', wholesalePrice: '7.00', stockCount: 8,
+  });
+
+  const sale = await callApi(api.orders, {
+    method: 'POST', query: { channel: 'pos' }, token: ownerToken,
+    body: {
+      idempotencyKey: `POS-wholesale-${Date.now()}-abcdefgh`,
+      subtotal: 21, shippingFee: 0, discount: 0, total: 21,
+      paymentMethod: 'cash-on-delivery', cashReceived: 21, shippingAddress: WALLET,
+      items: [{ product: { id: product.id, price: 7 }, quantity: 3, priceType: 'wholesale' }],
+      tenders: [{ method: 'cash-on-delivery', amount: 2100 }],
+    },
+  });
+
+  assert.equal(sale.status, 201, `wholesale sale failed: ${JSON.stringify(sale.body)}`);
+  assert.equal(sale.body.items[0].priceType, 'wholesale');
+  assert.equal(sale.body.items[0].quantity, 3);
+  assert.equal(sale.body.items[0].product.price, 7);
+  assert.equal(sale.body.total, 21);
+  const afterSale = await callApi(api.products, { token: ownerToken, query: { id: product.id } });
+  assert.equal(afterSale.body.stockCount, 5, 'all wholesale units are deducted from inventory');
+
+  api.closeDataLayer();
+  rmSync(dir, { recursive: true, force: true });
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 // The four fixes from the review.
 // ─────────────────────────────────────────────────────────────────────────

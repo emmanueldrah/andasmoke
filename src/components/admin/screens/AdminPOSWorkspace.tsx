@@ -29,7 +29,7 @@ import { checkLocalServer, startHealthChecks, type ServerHealth } from '../../..
 import { resolveStorePhone } from '../../../lib/storeContact';
 import type { Order, PaymentMethod, Product, ProductVariant } from '../../../types';
 
-type PosLine = { product: Product; variant?: ProductVariant; quantity: number };
+type PosLine = { product: Product; variant?: ProductVariant; quantity: number; priceType: 'retail' | 'wholesale' };
 type PosItem = { product: Product; variant?: ProductVariant; title: string; stock: number; barcode?: string };
 type PaymentChoice = 'cash-on-delivery' | 'momo-mtn';
 
@@ -257,8 +257,11 @@ export function AdminPOSWorkspace() {
   }, [items, search]);
 
   const priceFor = (line: PosLine) => {
-    return Number(line.variant?.price ?? line.product.price);
+    const retailPrice = Number(line.variant?.price ?? line.product.price);
+    const wholesalePrice = line.variant?.wholesalePrice ?? line.product.wholesalePrice;
+    return line.priceType === 'wholesale' && wholesalePrice != null ? Number(wholesalePrice) : retailPrice;
   };
+  const hasWholesalePrice = (line: PosLine) => line.variant?.wholesalePrice != null || line.product.wholesalePrice != null;
   const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0);
 // Display figures stay in cedis; the money the till acts on is in pesewas, so a
 // ticket total is exactly the sum of its printed lines.
@@ -333,8 +336,12 @@ export function AdminPOSWorkspace() {
       }
       return current
         ? previous.map(line => lineKey(line) === key ? { ...line, quantity: line.quantity + 1 } : line)
-        : [...previous, { product: item.product, variant: item.variant, quantity: 1 }];
+        : [...previous, { product: item.product, variant: item.variant, quantity: 1, priceType: 'retail' }];
     });
+  };
+
+  const updatePriceType = (line: PosLine, priceType: PosLine['priceType']) => {
+    setCart(previous => previous.map(item => lineKey(item) === lineKey(line) ? { ...item, priceType } : item));
   };
 
   const updateLine = (line: PosLine, quantity: number) => {
@@ -422,7 +429,8 @@ export function AdminPOSWorkspace() {
     const lines = order.items.map(item => {
       const unitPrice = Number(item.selectedVariant?.price ?? item.product.price);
       const variant = item.selectedVariant?.name ? ` - ${escapeReceipt(item.selectedVariant.name)}` : '';
-      return `<div class="item"><div class="desc">${escapeReceipt(item.product.name)}${variant}</div><div class="meta">${escapeReceipt(item.product.brand)} · ${item.quantity} x ${money(unitPrice)} <b>${money(unitPrice * item.quantity)}</b></div></div>`;
+      const priceType = item.priceType === 'wholesale' ? ' · Wholesale' : '';
+      return `<div class="item"><div class="desc">${escapeReceipt(item.product.name)}${variant}</div><div class="meta">${escapeReceipt(item.product.brand)} · ${item.quantity} x ${money(unitPrice)}${priceType} <b>${money(unitPrice * item.quantity)}</b></div></div>`;
     }).join('');
     const storeName = escapeReceipt(storeSettings.storeName || 'ANDA C SMOKE HUB');
     // The receipt always carries the current business line, even if the stored
@@ -607,7 +615,8 @@ export function AdminPOSWorkspace() {
         items: cart.map(line => ({
           product: { id: line.product.id, name: line.product.name, brand: line.product.brand, price: priceFor(line), image: line.variant?.image || line.product.image, unit: line.product.unit, category: line.product.category, inStock: true, stockCount: Number(line.variant?.stockCount ?? line.product.stockCount) },
           quantity: line.quantity,
-          selectedVariant: line.variant ? { id: line.variant.id, name: line.variant.name, price: Number(line.variant.price), inStock: true } : undefined,
+          selectedVariant: line.variant ? { id: line.variant.id, name: line.variant.name, price: priceFor(line), inStock: true } : undefined,
+          priceType: line.priceType,
         })),
       };
       const order = await api.post<Order>('/orders?channel=pos', payload);
@@ -692,7 +701,7 @@ export function AdminPOSWorkspace() {
   const recallHeldSale = async (id: string) => {
     try {
       const held = await api.post<HeldSale>('/held-sales?action=recall', { id });
-      setCart((held.items || []) as PosLine[]);
+      setCart((held.items || []).map(item => ({ ...item, priceType: item.priceType ?? 'retail' })) as PosLine[]);
       if (held.promoCode) setPromoCode(held.promoCode);
       if (held.cashReceived) setCashReceived(String(held.cashReceived));
       if (held.paymentMethod) setPayment(held.paymentMethod as PaymentChoice);
@@ -1252,6 +1261,21 @@ return (
                           </div>
                           <b className="text-[13px] tabular-nums text-[var(--text-primary)]">{money(priceFor(line) * line.quantity)}</b>
                         </div>
+                        {hasWholesalePrice(line) && (
+                          <div className="mt-1.5 inline-flex rounded-md border border-[var(--border-color)] bg-[var(--bg-soft)] p-0.5" role="group" aria-label={`${line.product.name} price type`}>
+                            {(['retail', 'wholesale'] as const).map(priceType => (
+                              <button
+                                key={priceType}
+                                type="button"
+                                aria-pressed={line.priceType === priceType}
+                                onClick={() => updatePriceType(line, priceType)}
+                                className={`rounded px-2 py-1 text-[10px] font-semibold capitalize transition ${line.priceType === priceType ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+                              >
+                                {priceType}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </li>
                   ))}
