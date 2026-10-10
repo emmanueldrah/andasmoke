@@ -1,0 +1,1162 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: "Manrope", "Segoe UI", sans-serif;
+    --font-display: "Fraunces", Georgia, serif;
+    /* Shisha lounge identity: smoke plaster, ember, and brass */
+    --bg-main: rgba(255, 255, 255, 0.04);
+    --bg-card: rgba(255, 255, 255, 0.06);
+    --bg-card-alt: rgba(255, 255, 255, 0.03);
+    --bg-soft: rgba(255, 255, 255, 0.02);
+    --text-primary: #261d19;
+    --text-muted: #65544a;
+    --text-subtle: #897262;
+    --border-color: rgba(86, 56, 39, 0.16);
+    --accent: #9c4e35;
+    --accent-strong: #c59651;
+    --accent-soft: rgba(156, 78, 53, 0.12);
+    --highlight: #a86b39;
+    --jade: #477b68;
+    --jade-soft: rgba(71, 123, 104, 0.12);
+    --violet: #795f7d;
+    --violet-strong: #957798;
+    --violet-soft: rgba(121, 95, 125, 0.1);
+    --olive: #7b704b;
+    --olive-strong: #93845a;
+    --danger: #a84332;
+    --danger-soft: rgba(168, 67, 50, 0.1);
+    --shadow-soft: 0 12px 30px rgba(64, 43, 30, 0.10);
+    --shadow-card: 0 14px 32px rgba(64, 43, 30, 0.12);
+    /* Glass layer: every surface sits on the backdrop as frosted panes. */
+    --glass-blur: 18px;
+    --glass-sheen: rgba(255, 255, 255, 0.52);
+    --glass-sheen-soft: rgba(255, 255, 255, 0.12);
+    --glass-tint: 72%;
+    --glass-tint-deep: 52%;
+    --glass-edge: rgba(255, 255, 255, 0.26);
+    /* Clay layer: controls extruded from the pane with lit tops and cast bases. */
+    --clay-lift: inset 0 1px 0 var(--glass-sheen);
+    --clay-well: inset 0 2px 5px color-mix(in srgb, #2b1d14 12%, transparent);
+    --clay-base: 0 2px 0 color-mix(in srgb, var(--text-primary) 9%, transparent);
+    --clay-cast: 0 10px 20px -10px color-mix(in srgb, var(--text-primary) 28%, transparent);
+    /* The lounge mark, sitting behind every pane. Cut out to a transparent
+       PNG so its white plate no longer washes out the background. */
+    --mark-opacity: 0.1;
+    --mark-blur: 2px;
+    --mark-filter: none;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    /* Ember and onyx preserve the same brass-and-smoke identity */
+    --bg-main: rgba(20, 15, 13, 0.18);
+    --bg-card: rgba(34, 26, 22, 0.28);
+    --bg-card-alt: rgba(52, 41, 35, 0.22);
+    --bg-soft: rgba(255, 255, 255, 0.02);
+    --text-primary: #f4ebdf;
+    --text-muted: #d3c1a9;
+    --text-subtle: #ab8d70;
+    --border-color: rgba(226, 177, 117, 0.16);
+    --accent: #d18c57;
+    --accent-strong: #e5bd72;
+    --accent-soft: rgba(209, 140, 87, 0.14);
+    --highlight: #e3bd70;
+    --jade: #78ad91;
+    --jade-soft: rgba(120, 173, 145, 0.12);
+    --violet: #b49ab9;
+    --violet-strong: #c7aeca;
+    --violet-soft: rgba(180, 154, 185, 0.12);
+    --olive: #c2ad78;
+    --olive-strong: #d2c18e;
+    --danger: #df8065;
+    --danger-soft: rgba(223, 128, 101, 0.13);
+    --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.28);
+    --shadow-card: 0 20px 48px rgba(0, 0, 0, 0.22);
+    /* Dark glass keeps a brighter rim so panes stay legible on near-black. */
+    --glass-sheen: rgba(255, 255, 255, 0.10);
+    --glass-sheen-soft: rgba(255, 255, 255, 0.06);
+    --glass-tint: 40%;
+    --glass-tint-deep: 26%;
+    --glass-edge: rgba(255, 255, 255, 0.10);
+    --clay-base: 0 2px 0 rgba(0, 0, 0, 0.44);
+    --clay-cast: 0 12px 26px -12px rgba(0, 0, 0, 0.66);
+    /* The emblem is almost entirely black, so on a near-black page it would
+       vanish. Inverting turns it into a light watermark. */
+    --mark-opacity: 0.13;
+    --mark-filter: invert(1) saturate(0.9);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    position: relative;
+    background:
+      radial-gradient(1200px 540px at 90% -14%, rgba(197, 150, 81, 0.11), transparent 58%),
+      radial-gradient(900px 440px at -8% 0%, rgba(71, 123, 104, 0.06), transparent 52%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.18));
+    color: var(--text-primary);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    background-attachment: fixed;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  /* ── Layer 0: the brand mark, behind every surface ─────────────────────────
+     A negative z-index is unreliable here because the body background
+     propagates to the canvas, so the mark sits at z-index 0 on a fixed layer
+     and #root is lifted above it. Fixed so it never scrolls away. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: url("/brand-mark.png");
+    background-repeat: no-repeat;
+    background-position: 84% 4%;
+    background-size: min(620px, 56vw);
+    opacity: var(--mark-opacity);
+    filter: var(--mark-filter) blur(var(--mark-blur));
+    mix-blend-mode: multiply;
+  }
+
+  /* A second, offset copy fills the lower left so the mark is not one-sided. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: url("/brand-mark.png");
+    background-repeat: no-repeat;
+    background-position: 2% 88%;
+    background-size: min(440px, 44vw);
+    transform: scaleX(-1);
+    opacity: calc(var(--mark-opacity) * 0.6);
+    filter: var(--mark-filter) blur(calc(var(--mark-blur) * 1.8));
+  }
+
+  html.dark body {
+    background:
+      radial-gradient(1100px 520px at 85% -10%, rgba(229, 189, 114, 0.13), transparent 60%),
+      radial-gradient(900px 520px at -10% 0%, rgba(120, 173, 145, 0.05), transparent 55%),
+      radial-gradient(700px 500px at 50% 115%, rgba(140, 80, 40, 0.07), transparent 60%),
+      linear-gradient(180deg, #15100e 0%, #100d0b 48%, #0b0908 100%) !important;
+    color: var(--text-primary);
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  select option {
+    background-color: #FCF9F2;
+    color: #221B13;
+  }
+
+  html.dark select option {
+    background-color: #1A1614;
+    color: #F3EDE2;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-subtle);
+  }
+
+  a { text-decoration: none; }
+  img { display: block; max-width: 100%; }
+  p { margin: 0; }
+
+  /* Lift the app above the fixed brand-mark layers. Without this the mark
+     paints on top of the UI once body::before moves to z-index 0. */
+  #root {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+    color: var(--text-primary);
+    min-height: 100vh;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .admin-shell {
+    padding: 0.75rem;
+  }
+
+  .admin-shell__frame {
+    position: relative;
+    min-height: calc(100vh - 1.5rem);
+    border-radius: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 24px 52px -30px rgba(0, 0, 0, 0.24);
+    overflow: hidden;
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+  }
+
+  .admin-shell__sidebar {
+    top: 0.75rem;
+    left: 0.75rem;
+    bottom: 0.75rem;
+    border-radius: 1.25rem 0 0 1.25rem;
+    overflow: hidden;
+  }
+
+  .admin-shell__main {
+    padding-left: 0;
+  }
+
+  .admin-shell__header {
+    margin-left: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+  }
+
+  .admin-shell__content {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  }
+
+  /* Keep legacy utility classes readable while screens are migrated to tokens. */
+  html.dark .text-stone-900,
+  html.dark .text-stone-800,
+  html.dark .text-stone-700,
+  html.dark .text-gray-900,
+  html.dark .text-gray-800,
+  html.dark .text-gray-700,
+  html.dark .text-slate-900,
+  html.dark .text-slate-800,
+  html.dark .text-slate-700,
+  html.dark [class~="text-[#1C1817]"],
+  html.dark [class~="text-[#1E1719]"] {
+    color: var(--text-primary) !important;
+  }
+
+  html.dark .text-stone-600,
+  html.dark .text-stone-500,
+  html.dark .text-gray-600,
+  html.dark .text-gray-500,
+  html.dark .text-slate-600,
+  html.dark .text-slate-500 {
+    color: var(--text-muted) !important;
+  }
+
+  html.dark .text-stone-400,
+  html.dark .text-gray-400,
+  html.dark .text-slate-400 {
+    color: var(--text-subtle) !important;
+  }
+
+  html [class~="bg-white"],
+  html [class~="bg-stone-50"],
+  html [class~="bg-gray-50"],
+  html [class~="bg-slate-50"],
+  html [class~="bg-zinc-50"] {
+    background: linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 12px 28px -22px rgba(0,0,0,0.18) !important;
+    backdrop-filter: blur(18px) saturate(170%) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
+  }
+
+  html.dark [class~="bg-white"] {
+    background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)) !important;
+  }
+
+  html.dark [class~="bg-stone-50"],
+  html.dark [class~="bg-gray-50"],
+  html.dark [class~="bg-slate-50"],
+  html.dark [class~="bg-zinc-50"] {
+    background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)) !important;
+  }
+}
+
+@layer components {
+  /* ── Design system: Ember & Onyx ─────────────────────────────────────────── */
+
+  /* ── Layer 1: glass ────────────────────────────────────────────────────────
+     Every background surface is a frosted pane. Controls resting on top
+     (Layer 2) are extruded clay, so the two never compete. */
+
+  .lux-card {
+    position: relative;
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.09) 0%,
+      rgba(255, 255, 255, 0.04) 72%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.85rem;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 20px 36px -22px rgba(0, 0, 0, 0.16);
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  }
+
+  /* Surfaces holding interactive controls get a slightly deeper, softer pane
+     so nested clay controls stay readable. */
+  .lux-card:has(.lux-input),
+  .lux-card:has(.lux-select) {
+    backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(150%);
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(150%);
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 18px 42px -24px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+  }
+
+  .glass-panel--dark {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 30px rgba(0, 0, 0, 0.14);
+  }
+
+  .brand-seal {
+    /* A struck-metal emblem: bevelled rim, lit face, seated shadow. */
+    border-color: color-mix(in srgb, var(--accent-strong) 72%, var(--border-color));
+    background: linear-gradient(145deg, color-mix(in srgb, var(--accent-strong) 56%, white), var(--accent));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -2px 0 rgba(62, 34, 17, 0.2),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+      0 6px 14px -4px rgba(27, 17, 12, 0.42);
+  }
+
+  /* ── Layer 2: clay & skeuo ─────────────────────────────────────────────────
+     Controls are moulded out of the pane: a lit top edge, a cast base, and a
+     pressed state that sinks them back into the glass. */
+
+  .clay-surface {
+    box-shadow:
+      var(--clay-lift),
+      var(--clay-base),
+      var(--clay-cast);
+  }
+
+  html.dark .clay-surface {
+    box-shadow:
+      var(--clay-lift),
+      var(--clay-base),
+      var(--clay-cast);
+  }
+
+  .tactile-control {
+    box-shadow: var(--clay-well), 0 1px 0 var(--glass-sheen);
+  }
+
+  html.dark .tactile-control {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.34), 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .lux-input,
+  .lux-select {
+    width: 100%;
+    border-radius: 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
+    /* Skeuo: a carved well, so typing looks like pressing into the surface. */
+    background: color-mix(in srgb, var(--bg-soft) 34%, transparent);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    box-shadow:
+      var(--clay-well),
+      inset 0 -1px 0 var(--glass-sheen-soft),
+      0 1px 0 var(--glass-sheen);
+  }
+
+  .lux-input:focus,
+  .lux-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--bg-card) 62%, transparent);
+    box-shadow:
+      var(--clay-well),
+      0 0 0 3px var(--accent-soft),
+      inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+
+  .lux-input:disabled,
+  .lux-select:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .lux-label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+    margin-bottom: 0.375rem;
+  }
+
+  .lux-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.65rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    line-height: 1;
+    padding: 0.7rem 1.1rem;
+    min-height: 2.7rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    /* Moulded: lit crown, cast base, and a real press depth. */
+    box-shadow:
+      var(--clay-lift),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.09),
+      var(--clay-base),
+      var(--clay-cast);
+    transition: filter 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease, opacity 0.15s ease;
+  }
+
+  .lux-btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .lux-btn:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  .lux-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  .lux-btn--primary {
+    background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
+    color: #1C1405;
+    border-color: color-mix(in srgb, var(--accent-strong) 60%, transparent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.42),
+      inset 0 -2px 0 color-mix(in srgb, #6d3d10 32%, transparent),
+      0 3px 0 color-mix(in srgb, #6d3d10 46%, transparent),
+      0 12px 26px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+
+  .lux-btn--primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .lux-btn--primary:active:not(:disabled) { box-shadow: inset 0 2px 6px rgba(60, 30, 6, 0.4); }
+
+  .lux-btn--ink {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-soft) 80%, var(--text-primary) 20%) 0%, var(--bg-soft) 100%);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+    box-shadow: var(--clay-lift), var(--clay-base), var(--clay-cast);
+  }
+
+  .lux-btn--ink:hover:not(:disabled) { filter: brightness(1.15); }
+
+  /* Resting on glass, so a translucent clay slab rather than an open outline. */
+  .lux-btn--outline {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-card) 72%, transparent) 0%, color-mix(in srgb, var(--bg-soft) 46%, transparent) 100%);
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--border-color) 88%, transparent);
+    box-shadow: var(--clay-lift), var(--clay-base);
+  }
+
+  .lux-btn--outline:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, var(--accent-soft) 0%, color-mix(in srgb, var(--accent) 14%, transparent) 100%);
+    box-shadow: var(--clay-lift), 0 2px 0 color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  .lux-btn--ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: transparent;
+  }
+
+  .lux-btn--ghost:hover:not(:disabled) {
+    background: var(--accent-soft);
+    color: var(--text-primary);
+  }
+
+  .lux-btn--danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+  }
+
+  .lux-btn--danger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--danger) 18%, transparent);
+  }
+
+  .lux-btn--sm {
+    min-height: 2.2rem;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.75rem;
+    border-radius: 0.65rem;
+  }
+
+  .lux-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 9999px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    /* Clay pill pressed onto the pane. */
+    box-shadow:
+      inset 0 1px 0 var(--glass-sheen-soft),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+      0 1px 2px color-mix(in srgb, var(--text-primary) 16%, transparent);
+  }
+
+  .lux-chip--success { background: color-mix(in srgb, var(--jade) 20%, transparent); color: var(--jade); }
+  .lux-chip--warning { background: color-mix(in srgb, var(--highlight) 20%, transparent); color: var(--highlight); }
+  .lux-chip--danger { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
+  .lux-chip--info { background: color-mix(in srgb, var(--violet) 20%, transparent); color: var(--violet); }
+  .lux-chip--neutral { background: color-mix(in srgb, var(--text-subtle) 20%, transparent); color: var(--text-muted); }
+
+  .section-heading {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .brand-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+
+  /* ══ Admin sidebar ═══════════════════════════════════════════════════════
+     A dark ember + brass rail. Its text is fixed light-on-dark, so it stays
+     dark in both light and dark appearance rather than following theme tokens. */
+
+  .pos-sidebar {
+    isolation: isolate;
+    /* Frosted ember pane: the mark and page glow bleed through the blur.
+       No `position` here on purpose: the aside is fixed/absolute via Tailwind
+       utilities, which must keep winning in the cascade. */
+    background:
+      radial-gradient(128% 52% at 50% -6%, rgba(197, 150, 81, 0.24), transparent 64%),
+      linear-gradient(177deg, rgba(48, 33, 25, 0.82) 0%, rgba(32, 22, 18, 0.78) 46%, rgba(24, 16, 13, 0.82) 100%);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    border-right: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow:
+      inset -1px 0 0 rgba(255, 255, 255, 0.05),
+      20px 0 56px -22px rgba(20, 12, 8, 0.6);
+    color: #f7efe4;
+  }
+
+  html.dark .pos-sidebar {
+    background:
+      radial-gradient(128% 52% at 50% -6%, rgba(229, 189, 114, 0.18), transparent 64%),
+      linear-gradient(177deg, rgba(30, 21, 17, 0.8) 0%, rgba(20, 15, 12, 0.76) 48%, rgba(13, 9, 8, 0.84) 100%);
+    border-right-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+      inset -1px 0 0 rgba(255, 255, 255, 0.04),
+      20px 0 56px -22px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Fine grain keeps the large flat areas from looking plasticky. */
+  .pos-sidebar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px),
+      radial-gradient(circle at 72% 46%, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px);
+    background-size: 34px 34px, 46px 46px;
+  }
+
+  /* ── Brand ── */
+  .pos-brand-name {
+    background: linear-gradient(96deg, #fffaf2 0%, #f3d69c 52%, #d8a765 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ── Primary action ── */
+  .pos-nav-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 2.75rem;
+    border-radius: 0.7rem;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    color: #2a1a0c;
+    background: linear-gradient(150deg, #fbe3b4 0%, #e0b165 46%, #c58c46 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -2px 0 rgba(120, 70, 20, 0.24),
+      0 8px 20px rgba(20, 10, 4, 0.34);
+    transition: transform 120ms ease, filter 160ms ease, box-shadow 160ms ease;
+  }
+
+  .pos-nav-cta:hover {
+    filter: brightness(1.06);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      inset 0 -2px 0 rgba(120, 70, 20, 0.24),
+      0 12px 26px rgba(20, 10, 4, 0.42);
+  }
+
+  .pos-nav-cta:active {
+    transform: translateY(1px);
+  }
+
+  /* ── Group headings ── */
+  .pos-nav-group-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.75rem 0.5rem;
+    font-size: 0.5625rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.34);
+  }
+
+  .pos-nav-group-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent);
+  }
+
+  /* ── Nav links ── */
+  .pos-nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    /* 44px minimum keeps every target comfortable on a touch till. */
+    min-height: 2.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.7rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-align: left;
+    color: rgba(247, 239, 228, 0.66);
+    transition:
+      color 160ms ease,
+      background 160ms ease,
+      transform 120ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .pos-nav-link:hover {
+    background: rgba(255, 255, 255, 0.062);
+    color: #fff;
+  }
+
+  .pos-nav-link:active {
+    transform: translateY(1px);
+  }
+
+  .pos-nav-link:focus-visible {
+    outline: 2px solid #e5bd72;
+    outline-offset: 2px;
+  }
+
+  .pos-nav-icon {
+    color: rgba(247, 239, 228, 0.5);
+    transition: color 160ms ease;
+  }
+
+  .pos-nav-link:hover .pos-nav-icon {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .pos-nav-link--active,
+  .pos-nav-link--active:hover {
+    color: #fff;
+    background: linear-gradient(100deg, rgba(197, 150, 81, 0.36), rgba(156, 78, 53, 0.14));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      0 8px 20px rgba(0, 0, 0, 0.26);
+  }
+
+  .pos-nav-link--active .pos-nav-icon {
+    color: #f7dca8;
+  }
+
+  .pos-nav-link--active::before {
+    content: "";
+    position: absolute;
+    left: -0.75rem;
+    top: 50%;
+    width: 3px;
+    height: 1.5rem;
+    transform: translateY(-50%);
+    border-radius: 0 999px 999px 0;
+    background: linear-gradient(180deg, #f3d69c, #c58c46);
+    box-shadow: 0 0 12px rgba(229, 189, 114, 0.65);
+  }
+
+  /* ── Count badges ── */
+  .pos-nav-badge {
+    margin-left: auto;
+    min-width: 1.4rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.625rem;
+    font-weight: 800;
+    line-height: 1.35;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .pos-nav-badge--attention {
+    background: rgba(224, 138, 66, 0.22);
+    color: #f6c489;
+    box-shadow: inset 0 0 0 1px rgba(246, 196, 137, 0.3);
+  }
+
+  .pos-nav-badge--critical {
+    background: rgba(214, 88, 62, 0.24);
+    color: #ffb3a0;
+    box-shadow: inset 0 0 0 1px rgba(255, 179, 160, 0.32);
+  }
+
+  /* ── Live status ── */
+  .pos-status-card {
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .pos-live-dot {
+    position: relative;
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .pos-live-dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: currentColor;
+    animation: posPulse 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes posPulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    70% { transform: scale(2.6); opacity: 0; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pos-live-dot::after { animation: none; }
+  }
+
+  /* ── Account card ── */
+  .pos-account-card {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(255, 255, 255, 0.05);
+    transition: background 160ms ease, border-color 160ms ease;
+  }
+
+  .pos-account-card:hover,
+  .pos-account-card:focus-within {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(229, 189, 114, 0.34);
+  }
+
+  .pos-account-avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    overflow: hidden;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    color: #2a1a0c;
+    background: linear-gradient(150deg, #f7dca8, #c58c46);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  /* Actions stay hidden until hover or keyboard focus reaches them. */
+  .pos-account-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    flex: none;
+    opacity: 0;
+    transform: translateX(4px);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .pos-account-card:hover .pos-account-actions,
+  .pos-account-card:focus-within .pos-account-actions {
+    opacity: 1;
+    transform: none;
+  }
+
+  .pos-account-action {
+    display: grid;
+    place-items: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: 0.5rem;
+    color: rgba(255, 255, 255, 0.66);
+    transition: background 140ms ease, color 140ms ease;
+  }
+
+  .pos-account-action:hover {
+    background: rgba(255, 255, 255, 0.11);
+    color: #fff;
+  }
+
+  .pos-account-action--danger:hover {
+    background: rgba(214, 88, 62, 0.24);
+    color: #ffb3a0;
+  }
+
+  .pos-account-action:focus-visible {
+    outline: 2px solid #e5bd72;
+    outline-offset: 1px;
+  }
+
+  /* ── Icon rail ── */
+  .pos-nav-link.is-rail {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .pos-nav-link--active.is-rail::before {
+    left: 0;
+  }
+
+  /* Badges move onto the icon corner so the rail stays narrow. */
+  .pos-nav-link.is-rail .pos-nav-badge {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.3rem;
+    margin: 0;
+    min-width: 1.05rem;
+    padding: 0 0.2rem;
+    font-size: 0.5625rem;
+    line-height: 1.3;
+  }
+
+  /* ══ Counter (POS workspace) ═════════════════════════════════════════
+     Sized for a touch till: the scan field and the pay button are the two
+     controls a cashier hits hundreds of times a day. */
+  .pos-scan {
+    min-height: 3.25rem;
+    border-radius: 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--border-color) 84%, transparent);
+    background: color-mix(in srgb, var(--bg-soft) 34%, transparent);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    /* A deep skeuo well: the scanner is pressed into the glass pane. */
+    box-shadow:
+      var(--clay-well),
+      inset 0 -2px 0 var(--glass-sheen-soft),
+      0 1px 0 var(--glass-sheen);
+    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  }
+
+  .pos-scan::placeholder {
+    font-weight: 600;
+    color: var(--text-subtle);
+  }
+
+  .pos-scan:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--bg-card) 58%, transparent);
+    box-shadow:
+      var(--clay-well),
+      0 0 0 4px var(--accent-soft),
+      inset 0 0 0 1px color-mix(in srgb, var(--accent) 32%, transparent);
+  }
+
+  /* Compact ticket line keeps the whole basket visible without scrolling. */
+  .pos-line {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--bg-soft) 38%, transparent);
+    box-shadow:
+      inset 0 1px 0 var(--glass-sheen-soft),
+      0 1px 2px color-mix(in srgb, var(--text-primary) 14%, transparent);
+    transition: background 140ms ease, transform 140ms ease;
+  }
+
+  .pos-line:hover {
+    background: var(--accent-soft);
+    transform: translateX(2px);
+  }
+
+  .pos-qty {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-card) 78%, transparent) 0%, color-mix(in srgb, var(--bg-soft) 54%, transparent) 100%);
+    color: var(--text-muted);
+    box-shadow: var(--clay-lift), var(--clay-base);
+    transition: background 130ms ease, color 130ms ease, border-color 130ms ease, box-shadow 130ms ease, transform 120ms ease;
+  }
+
+  .pos-qty:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .pos-qty:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18);
+  }
+
+  /* The amount owed is the single most important number on the counter. */
+  .pos-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    border-radius: 0.8rem;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 16%, transparent) 0%, color-mix(in srgb, var(--accent) 7%, transparent) 100%);
+    box-shadow:
+      inset 0 1px 0 var(--glass-sheen-soft),
+      inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent),
+      0 8px 18px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  .pos-total b {
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .pos-pay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 3.5rem;
+    border-radius: 0.85rem;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(140deg, var(--accent) 0%, var(--accent-strong) 100%);
+    /* The most moulded object in the app: lit crown, hard cast base, real press. */
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.44),
+      inset 0 -2px 0 color-mix(in srgb, #6d3d10 30%, transparent),
+      0 3px 0 color-mix(in srgb, #6d3d10 48%, transparent),
+      0 14px 28px -12px color-mix(in srgb, var(--accent) 72%, transparent);
+    transition: transform 120ms ease, filter 160ms ease, box-shadow 120ms ease;
+  }
+
+  .pos-pay:hover:not(:disabled) {
+    filter: brightness(1.07);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -2px 0 color-mix(in srgb, #6d3d10 30%, transparent),
+      0 4px 0 color-mix(in srgb, #6d3d10 48%, transparent),
+      0 18px 34px -12px color-mix(in srgb, var(--accent) 80%, transparent);
+  }
+
+  .pos-pay:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow:
+      inset 0 3px 8px rgba(50, 24, 4, 0.42),
+      0 1px 0 color-mix(in srgb, #6d3d10 40%, transparent);
+  }
+
+  .pos-pay:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .pos-pay__hint {
+    margin-left: 0.25rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    background: rgba(0, 0, 0, 0.22);
+    font-size: 0.625rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  html.dark .pos-pay__hint {
+    background: rgba(0, 0, 0, 0.34);
+  }
+
+  /* ── Accessibility fallbacks ────────────────────────────────────────────────
+     Some users ask the OS for less transparency. Blur is expensive on tills,
+     so drop it and fall back to opaque panes rather than ship a slow register. */
+  /* ── Layer 0 fallback ──────────────────────────────────────────────────────
+     If the cut-out mark cannot load, drop the layers rather than paint an
+     empty stacking layer over the page. */
+  @media (prefers-reduced-transparency: reduce) {
+    .lux-card,
+    .glass-panel,
+    .pos-sidebar,
+    .lux-card:has(.lux-input),
+    .lux-card:has(.lux-select) {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .lux-card { background: var(--bg-card); }
+    .glass-panel { background: var(--bg-card); }
+    .pos-sidebar { background: linear-gradient(177deg, #251b16 0%, #1c1512 46%, #14100d 100%); }
+
+    html.dark .lux-card { background: var(--bg-card); }
+    html.dark .glass-panel { background: var(--bg-card); }
+    html.dark .pos-sidebar { background: linear-gradient(177deg, #1c1511 0%, #14100d 48%, #0c0807 100%); }
+  }
+
+  /* Backdrop-filter is unsupported or disabled: keep the panes readable. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .lux-card { background: color-mix(in srgb, var(--bg-card) 96%, transparent); }
+    .glass-panel { background: color-mix(in srgb, var(--bg-card) 96%, transparent); }
+    .pos-sidebar { background: linear-gradient(177deg, #251b16 0%, #1c1512 46%, #14100d 100%); }
+    html.dark .lux-card,
+    html.dark .glass-panel { background: color-mix(in srgb, var(--bg-card) 96%, transparent); }
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes slide-left {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateX(-100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-countdown {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+.toast-enter,
+.alert-enter {
+  animation: fadeIn 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter,
+  .alert-enter {
+    animation: none;
+  }
+}
+
+.animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-pulse-badge { animation: pulse-badge 1.5s ease-in-out infinite; }
+.animate-slide-left { animation: slide-left 15s linear infinite; }
+.animate-menu-in { animation: menu-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

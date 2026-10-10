@@ -1,0 +1,12 @@
+{
+  "name": "Anda C Smoke Hub POS",
+  "short_name": "Anda POS",
+  "description": "Point of sale, stock and sales records for Anda C Smoke Hub, Accra.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e8e2d8",
+  "theme_color": "#251b16",
+  "icons": [
+    { "src": "/brand-mark.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

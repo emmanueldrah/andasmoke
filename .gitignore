@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+electron/api-bundle.cjs
+
+# Local till data (the SQLite database and its WAL files)
+.data/
+.data-*/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+# Automatic daily backups and their manifests
+backups/
+*.manifest.json
+# Product photos written at runtime
+media/
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# Manual exports chosen by the user
+
+# Electron packaging output
+release/
+
+# Logs and caches
+*.log
+npm-debug.log*
+.vite/
+.eslintcache
+.playwright-mcp/
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
