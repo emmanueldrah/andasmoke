@@ -5,11 +5,34 @@ const globalState = globalThis as typeof globalThis & {
   __andaCloudSchema?: Promise<void>;
 };
 
+function resolveDatabaseUrl(): string {
+  const candidates = [
+    process.env.DATABASE_URL,
+    process.env.DATABASE_URL_UNPOOLED,
+    process.env.DATABASE_POSTGRES_URL,
+    process.env.DATABASE_POSTGRES_URL_NO_SSL,
+    process.env.DATABASE_POSTGRES_PRISMA_URL,
+  ].filter((value): value is string => Boolean(value && value.trim()));
+
+  if (candidates.length > 0) return candidates[0].trim();
+
+  const host = process.env.DATABASE_POSTGRES_HOST || process.env.DATABASE_PGHOST;
+  const user = process.env.DATABASE_POSTGRES_USER || process.env.DATABASE_PGUSER;
+  const password = process.env.DATABASE_POSTGRES_PASSWORD || process.env.DATABASE_PGPASSWORD;
+  const database = process.env.DATABASE_POSTGRES_DATABASE || process.env.DATABASE_PGDATABASE;
+
+  if (host && user && password && database) {
+    return `postgres://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${host}/${database}?sslmode=require`;
+  }
+
+  throw new Error('No Neon/Postgres database URL is configured for the Vercel POS API.');
+}
+
 export function getCloudPool(): Pool {
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required for the Vercel POS API.');
+  const connectionString = resolveDatabaseUrl();
   if (!globalState.__andaCloudPool) {
     globalState.__andaCloudPool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString,
       max: 4,
       idleTimeoutMillis: 5_000,
       connectionTimeoutMillis: 10_000,
