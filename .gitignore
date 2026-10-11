@@ -26,6 +26,7 @@ media/
 
 # Electron packaging output
 release/
+release-updated/
 
 # Logs and caches
 *.log

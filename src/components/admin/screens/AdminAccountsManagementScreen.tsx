@@ -326,14 +326,14 @@ export const AdminAccountsManagementScreen: React.FC = () => {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[680px] w-full text-sm">
+          <table className="w-full table-fixed text-sm sm:table-auto sm:min-w-[680px]">
             <thead className="border-b border-[var(--border-color)] bg-[var(--bg-soft)]">
               <tr>
-                <th className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">Name</th>
-                <th className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">Email</th>
-                <th className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)] hidden md:table-cell">Phone</th>
-                <th className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">Role</th>
-                <th className="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">Actions</th>
+                <th className="w-[48%] px-3 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)] sm:w-auto sm:px-6">Name</th>
+                <th className="hidden px-6 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)] sm:table-cell">Email</th>
+                <th className="hidden px-6 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)] md:table-cell">Phone</th>
+                <th className="w-[24%] px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)] sm:w-auto sm:px-6">Role</th>
+                <th className="w-[28%] px-2 py-3 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)] sm:w-auto sm:px-6">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
@@ -342,14 +342,23 @@ export const AdminAccountsManagementScreen: React.FC = () => {
                   <tr key={account.id} className="transition-colors hover:bg-[var(--bg-soft)]">
                     {editingId === account.id ? (
                       <>
-                        <td className="px-6 py-3">
-                          <input
-                            value={editForm.fullName}
-                            onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
-                            className="lux-input"
-                          />
+                        <td className="px-2 py-3 sm:px-6">
+                          <div className="space-y-2">
+                            <input
+                              value={editForm.fullName}
+                              onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
+                              className="lux-input text-xs sm:text-sm"
+                            />
+                            <input
+                              type="email"
+                              value={editForm.email}
+                              onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                              className="lux-input text-xs sm:hidden"
+                              aria-label="Email"
+                            />
+                          </div>
                         </td>
-                        <td className="px-6 py-3">
+                        <td className="hidden px-6 py-3 sm:table-cell">
                           <input
                             type="email"
                             value={editForm.email}
@@ -357,7 +366,7 @@ export const AdminAccountsManagementScreen: React.FC = () => {
                             className="lux-input"
                           />
                         </td>
-                        <td className="px-6 py-3 hidden md:table-cell">
+                        <td className="hidden px-6 py-3 md:table-cell">
                           <input
                             type="tel"
                             value={editForm.phone}
@@ -365,11 +374,11 @@ export const AdminAccountsManagementScreen: React.FC = () => {
                             className="lux-input"
                           />
                         </td>
-                        <td className="px-6 py-3">
+                        <td className="px-2 py-3 sm:px-6">
                           <select
                             value={editForm.role}
                             onChange={e => setEditForm({ ...editForm, role: e.target.value as AdminAccount['role'] })}
-                            className="lux-select"
+                            className="lux-select text-xs sm:text-sm"
                           >
                             <option value="manager">Manager</option>
                             <option value="admin">Admin</option>
@@ -377,8 +386,8 @@ export const AdminAccountsManagementScreen: React.FC = () => {
                             <option value="super_admin">Super Admin</option>
                           </select>
                         </td>
-                        <td className="px-6 py-3">
-                          <div className="flex items-center gap-2">
+                        <td className="px-2 py-3 sm:px-6">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <button
                               onClick={handleSaveEdit}
                               className="rounded-xl bg-[var(--jade-soft)] p-2 text-[var(--jade)] transition-colors hover:bg-[color-mix(in_srgb,var(--jade)_22%,transparent)]"
@@ -398,7 +407,7 @@ export const AdminAccountsManagementScreen: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <td className="px-6 py-4">
+                        <td className="px-2 py-4 sm:px-6">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--border-color)] flex items-center justify-center font-bold text-xs flex-shrink-0 overflow-hidden">
                               {account.avatar ? (
@@ -407,9 +416,12 @@ export const AdminAccountsManagementScreen: React.FC = () => {
                                 String(account.fullName || '?').charAt(0).toUpperCase()
                               )}
                             </div>
-                            <div>
-                              <p className="font-semibold text-[var(--text-primary)]">
+                            <div className="min-w-0">
+                              <p className="break-words text-xs font-semibold leading-tight text-[var(--text-primary)] sm:text-sm">
                                 {account.fullName || 'Admin User'}
+                              </p>
+                              <p className="block max-w-full break-all text-[10px] leading-4 text-[var(--text-muted)] sm:hidden">
+                                {account.email || '—'}
                               </p>
                               {account.id === currentAdminAccountId && (
                                 <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wide">You</span>
@@ -417,15 +429,15 @@ export const AdminAccountsManagementScreen: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-[var(--text-muted)]">{account.email || '—'}</td>
-                        <td className="px-6 py-4 text-[var(--text-muted)] hidden md:table-cell">{account.phone || '—'}</td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${ROLE_BADGE[account.role || 'admin'] ?? 'bg-[color-mix(in_srgb,var(--text-subtle)_14%,transparent)] text-[var(--text-muted)]'}`}>
+                        <td className="hidden px-6 py-4 text-[var(--text-muted)] sm:table-cell">{account.email || '—'}</td>
+                        <td className="hidden px-6 py-4 text-[var(--text-muted)] md:table-cell">{account.phone || '—'}</td>
+                        <td className="px-2 py-4 sm:px-6">
+                          <span className={`inline-flex max-w-full whitespace-normal break-words rounded-full px-1.5 py-1 text-center text-[10px] font-semibold leading-tight sm:px-2.5 sm:text-xs ${ROLE_BADGE[account.role || 'admin'] ?? 'bg-[color-mix(in_srgb,var(--text-subtle)_14%,transparent)] text-[var(--text-muted)]'}`}>
                             {ROLE_LABEL[account.role || 'admin'] ?? account.role ?? 'Admin'}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
+                        <td className="px-2 py-4 sm:px-6">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <button
                               onClick={() => startEdit(account)}
                               className="rounded-xl bg-[var(--violet-soft)] p-2 text-[var(--violet)] transition-colors hover:bg-[color-mix(in_srgb,var(--violet)_22%,transparent)]"
