@@ -44,8 +44,8 @@
     --clay-cast: 0 10px 20px -10px color-mix(in srgb, var(--text-primary) 28%, transparent);
     /* The lounge mark, sitting behind every pane. Cut out to a transparent
        PNG so its white plate no longer washes out the background. */
-    --mark-opacity: 0.1;
-    --mark-blur: 2px;
+    --mark-opacity: 0.022;
+    --mark-blur: 4px;
     --mark-filter: none;
   }
 
@@ -89,7 +89,7 @@
     --clay-cast: 0 12px 26px -12px rgba(0, 0, 0, 0.66);
     /* The emblem is almost entirely black, so on a near-black page it would
        vanish. Inverting turns it into a light watermark. */
-    --mark-opacity: 0.13;
+    --mark-opacity: 0.03;
     --mark-filter: invert(1) saturate(0.9);
   }
 
@@ -129,10 +129,9 @@
     background-image: url("/brand-mark.png");
     background-repeat: no-repeat;
     background-position: 84% 4%;
-    background-size: min(620px, 56vw);
+    background-size: min(380px, 36vw);
     opacity: var(--mark-opacity);
     filter: var(--mark-filter) blur(var(--mark-blur));
-    mix-blend-mode: multiply;
   }
 
   /* A second, offset copy fills the lower left so the mark is not one-sided. */
@@ -145,7 +144,7 @@
     background-image: url("/brand-mark.png");
     background-repeat: no-repeat;
     background-position: 2% 88%;
-    background-size: min(440px, 44vw);
+    background-size: min(300px, 30vw);
     transform: scaleX(-1);
     opacity: calc(var(--mark-opacity) * 0.6);
     filter: var(--mark-filter) blur(calc(var(--mark-blur) * 1.8));
