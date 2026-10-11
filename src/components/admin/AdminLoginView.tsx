@@ -109,13 +109,20 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
 
   const isSetup = setup === 'needed';
   const submit = isSetup ? handleSetupSubmit : handleSignIn;
-  const inputClass = 'tactile-control w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-main)] py-3 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-subtle)] transition focus:border-[var(--accent)] focus:bg-[var(--bg-card)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20';
+  const inputClass = 'tactile-control w-full rounded-lg border border-[var(--border-color)] bg-white py-3 pr-4 text-sm text-[var(--text-primary)] placeholder-[var(--text-subtle)] transition focus:border-[var(--accent)] focus:bg-[var(--bg-card)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20 dark:bg-[#181310]';
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(197,150,81,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(71,123,104,0.14),transparent_38%),linear-gradient(135deg,rgba(17,13,12,0.8),rgba(24,17,15,0.55),rgba(9,9,9,0.82))] text-[var(--text-primary)] font-sans transition-colors duration-200">
+    <div
+      className="relative min-h-screen overflow-hidden text-[var(--text-primary)] font-sans transition-colors duration-200"
+      style={{
+        background: isDark
+          ? 'radial-gradient(circle at 12% 8%, rgba(197,150,81,0.18), transparent 34%), radial-gradient(circle at 90% 88%, rgba(71,123,104,0.12), transparent 38%), linear-gradient(135deg, #17110e, #18110f 48%, #090909)'
+          : 'radial-gradient(circle at 12% 8%, rgba(197,150,81,0.18), transparent 34%), radial-gradient(circle at 90% 88%, rgba(71,123,104,0.12), transparent 38%), linear-gradient(135deg, #f8f3eb, #f2f1e9 48%, #eaf0eb)',
+      }}
+    >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-4 rounded-[32px] border border-white/10 bg-white/[0.02] backdrop-blur-[22px]" />
-        <div className="absolute inset-8 rounded-[28px] border border-white/[0.08] bg-[rgba(255,255,255,0.015)] backdrop-blur-[28px]" />
+        <div className="absolute inset-4 rounded-[32px] border border-stone-900/5 dark:border-white/10" />
+        <div className="absolute inset-8 rounded-[28px] border border-stone-900/[0.04] dark:border-white/[0.08]" />
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.10]">
           <BrandMark
             name={storeSettings.storeName}
@@ -124,7 +131,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
         </div>
       </div>
 
-      <header className="relative z-10 mx-auto flex w-full max-w-7xl justify-end px-6 py-6">
+      <header className="relative z-10 mx-auto flex w-full max-w-7xl justify-end px-6 py-3 sm:py-4">
         <button
           type="button"
           onClick={toggleTheme}
@@ -136,15 +143,15 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
         </button>
       </header>
 
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-10 pt-4">
-        <div className="clay-surface relative z-10 w-full max-w-5xl overflow-hidden rounded-[28px] border border-white/10 bg-[rgba(24,18,17,0.26)] shadow-[0_25px_80px_rgba(0,0,0,0.34)] backdrop-blur-[26px]">
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-4 pt-2">
+        <div className="clay-surface relative z-10 w-full max-w-5xl overflow-hidden rounded-2xl border border-stone-900/10 bg-white/90 shadow-[0_22px_60px_rgba(49,38,26,0.12)] dark:border-white/10 dark:bg-[#211916] dark:shadow-[0_25px_80px_rgba(0,0,0,0.34)]">
           <div className="grid lg:grid-cols-[0.8fr_1.2fr]">
-            <div className="relative flex flex-col justify-between overflow-hidden border-b border-white/10 bg-[radial-gradient(ellipse_at_76%_12%,rgba(229,189,114,0.18),transparent_34%),linear-gradient(145deg,rgba(118,77,53,0.52),rgba(34,24,21,0.38),rgba(16,12,12,0.48))] p-7 text-white lg:border-b-0 lg:border-r sm:p-9 backdrop-blur-md">
+            <div className="relative flex flex-col justify-between overflow-hidden border-b border-stone-900/10 bg-[linear-gradient(145deg,#f6e8d1,#f0ece2_52%,#e4ebe4)] p-6 text-[#261d19] dark:border-white/10 dark:bg-[linear-gradient(145deg,#493123,#281b17_52%,#17110f)] dark:text-white lg:border-b-0 lg:border-r sm:p-8">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(156,78,53,0.14),transparent_34%)]" />
               <div className="relative">
-                <div className="glass-panel glass-panel--dark inline-flex items-center gap-3 rounded-xl px-3 py-2 text-white">
+                <div className="inline-flex items-center gap-3 rounded-xl border border-stone-900/10 bg-white/55 px-3 py-2 dark:border-white/15 dark:bg-white/[0.06]">
                   <BrandMark name={storeSettings.storeName} className="h-11 w-11 rounded-full text-xs" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">{storeSettings.storeName}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-700 dark:text-white/80">{storeSettings.storeName}</span>
                 </div>
 
                 <div className="mt-10 space-y-4">
@@ -152,7 +159,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                   <h1 className="brand-display text-3xl font-semibold sm:text-4xl">
                     {isSetup ? 'Set up this till' : 'POS terminal'}
                   </h1>
-                  <p className="max-w-xs text-sm leading-relaxed text-white/75">
+                  <p className="max-w-xs text-sm leading-relaxed text-stone-600 dark:text-white/75">
                     {isSetup
                       ? 'Create the owner account for this till. It runs entirely on this computer and needs no internet.'
                       : 'Sign in with the email and PIN your manager gave you.'}
@@ -160,21 +167,21 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                 </div>
               </div>
 
-              <div className="glass-panel glass-panel--dark relative mt-8 rounded-xl p-4 text-white">
+              <div className="relative mt-6 rounded-xl border border-stone-900/10 bg-white/55 p-4 dark:border-white/10 dark:bg-white/[0.06]">
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-[var(--accent-soft)] p-2 text-[var(--highlight)]">
                     <ShieldCheck className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-white/60">Works offline</p>
-                    <p className="mt-1 text-sm font-semibold text-white">Sales are saved on this computer.</p>
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500 dark:text-white/60">Works offline</p>
+                    <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-white">Sales are saved on this computer.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-[rgba(255,255,255,0.03)] p-6 backdrop-blur-[20px] sm:p-8 lg:p-10">
-              <div className="mb-8">
+            <div className="bg-white/70 p-5 dark:bg-white/[0.03] sm:p-7 lg:p-8">
+              <div className="mb-5">
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--accent-strong)]">
                   {isSetup ? 'First run' : 'Secure sign in'}
                 </p>
@@ -191,7 +198,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
               {setup === 'checking' ? (
                 <p className="py-8 text-center text-sm text-[var(--text-muted)]">Checking this till…</p>
               ) : (
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} className="space-y-3">
                   {isSetup && (
                     <div>
                       <label className="mb-1.5 block text-xs font-bold text-[var(--text-primary)]" htmlFor="setup-name">Your name</label>
@@ -302,7 +309,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                 </form>
               )}
 
-              <div className="mt-8 border-t border-[var(--border-color)] pt-4 text-center">
+              <div className="mt-6 border-t border-[var(--border-color)] pt-4 text-center">
                 <p className="flex items-center justify-center gap-1.5 text-[11px] text-[var(--text-subtle)]">
                   <Store className="h-3.5 w-3.5" />
                   {storeSettings.storeName} · {storeSettings.storeAddress || 'Accra, Ghana'}
@@ -313,7 +320,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
         </div>
       </main>
 
-      <footer className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-6 text-center text-xs text-[var(--text-subtle)]">
+      <footer className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-3 pt-1 text-center text-xs text-[var(--text-subtle)]">
         © {new Date().getFullYear()} {storeSettings.storeName}. All rights reserved.
       </footer>
     </div>
