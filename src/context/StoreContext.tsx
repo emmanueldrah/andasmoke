@@ -475,7 +475,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     let cancelled = false;
-    void api.get<{ role: 'admin'; email: string; adminName?: string; adminRole?: string }>('/auth?action=session', adminToken)
+    void api.get<{ role: 'admin'; email: string; adminName?: string; adminRole?: string; avatar?: string }>('/auth?action=session', adminToken)
       .then(session => {
         // Do not let an older validation request overwrite a newer login.
         if (cancelled || localStorage.getItem('anda_auth_token') !== adminToken) return;
@@ -489,7 +489,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           adminRole: (session.adminRole || 'Super Admin') as AdminSession['adminRole'],
           email: session.email,
           phone: (session as any).phone || existingSession.phone,
-          avatar: existingSession.avatar || (emailKey ? avatars[emailKey] : undefined),
+          avatar: session.avatar !== undefined
+            ? session.avatar || undefined
+            : existingSession.avatar || (emailKey ? avatars[emailKey] : undefined),
         };
         localStorage.setItem('anda_admin_session', JSON.stringify(restored));
         setAdminSession(restored);
@@ -713,7 +715,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       const avatars = JSON.parse(localStorage.getItem('anda_admin_avatars') || '{}');
       const emailKey = (result.admin.email || '').toLowerCase().trim();
-      const avatar = result.admin.avatar || (emailKey ? avatars[emailKey] : undefined) || (result.admin.id ? avatars[result.admin.id] : undefined);
+      const avatar = result.admin.avatar !== undefined
+        ? result.admin.avatar || undefined
+        : (emailKey ? avatars[emailKey] : undefined) || (result.admin.id ? avatars[result.admin.id] : undefined);
 
 const sessionPayload: AdminSession = {
         isLoggedIn: true,
@@ -766,13 +770,7 @@ localStorage.setItem('anda_auth_token', result.token);
       const accounts = await api.get<AdminAccount[]>('/admin-accounts');
       if (Array.isArray(accounts)) {
         const avatars = JSON.parse(localStorage.getItem('anda_admin_avatars') || '{}');
-        const enriched = accounts.map(acc => {
-          const emailKey = (acc.email || '').toLowerCase().trim();
-          return {
-            ...acc,
-            avatar: acc.avatar || (emailKey ? avatars[emailKey] : undefined) || (acc.id ? avatars[acc.id] : undefined),
-          };
-        });
+        const enriched = accounts.map(acc => ({ ...acc, avatar: acc.avatar || undefined }));
         setAdminAccounts(enriched);
         try {
           localStorage.setItem('anda_admin_accounts', JSON.stringify(enriched));
@@ -859,7 +857,7 @@ localStorage.setItem('anda_auth_token', result.token);
     }
 
     // Safe backend payload omitting client-only avatar
-    const { avatar: _a, profileImage: _p, ...backendUpdates } = updates;
+    const { profileImage: _p, ...backendUpdates } = updates;
     if (targetBackendId && Object.keys(backendUpdates).length > 0) {
       try {
         await api.patch(`/admin-accounts/${targetBackendId}`, backendUpdates);

@@ -17,7 +17,7 @@ const MIN_IDLE_TIMEOUT_MS = 5 * 60_000;
 const MAX_IDLE_TIMEOUT_MS = 7 * 24 * 60 * 60_000;
 const ROLES = ['Super Admin', 'Store Manager', 'Inventory Dispatcher', 'Cashier'] as const;
 type CloudRole = typeof ROLES[number];
-type CloudSession = { sub: string; email: string; role: 'admin'; adminRole: CloudRole; adminName: string; iat?: number; exp?: number };
+type CloudSession = { sub: string; email: string; role: 'admin'; adminRole: CloudRole; adminName: string; avatar?: string | null; iat?: number; exp?: number };
 type Query = Record<string, string | string[] | undefined>;
 type PgRow = Record<string, any>;
 
@@ -61,13 +61,13 @@ async function requireCloudAdmin(req: ApiRequest, res: ApiResponse, allowedRoles
     if (!payload.sub || payload.role !== 'admin') throw new Error('Invalid session');
     const pool = getCloudPool();
     await ensureCloudSchema();
-    const { rows } = await pool.query('SELECT id, email, admin_name, admin_role, is_active FROM admin_sessions WHERE id = $1 LIMIT 1', [payload.sub]);
+    const { rows } = await pool.query('SELECT id, email, admin_name, admin_role, avatar, is_active FROM admin_sessions WHERE id = $1 LIMIT 1', [payload.sub]);
     const admin = rows[0];
     if (!admin || !admin.is_active) {
       res.status(401).json({ error: 'Administrator account is no longer active' });
       return null;
     }
-    const session = { ...payload, email: admin.email, adminName: admin.admin_name, adminRole: admin.admin_role } as CloudSession;
+    const session = { ...payload, email: admin.email, adminName: admin.admin_name, adminRole: admin.admin_role, avatar: admin.avatar } as CloudSession;
     if (allowedRoles && !allowedRoles.includes(session.adminRole)) {
       res.status(403).json({ error: 'Your administrator role does not allow this action' });
       return null;
@@ -181,13 +181,13 @@ async function authHandler(req: ApiRequest, res: ApiResponse): Promise<unknown> 
     const idleTimeoutMs = await getIdleTimeoutMs();
     const token = signCloudSession({ id: admin.id, email: admin.email, adminName: admin.admin_name, adminRole: admin.admin_role }, idleTimeoutMs);
     await recordCloudAudit({ sub: admin.id, email: admin.email, adminName: admin.admin_name, adminRole: admin.admin_role, role: 'admin' }, 'STAFF_LOGIN', 'admin_session', admin.id, { adminId: admin.id, adminRole: admin.admin_role, email: admin.email });
-    return res.status(200).json({ token, idleTimeoutMs, admin: { id: admin.id, adminName: admin.admin_name, adminRole: admin.admin_role, email: admin.email } });
+    return res.status(200).json({ token, idleTimeoutMs, admin: { id: admin.id, adminName: admin.admin_name, adminRole: admin.admin_role, email: admin.email, avatar: admin.avatar || '' } });
   }
 
   if (req.method === 'GET' && action === 'session') {
     const auth = await requireCloudAdmin(req, res);
     if (!auth) return;
-    return res.status(200).json({ role: 'admin', email: auth.email, adminName: auth.adminName, adminRole: auth.adminRole });
+    return res.status(200).json({ role: 'admin', email: auth.email, adminName: auth.adminName, adminRole: auth.adminRole, avatar: auth.avatar || '' });
   }
 
   if (req.method === 'GET' && action === 'idle-timeout') {
@@ -720,7 +720,7 @@ async function adminAccountsHandler(req: ApiRequest, res: ApiResponse, pathId = 
   const pool = getCloudPool();
   if (req.method === 'GET') {
     if (auth.adminRole !== 'Super Admin') return res.status(403).json({ error:'Only Super Admins can view team accounts' });
-    const { rows } = await pool.query('SELECT id,admin_name AS "fullName",email,phone,admin_role AS role,is_active AS "isActive",last_login_at AS "lastLoginAt",created_at AS "createdAt" FROM admin_sessions ORDER BY created_at');
+    const { rows } = await pool.query('SELECT id,admin_name AS "fullName",email,phone,avatar,admin_role AS role,is_active AS "isActive",last_login_at AS "lastLoginAt",created_at AS "createdAt" FROM admin_sessions ORDER BY created_at');
     return res.status(200).json(rows);
   }
   if (req.method === 'POST') {
@@ -729,7 +729,7 @@ async function adminAccountsHandler(req: ApiRequest, res: ApiResponse, pathId = 
     if (!parsed.success) return res.status(400).json({ error:'Name, email, and a PIN of at least 4 characters are required' });
     try {
       const hash = await bcrypt.hash(parsed.data.pin,12);
-      const { rows } = await pool.query('INSERT INTO admin_sessions(id,admin_name,admin_role,email,phone,pin_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,admin_name AS "fullName",email,phone,admin_role AS role,is_active AS "isActive",last_login_at AS "lastLoginAt",created_at AS "createdAt"', [randomUUID(),parsed.data.fullName,roleFromRequest(parsed.data.role),parsed.data.email.toLowerCase(),parsed.data.phone || '',hash]);
+      const { rows } = await pool.query('INSERT INTO admin_sessions(id,admin_name,admin_role,email,phone,pin_hash) VALUES($1,$2,$3,$4,$5,$6) RETURNING id,admin_name AS "fullName",email,phone,avatar,admin_role AS role,is_active AS "isActive",last_login_at AS "lastLoginAt",created_at AS "createdAt"', [randomUUID(),parsed.data.fullName,roleFromRequest(parsed.data.role),parsed.data.email.toLowerCase(),parsed.data.phone || '',hash]);
       await recordCloudAudit(auth,'STAFF_ACCOUNT_CHANGED','admin_session',rows[0].id,{ event:'created',email:rows[0].email,role:rows[0].role });
       return res.status(201).json(rows[0]);
     } catch (error:any) {
@@ -743,7 +743,7 @@ async function adminAccountsHandler(req: ApiRequest, res: ApiResponse, pathId = 
   if (!target) return res.status(404).json({ error:'Admin account not found' });
   if (req.method === 'PATCH') {
     if (auth.adminRole !== 'Super Admin' && target.id !== auth.sub) return res.status(403).json({ error:'Only Super Admins can manage other team accounts' });
-    const { fullName,email,phone,role,isActive,pin,currentPin } = req.body || {};
+    const { fullName,email,phone,role,isActive,pin,currentPin,avatar } = req.body || {};
     if (target.id === auth.sub && (role !== undefined || isActive === false)) return res.status(400).json({ error:'You cannot change your own role or deactivate your own account' });
     if (pin && (!currentPin || !(await bcrypt.compare(String(currentPin),target.pin_hash)))) return res.status(401).json({ error:'Current PIN is incorrect' });
     const sets:string[]=[]; const values:unknown[]=[];
@@ -754,9 +754,16 @@ async function adminAccountsHandler(req: ApiRequest, res: ApiResponse, pathId = 
     if(role!==undefined)add('admin_role',roleFromRequest(role));
     if(isActive!==undefined)add('is_active',Boolean(isActive));
     if(pin)add('pin_hash',await bcrypt.hash(String(pin),12));
+    if (avatar !== undefined) {
+      const validAvatar = typeof avatar === 'string'
+        && avatar.length <= 200_000
+        && (!avatar || /^data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(avatar) || /^https:\/\/\S+$/i.test(avatar));
+      if (!validAvatar) return res.status(400).json({ error:'Profile photo must be a small image or HTTPS URL.' });
+      add('avatar', avatar || null);
+    }
     if(!sets.length)return res.status(400).json({error:'No account fields to update.'});
     values.push(id);
-    const {rows}=await pool.query(`UPDATE admin_sessions SET ${sets.join(', ')} WHERE id=$${values.length} RETURNING id,admin_name AS "fullName",email,phone,admin_role AS role,is_active AS "isActive",last_login_at AS "lastLoginAt",created_at AS "createdAt"`,values);
+    const {rows}=await pool.query(`UPDATE admin_sessions SET ${sets.join(', ')} WHERE id=$${values.length} RETURNING id,admin_name AS "fullName",email,phone,avatar,admin_role AS role,is_active AS "isActive",last_login_at AS "lastLoginAt",created_at AS "createdAt"`,values);
     await recordCloudAudit(auth,'STAFF_ACCOUNT_CHANGED','admin_session',id,{event:'updated',email:rows[0].email,pinChanged:Boolean(pin)});
     return res.status(200).json(rows[0]);
   }

@@ -1,17 +1,15 @@
 /**
- * Local server health.
+ * POS service health.
  *
- * The app's online/offline light answers one question: can this till still take
- * a sale? That depends on the local API in the Electron main process, not on the
- * shop's internet connection — a till with no router in the building still takes
- * cash sales all day, and showing "offline" for that would be wrong.
+ * In the desktop app the loopback API proxies to the hosted service, so this
+ * check reflects whether online account and sales operations can proceed.
  *
  * Kept as a small module the renderer can pull in, so it does not depend on any
  * Node built-ins at bundle time.
  */
 
 export type ServerHealth = {
-  /** True when the local API answered recently. */
+  /** True when the configured POS API answered recently. */
   ok: boolean;
   /** How long the last successful check was, in milliseconds. */
   latencyMs: number | null;
@@ -51,8 +49,7 @@ export async function checkLocalServer(path = '/api/health'): Promise<ServerHeal
     state.latencyMs = Date.now() - startedAt;
     state.lastOkAt = new Date().toISOString();
   } catch {
-    // The local API is unreachable: the till cannot record a sale, so the light
-    // goes out.
+    // The POS API is unreachable, so online operations are unavailable.
     state.ok = false;
     state.latencyMs = null;
   } finally {

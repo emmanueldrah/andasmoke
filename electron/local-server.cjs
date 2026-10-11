@@ -1,9 +1,9 @@
 /**
  * Anda C Smoke Hub — local API server.
  *
- * Runs inside the Electron main process and serves two things on one origin:
- *   /api/*  the Drizzle-backed handlers in ../../server-api
- *   /*      the built renderer from dist/
+ * Runs inside the Electron main process and serves the renderer on loopback.
+ * API requests may be proxied to the hosted service to keep browser requests
+ * same-origin without making local SQLite the source of truth.
  *
  * Binding to 127.0.0.1 only keeps the till's data unreachable from the local
  * network. Nothing here talks to the internet, so the app works with the cable
@@ -80,6 +80,40 @@ function decorate(res) {
   return res;
 }
 
+async function proxyCloudApi(req, res, cloudApiOrigin) {
+  try {
+    const headers = {};
+    const hopByHopHeaders = new Set([
+      'accept-encoding', 'connection', 'content-length', 'host', 'keep-alive',
+      'origin', 'proxy-authenticate', 'proxy-authorization', 'referer', 'te',
+      'trailer', 'transfer-encoding', 'upgrade',
+    ]);
+    for (const [name, value] of Object.entries(req.headers)) {
+      if (value === undefined || hopByHopHeaders.has(name.toLowerCase())) continue;
+      headers[name] = Array.isArray(value) ? value.join(', ') : value;
+    }
+
+    const method = req.method || 'GET';
+    const body = method === 'GET' || method === 'HEAD' ? undefined : await readBody(req);
+    const response = await fetch(new URL(req.url || '/', cloudApiOrigin), {
+      method,
+      headers,
+      body,
+      signal: AbortSignal.timeout(30_000),
+    });
+
+    res.statusCode = response.status;
+    for (const name of ['cache-control', 'content-disposition', 'content-type', 'etag', 'last-modified', 'retry-after']) {
+      const value = response.headers.get(name);
+      if (value) res.setHeader(name, value);
+    }
+    res.end(Buffer.from(await response.arrayBuffer()));
+  } catch (error) {
+    console.error('[api] hosted request failed:', error && error.message ? error.message : error);
+    return res.status(503).json({ error: 'The hosted POS service is unreachable. Check the internet connection and try again.' });
+  }
+}
+
 /** Parses `/api/orders/abc123` into `{ resource: 'orders', id: 'abc123' }`. */
 function parseRoute(pathname) {
   const segments = pathname.replace(/^\/+|\/+$/g, '').split('/');
@@ -93,7 +127,7 @@ function parseRoute(pathname) {
  * Starts the server. Returns the listening port so callers know the origin the
  * renderer should load (the window must use this exact host and port).
  */
-async function startLocalServer({ distDir, handlers, host = '127.0.0.1', port = 0 }) {
+async function startLocalServer({ distDir, handlers, cloudApiOrigin, host = '127.0.0.1', port = 0 }) {
   const distIndex = path.join(distDir, 'index.html');
 
   const server = http.createServer(async (req, res) => {
@@ -101,6 +135,10 @@ async function startLocalServer({ distDir, handlers, host = '127.0.0.1', port = 
 
     try {
       const requestUrl = new URL(req.url || '/', `http://${host}`);
+
+      if (cloudApiOrigin && requestUrl.pathname.startsWith('/api/')) {
+        return await proxyCloudApi(req, res, cloudApiOrigin);
+      }
 
       // ── Health ──────────────────────────────────────────────────────────
       // Answered here, before any handler: it must not depend on the database,

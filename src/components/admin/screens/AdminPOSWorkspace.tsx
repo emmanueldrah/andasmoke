@@ -163,16 +163,9 @@ export function AdminPOSWorkspace() {
   // Tickets parked mid-queue, shown in a drawer beside the counter.
   const [heldSales, setHeldSales] = useState<HeldSale[]>([]);
   const [heldSalesOpen, setHeldSalesOpen] = useState(false);
-  /**
-   * Whether the till can take a sale right now.
-   *
-   * This is the health of the *local* server, not the internet. A shop with no
-   * router still sells all day, so showing "offline" because there is no Wi-Fi
-   * would be wrong — the only thing that matters is whether this machine can
-   * reach its own API.
-   */
+  /** Whether the hosted service is reachable so it can record this sale. */
   const [tillHealth, setTillHealth] = useState<ServerHealth>({
-    ok: true, latencyMs: null, lastOkAt: null, checked: false,
+    ok: false, latencyMs: null, lastOkAt: null, checked: false,
   });
   const online = tillHealth.ok;
   useEffect(() => {
@@ -560,6 +553,10 @@ export function AdminPOSWorkspace() {
 
   const completeSale = async () => {
     if (!cart.length || submitting) return;
+    if (!online) {
+      showAlert('The cloud POS service is unavailable. Reconnect before completing a sale.', 'error');
+      return;
+    }
 
     // Every tender must be complete before the sale can be posted, so the
     // cashier is told what is missing rather than the server refusing it.
@@ -635,13 +632,10 @@ export function AdminPOSWorkspace() {
       await Promise.all([fetchProducts({ includeUnpublished: true }), fetchOrders()]);
     } catch (error: any) {
       receiptWindow?.close();
-      // The API is local, so there is nowhere to queue to. Either the sale was
-      // rejected (keep the ticket so the cashier can fix it) or the local server
-      // is not answering at all, which is worth saying plainly.
-      const unreachable = error instanceof TypeError || (error instanceof ApiError && error.status === 408);
+      const unreachable = error instanceof TypeError || (error instanceof ApiError && (error.status === 408 || error.status === 503));
       showAlert(
         unreachable
-          ? 'Cannot reach the local till service. Restart the app, then try this sale again.'
+          ? 'Cannot reach the cloud POS service. Reconnect, then try this sale again.'
           : error?.data?.error || error?.message || 'Could not complete this sale.',
         'error',
       );
@@ -1022,13 +1016,13 @@ return (
              before a cashier starts selling. ── */}
       <div className="lux-card flex flex-wrap items-center gap-2 px-3 py-2.5">
         <span
-          className={`lux-chip ${storeError ? 'lux-chip--warning' : 'lux-chip--success'}`}
+          className={`lux-chip ${!online || storeError ? 'lux-chip--warning' : 'lux-chip--success'}`}
           title={online
-            ? `The till's local service is answering${tillHealth.latencyMs != null ? ` (${tillHealth.latencyMs} ms)` : ''}. Sales do not need the internet.`
-            : 'The till cannot reach its own local service. Sales cannot be recorded until it responds.'}
+            ? `Cloud POS is connected${tillHealth.latencyMs != null ? ` (${tillHealth.latencyMs} ms)` : ''}. Sales sync online.`
+            : 'Cloud POS is unavailable. An internet connection is required to record sales.'}
         >
           {online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-          {storeError ? 'Inventory unavailable' : loading ? 'Loading inventory' : products.length === 0 ? 'Inventory empty' : 'Ready to sell'}
+          {!online ? 'Cloud unavailable' : storeError ? 'Inventory unavailable' : loading ? 'Loading inventory' : products.length === 0 ? 'Inventory empty' : 'Ready to sell'}
         </span>
 
         <span className="hidden items-center gap-1.5 text-xs text-[var(--text-muted)] sm:flex">
@@ -1511,7 +1505,7 @@ return (
 
               <button
                 type="button"
-                disabled={!cart.length || submitting}
+                disabled={!online || !cart.length || submitting}
                 onClick={() => void completeSale()}
                 className="pos-pay w-full"
               >

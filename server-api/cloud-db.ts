@@ -69,10 +69,11 @@ const schemaStatements = [
   )`,
   `CREATE TABLE IF NOT EXISTS admin_sessions (
     id text PRIMARY KEY, admin_name text NOT NULL, admin_role text NOT NULL, email text NOT NULL UNIQUE,
-    phone text NOT NULL DEFAULT '', pin_hash text NOT NULL, is_active boolean NOT NULL DEFAULT true,
+    phone text NOT NULL DEFAULT '', avatar text, pin_hash text NOT NULL, is_active boolean NOT NULL DEFAULT true,
     last_login_at timestamptz, failed_pin_attempts integer NOT NULL DEFAULT 0,
     locked_until timestamptz, created_at timestamptz NOT NULL DEFAULT now()
   )`,
+  'ALTER TABLE admin_sessions ADD COLUMN IF NOT EXISTS avatar text',
   `CREATE TABLE IF NOT EXISTS store_settings (
     id text PRIMARY KEY, key text NOT NULL UNIQUE, value text NOT NULL,
     updated_at timestamptz NOT NULL DEFAULT now()

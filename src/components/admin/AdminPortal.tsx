@@ -35,6 +35,7 @@ import {
 import { AdminPOSCatalogScreen } from './screens/AdminPOSCatalogScreen';
 import { AdminPOSWorkspace } from './screens/AdminPOSWorkspace';
 import { BrandMark } from '../common/BrandMark';
+import { checkLocalServer } from '../../lib/health';
 import { AdminSession, Product } from '../../types';
 
 type AdminTab =
@@ -166,17 +167,16 @@ export const AdminPortal: React.FC = () => {
   const [railCollapsed, setRailCollapsed] = useState(() => {
     try { return localStorage.getItem(RAIL_KEY) === '1'; } catch { return false; }
   });
-  const [online, setOnline] = useState(() => navigator.onLine);
+  const [online, setOnline] = useState(false);
 
   useEffect(() => {
-    const handleOnline = () => setOnline(true);
-    const handleOffline = () => setOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+    let active = true;
+    const check = () => {
+      void checkLocalServer().then(health => { if (active) setOnline(health.ok); });
     };
+    check();
+    const timer = window.setInterval(check, 5_000);
+    return () => { active = false; window.clearInterval(timer); };
   }, []);
 
   useEffect(() => {
@@ -297,7 +297,7 @@ export const AdminPortal: React.FC = () => {
           className={`flex items-center gap-2 rounded-xl px-3 py-2 ${collapsed ? 'justify-center px-0 w-full' : ''} ${
             online ? 'bg-[var(--jade-soft)] text-[var(--jade)]' : 'bg-[var(--danger-soft)] text-[var(--danger)]'
           }`}
-          title={online ? 'Connected to server' : 'Offline: sales will queue and sync'}
+          title={online ? 'Connected to the cloud POS service' : 'Cloud unavailable: sales cannot be recorded'}
         >
           {online ? <Wifi className="h-4 w-4 shrink-0" /> : <WifiOff className="h-4 w-4 shrink-0" />}
           {!collapsed && (

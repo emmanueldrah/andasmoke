@@ -161,7 +161,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                   </h1>
                   <p className="max-w-xs text-sm leading-relaxed text-stone-600 dark:text-white/75">
                     {isSetup
-                      ? 'Create the owner account for this till. It runs entirely on this computer and needs no internet.'
+                      ? 'Create the owner account for this store. Staff accounts, products, stock, and sales are stored online and shared across connected tills.'
                       : 'Sign in with the email and PIN your manager gave you.'}
                   </p>
                 </div>
@@ -173,8 +173,8 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                     <ShieldCheck className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500 dark:text-white/60">Works offline</p>
-                    <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-white">Sales are saved on this computer.</p>
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-stone-500 dark:text-white/60">Live cloud sync</p>
+                    <p className="mt-1 text-sm font-semibold text-stone-800 dark:text-white">Staff, products, stock, and sales stay in sync.</p>
                   </div>
                 </div>
               </div>
