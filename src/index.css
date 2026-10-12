@@ -7,14 +7,14 @@
     --font-sans: "Manrope", "Segoe UI", sans-serif;
     --font-display: "Fraunces", Georgia, serif;
     /* Light theme: clean white panes with warm amber accents, not parchment */
-    --bg-main: rgba(250, 247, 244, 0.96);
-    --bg-card: rgba(255, 255, 255, 0.96);
-    --bg-card-alt: rgba(249, 244, 239, 0.94);
-    --bg-soft: rgba(241, 236, 231, 0.9);
-    --text-primary: #1d1714;
-    --text-muted: #5d5049;
-    --text-subtle: #76675f;
-    --border-color: rgba(74, 60, 50, 0.22);
+    --bg-main: rgba(247, 243, 239, 0.98);
+    --bg-card: rgba(255, 255, 255, 0.99);
+    --bg-card-alt: rgba(250, 245, 240, 0.98);
+    --bg-soft: rgba(242, 235, 229, 0.96);
+    --text-primary: #1b120e;
+    --text-muted: #4d413b;
+    --text-subtle: #6a584f;
+    --border-color: rgba(77, 58, 48, 0.28);
     --accent: #9c4e35;
     --accent-strong: #c59651;
     --accent-soft: rgba(156, 78, 53, 0.12);
@@ -393,16 +393,16 @@
     width: 100%;
     min-height: 2.5rem;
     border-radius: 0.72rem;
-    border: 1px solid rgba(98, 78, 66, 0.28);
-    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(101, 78, 65, 0.42);
+    background: rgba(255, 255, 255, 1);
     padding: 0.62rem 0.82rem;
     font-size: 0.9rem;
     font-weight: 600;
-    color: rgba(35, 27, 21, 0.96);
+    color: rgba(27, 18, 14, 0.98);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
     box-shadow:
       inset 0 1px 2px rgba(60, 39, 30, 0.08),
-      0 1px 0 rgba(255,255,255,0.52);
+      0 1px 0 rgba(255,255,255,0.7);
   }
 
   html.dark .lux-input,
@@ -436,7 +436,7 @@
     font-weight: 800;
     letter-spacing: 0.11em;
     text-transform: uppercase;
-    color: rgba(62, 48, 39, 0.96);
+    color: rgba(41, 31, 25, 0.96);
     margin-bottom: 0.45rem;
   }
 
