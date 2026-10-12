@@ -236,13 +236,13 @@ useEffect(() => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,15,12,0.42)] p-2 backdrop-blur-md sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="clay-surface flex max-h-[calc(100vh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[var(--shadow-card)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
-        <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_88%,transparent)] px-4 py-2.5 sm:px-5">
+        <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_96%,transparent)] px-4 py-2.5 sm:px-5">
           <div>
             <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[var(--highlight)]">Stockroom</p>
             <h2 id="pos-product-title" className="brand-display mt-0.5 text-2xl font-semibold leading-tight text-[var(--text-primary)]">{productToEdit ? 'Edit product' : 'Add product'}</h2>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">Set up a sellable item for the register.</p>
           </div>
-          <button type="button" onClick={onClose} disabled={isSaving} aria-label="Close" className="lux-btn lux-btn--ghost lux-btn--sm px-2 text-[var(--text-muted)]"><X className="h-4 w-4" /></button>
+          <button type="button" onClick={onClose} disabled={isSaving} aria-label="Close" className="lux-btn lux-btn--ghost lux-btn--sm px-2 text-[var(--text-primary)] hover:bg-[var(--accent-soft)]"><X className="h-4 w-4" /></button>
         </header>
 
         {/* Two columns at till sizes so the whole form fits without scrolling:
