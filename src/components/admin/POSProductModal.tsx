@@ -235,7 +235,7 @@ useEffect(() => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,15,12,0.42)] p-2 backdrop-blur-md sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="clay-surface flex max-h-[calc(100vh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[var(--shadow-card)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+      <section className="clay-surface flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[var(--shadow-card)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
         <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_96%,transparent)] px-4 py-2.5 sm:px-5">
           <div>
             <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[var(--highlight)]">Stockroom</p>
@@ -248,10 +248,10 @@ useEffect(() => {
         {/* Two columns at till sizes so the whole form fits without scrolling:
             identity and pricing on the left, stock, codes, availability, and
             the photo on the right. Narrow windows fall back to one column. */}
-        <form id="pos-product-form" onSubmit={event => void saveProduct(event)} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5">
-          <div className="grid items-start gap-4 md:grid-cols-2">
+        <form id="pos-product-form" onSubmit={event => void saveProduct(event)} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-2.5 sm:px-5">
+          <div className="grid items-start gap-3 md:grid-cols-2">
             {/* Left column: what the item is and what it costs */}
-            <div className="grid content-start gap-2.5">
+            <div className="grid content-start gap-2">
               <label>
                 <span className="lux-label">Product name</span>
                 <input autoFocus required autoComplete="off" value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Double Apple flavor" className="lux-input" />
@@ -305,8 +305,8 @@ useEffect(() => {
             </div>
 
             {/* Right column: stock, codes, availability, photo */}
-            <div className="grid content-start gap-2.5">
-              <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid content-start gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <label>
                   <span className="lux-label">Opening stock</span>
                   <input type="number" min="0" step="1" value={variants.length ? variantStock : stockCount} readOnly={variants.length > 0} onChange={event => setStockCount(event.target.value)} className="lux-input font-bold tabular-nums" />
@@ -343,7 +343,7 @@ useEffect(() => {
                 <input type="checkbox" checked={isPublished} onChange={event => setIsPublished(event.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
               </label>
 
-              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-soft)_50%,transparent)] p-3">
+              <div className="flex flex-wrap items-center gap-2.5 rounded-lg border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-soft)_50%,transparent)] p-2.5">
                 <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" onChange={event => void addPhoto(event.target.files?.[0])} />
                 {image ? <img src={image} alt="Product preview" className="h-12 w-12 rounded-md object-cover" /> : <div className="grid h-12 w-12 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]"><Package className="h-5 w-5" /></div>}
                 <div className="min-w-0 flex-1">
