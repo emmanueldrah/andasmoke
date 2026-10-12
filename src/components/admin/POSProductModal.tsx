@@ -239,10 +239,10 @@ useEffect(() => {
         <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_96%,transparent)] px-4 py-2.5 sm:px-5">
           <div>
             <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[var(--highlight)]">Stockroom</p>
-            <h2 id="pos-product-title" className="brand-display mt-0.5 text-2xl font-semibold leading-tight text-[var(--text-primary)]">{productToEdit ? 'Edit product' : 'Add product'}</h2>
+            <h2 id="pos-product-title" className="brand-display mt-0.5 text-2xl font-semibold leading-tight text-white">{productToEdit ? 'Edit product' : 'Add product'}</h2>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">Set up a sellable item for the register.</p>
           </div>
-          <button type="button" onClick={onClose} disabled={isSaving} aria-label="Close" className="lux-btn lux-btn--ghost lux-btn--sm px-2 text-[var(--text-primary)] hover:bg-[var(--accent-soft)]"><X className="h-4 w-4" /></button>
+          <button type="button" onClick={onClose} disabled={isSaving} aria-label="Close" className="lux-btn lux-btn--ghost lux-btn--sm px-2 text-white hover:bg-[var(--accent-soft)]"><X className="h-4 w-4" /></button>
         </header>
 
         {/* Two columns at till sizes so the whole form fits without scrolling:
@@ -339,7 +339,7 @@ useEffect(() => {
               </label>
 
               <label className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-color)] px-3 py-2.5">
-                <span><span className="block text-xs font-bold text-[var(--text-primary)]">Available at register</span><span className="mt-0.5 block text-[11px] text-[var(--text-muted)]">Inactive products stay in inventory but cannot be sold.</span></span>
+                <span><span className="block text-xs font-bold text-white">Available at register</span><span className="mt-0.5 block text-[11px] text-[var(--text-muted)]">Inactive products stay in inventory but cannot be sold.</span></span>
                 <input type="checkbox" checked={isPublished} onChange={event => setIsPublished(event.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
               </label>
 
@@ -347,7 +347,7 @@ useEffect(() => {
                 <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" onChange={event => void addPhoto(event.target.files?.[0])} />
                 {image ? <img src={image} alt="Product preview" className="h-12 w-12 rounded-md object-cover" /> : <div className="grid h-12 w-12 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]"><Package className="h-5 w-5" /></div>}
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[var(--text-primary)]">Product photo</p>
+                  <p className="text-xs font-bold text-white">Product photo</p>
                   <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">Optional. The item can be sold without one.</p>
                 </div>
                 {image && <button type="button" onClick={() => setImage('')} className="lux-btn lux-btn--ghost lux-btn--sm px-2" aria-label="Remove product photo"><X className="h-4 w-4" /></button>}
@@ -359,7 +359,7 @@ useEffect(() => {
           </div>
 
           <details className="mt-2.5 rounded-lg border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-soft)_34%,transparent)] px-3 py-2.5">
-            <summary className="cursor-pointer text-sm font-bold text-[var(--text-primary)]">Variations <span className="font-normal text-[var(--text-subtle)]">(optional)</span></summary>
+            <summary className="cursor-pointer text-sm font-bold text-white">Variations <span className="font-normal text-[var(--text-subtle)]">(optional)</span></summary>
             <div className="mt-3 space-y-2">
               {variants.map((variant, index) => (
                 <div key={variant.id} className="grid gap-2 rounded-md border border-[var(--border-color)] bg-[var(--bg-card)] p-3 sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.7fr_auto]">
