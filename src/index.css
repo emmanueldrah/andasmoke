@@ -8,13 +8,13 @@
     --font-display: "Fraunces", Georgia, serif;
     /* Light theme: clean white panes with warm amber accents, not parchment */
     --bg-main: rgba(250, 247, 244, 0.96);
-    --bg-card: rgba(255, 255, 255, 0.92);
-    --bg-card-alt: rgba(248, 244, 239, 0.9);
-    --bg-soft: rgba(244, 239, 234, 0.78);
+    --bg-card: rgba(255, 255, 255, 0.96);
+    --bg-card-alt: rgba(249, 244, 239, 0.94);
+    --bg-soft: rgba(241, 236, 231, 0.9);
     --text-primary: #1d1714;
     --text-muted: #5d5049;
     --text-subtle: #76675f;
-    --border-color: rgba(74, 60, 50, 0.14);
+    --border-color: rgba(74, 60, 50, 0.22);
     --accent: #9c4e35;
     --accent-strong: #c59651;
     --accent-soft: rgba(156, 78, 53, 0.12);
@@ -393,8 +393,8 @@
     width: 100%;
     min-height: 2.5rem;
     border-radius: 0.72rem;
-    border: 1px solid rgba(120, 90, 67, 0.42);
-    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(98, 78, 66, 0.28);
+    background: rgba(255, 255, 255, 0.95);
     padding: 0.62rem 0.82rem;
     font-size: 0.9rem;
     font-weight: 600;
@@ -436,7 +436,7 @@
     font-weight: 800;
     letter-spacing: 0.11em;
     text-transform: uppercase;
-    color: rgba(68, 49, 38, 0.96);
+    color: rgba(62, 48, 39, 0.96);
     margin-bottom: 0.45rem;
   }
 
