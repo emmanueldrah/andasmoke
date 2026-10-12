@@ -6,15 +6,15 @@
   :root {
     --font-sans: "Manrope", "Segoe UI", sans-serif;
     --font-display: "Fraunces", Georgia, serif;
-    /* Shisha lounge identity: smoke plaster, ember, and brass */
-    --bg-main: rgba(255, 255, 255, 0.04);
-    --bg-card: rgba(255, 255, 255, 0.06);
-    --bg-card-alt: rgba(255, 255, 255, 0.03);
-    --bg-soft: rgba(255, 255, 255, 0.02);
-    --text-primary: #261d19;
-    --text-muted: #65544a;
-    --text-subtle: #897262;
-    --border-color: rgba(86, 56, 39, 0.16);
+    /* Light theme: clean white panes with warm amber accents, not parchment */
+    --bg-main: rgba(250, 247, 244, 0.96);
+    --bg-card: rgba(255, 255, 255, 0.92);
+    --bg-card-alt: rgba(248, 244, 239, 0.9);
+    --bg-soft: rgba(244, 239, 234, 0.78);
+    --text-primary: #1d1714;
+    --text-muted: #5d5049;
+    --text-subtle: #76675f;
+    --border-color: rgba(74, 60, 50, 0.14);
     --accent: #9c4e35;
     --accent-strong: #c59651;
     --accent-soft: rgba(156, 78, 53, 0.12);
@@ -111,9 +111,9 @@
     min-height: 100dvh;
     min-width: 0;
     background:
-      radial-gradient(1200px 540px at 90% -14%, rgba(197, 150, 81, 0.11), transparent 58%),
-      radial-gradient(900px 440px at -8% 0%, rgba(71, 123, 104, 0.06), transparent 52%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.18));
+      radial-gradient(1200px 540px at 90% -14%, rgba(197, 150, 81, 0.08), transparent 58%),
+      radial-gradient(900px 440px at -8% 0%, rgba(71, 123, 104, 0.05), transparent 52%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 240, 235, 0.96), rgba(252, 250, 247, 0.98));
     color: var(--text-primary);
     overflow-x: hidden;
     overflow-y: auto;
