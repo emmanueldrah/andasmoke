@@ -235,8 +235,8 @@ useEffect(() => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,15,12,0.42)] p-2 backdrop-blur-md sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="clay-surface flex max-h-[calc(100vh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[rgba(105,77,54,0.34)] bg-[rgba(250,245,239,0.98)] text-[var(--text-primary)] shadow-[0_28px_70px_rgba(34,24,18,0.22)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
-        <header className="flex items-start justify-between gap-4 border-b border-[rgba(105,77,54,0.18)] bg-[rgba(255,255,255,0.52)] px-4 py-2.5 sm:px-5">
+      <section className="clay-surface flex max-h-[calc(100vh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[var(--shadow-card)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+        <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_88%,transparent)] px-4 py-2.5 sm:px-5">
           <div>
             <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[rgba(101,70,49,0.92)]">Stockroom</p>
             <h2 id="pos-product-title" className="brand-display mt-0.5 text-2xl font-semibold leading-tight text-[rgba(34,24,18,0.98)]">{productToEdit ? 'Edit product' : 'Add product'}</h2>
