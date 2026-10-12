@@ -326,22 +326,22 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
                   className="min-w-0 flex-1 text-left"
                   title="Edit product"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <span className="truncate text-sm font-bold text-[var(--text-primary)]">{product.name}</span>
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <span className="break-words text-sm font-bold text-[var(--text-primary)]">{product.name}</span>
                     {hidden && (
                       <span className="shrink-0 rounded bg-[var(--bg-soft)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--text-subtle)]">
                         Hidden
                       </span>
                     )}
                   </span>
-                  <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-                    <span className="truncate">{product.brand}</span>
+                  <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-[var(--text-muted)]">
+                    <span className="break-words">{product.brand}</span>
                     <span aria-hidden="true">·</span>
-                    <span className="truncate">{product.categoryLabel}</span>
+                    <span className="break-words">{product.categoryLabel}</span>
                     {code && (
                       <>
                         <span aria-hidden="true">·</span>
-                        <span className="truncate font-mono text-[10px]">{code}</span>
+                        <span className="break-all font-mono text-[10px]">{code}</span>
                       </>
                     )}
                   </span>

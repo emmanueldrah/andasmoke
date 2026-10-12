@@ -234,109 +234,131 @@ useEffect(() => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,15,12,0.42)] p-3 backdrop-blur-md sm:p-6" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="clay-surface flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(105,77,54,0.34)] bg-[rgba(250,245,239,0.98)] text-[var(--text-primary)] shadow-[0_28px_70px_rgba(34,24,18,0.22)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
-        <header className="flex items-start justify-between gap-4 border-b border-[rgba(105,77,54,0.18)] bg-[rgba(255,255,255,0.52)] px-5 py-4 sm:px-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,15,12,0.42)] p-2 backdrop-blur-md sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="clay-surface flex max-h-[calc(100vh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[rgba(105,77,54,0.34)] bg-[rgba(250,245,239,0.98)] text-[var(--text-primary)] shadow-[0_28px_70px_rgba(34,24,18,0.22)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+        <header className="flex items-start justify-between gap-4 border-b border-[rgba(105,77,54,0.18)] bg-[rgba(255,255,255,0.52)] px-4 py-2.5 sm:px-5">
           <div>
             <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[rgba(101,70,49,0.92)]">Stockroom</p>
-            <h2 id="pos-product-title" className="brand-display mt-1 text-3xl font-semibold leading-tight text-[rgba(34,24,18,0.98)]">{productToEdit ? 'Edit product' : 'Add product'}</h2>
-            <p className="mt-1 text-sm text-[rgba(74,56,45,0.8)]">Set up a sellable item for the register.</p>
+            <h2 id="pos-product-title" className="brand-display mt-0.5 text-2xl font-semibold leading-tight text-[rgba(34,24,18,0.98)]">{productToEdit ? 'Edit product' : 'Add product'}</h2>
+            <p className="mt-0.5 text-xs text-[rgba(74,56,45,0.8)]">Set up a sellable item for the register.</p>
           </div>
           <button type="button" onClick={onClose} disabled={isSaving} aria-label="Close" className="lux-btn lux-btn--ghost lux-btn--sm px-2 text-[rgba(89,62,46,0.95)]"><X className="h-4 w-4" /></button>
         </header>
 
-        <form id="pos-product-form" onSubmit={event => void saveProduct(event)} className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="sm:col-span-2">
-              <span className="lux-label">Product name</span>
-              <input autoFocus required autoComplete="off" value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Double Apple flavor" className="lux-input" />
-            </label>
+        {/* Two columns at till sizes so the whole form fits without scrolling:
+            identity and pricing on the left, stock, codes, availability, and
+            the photo on the right. Narrow windows fall back to one column. */}
+        <form id="pos-product-form" onSubmit={event => void saveProduct(event)} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5">
+          <div className="grid items-start gap-4 md:grid-cols-2">
+            {/* Left column: what the item is and what it costs */}
+            <div className="grid content-start gap-2.5">
+              <label>
+                <span className="lux-label">Product name</span>
+                <input autoFocus required autoComplete="off" value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Double Apple flavor" className="lux-input" />
+              </label>
 
-            <label>
-              <span className="lux-label">Product group</span>
-              <select value={department} onChange={event => {
-                const nextDepartment = event.target.value as DepartmentType;
-                setDepartment(nextDepartment);
-                setCategory(fallbackCategories[nextDepartment][0].value);
-              }} className="lux-select">
-                <option value="beauty">Shisha & hookah</option>
-                <option value="groceries">Lounge supplies</option>
-              </select>
-            </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label>
+                  <span className="lux-label">Product group</span>
+                  <select value={department} onChange={event => {
+                    const nextDepartment = event.target.value as DepartmentType;
+                    setDepartment(nextDepartment);
+                    setCategory(fallbackCategories[nextDepartment][0].value);
+                  }} className="lux-select">
+                    <option value="beauty">Shisha & hookah</option>
+                    <option value="groceries">Lounge supplies</option>
+                  </select>
+                </label>
 
-            <label>
-              <span className="lux-label">Category</span>
-              <select value={category} onChange={event => setCategory(event.target.value as CategoryType)} className="lux-select">
-                {categoryOptions.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
-              </select>
-            </label>
+                <label>
+                  <span className="lux-label">Category</span>
+                  <select value={category} onChange={event => setCategory(event.target.value as CategoryType)} className="lux-select">
+                    {categoryOptions.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+                  </select>
+                </label>
+              </div>
 
-            <label>
-              <span className="lux-label">Brand <span className="font-medium normal-case tracking-normal">(optional)</span></span>
-              <input list="pos-product-brands" value={brand} onChange={event => setBrand(event.target.value)} placeholder="Brand or supplier" className="lux-input" />
-              <datalist id="pos-product-brands">{brands.map(item => <option key={item} value={item} />)}</datalist>
-            </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label>
+                  <span className="lux-label">Brand <span className="font-medium normal-case tracking-normal">(optional)</span></span>
+                  <input list="pos-product-brands" value={brand} onChange={event => setBrand(event.target.value)} placeholder="Brand or supplier" className="lux-input" />
+                  <datalist id="pos-product-brands">{brands.map(item => <option key={item} value={item} />)}</datalist>
+                </label>
 
-            <label>
-              <span className="lux-label">Unit <span className="font-medium normal-case tracking-normal">(optional)</span></span>
-              <input value={unit} onChange={event => setUnit(event.target.value)} placeholder="Each, 50g, bottle" className="lux-input" />
-            </label>
+                <label>
+                  <span className="lux-label">Unit <span className="font-medium normal-case tracking-normal">(optional)</span></span>
+                  <input value={unit} onChange={event => setUnit(event.target.value)} placeholder="Each, 50g, bottle" className="lux-input" />
+                </label>
+              </div>
 
-            <label>
-              <span className="lux-label">Selling price (GHS)</span>
-              <input required type="number" min="0.01" step="0.01" value={price} onChange={event => setPrice(event.target.value)} placeholder="0.00" className="lux-input font-bold tabular-nums" />
-            </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label>
+                  <span className="lux-label">Selling price (GHS)</span>
+                  <input required type="number" min="0.01" step="0.01" value={price} onChange={event => setPrice(event.target.value)} placeholder="0.00" className="lux-input font-bold tabular-nums" />
+                </label>
 
-            <label>
-              <span className="lux-label">Wholesale price (GHS) <span className="font-medium normal-case tracking-normal">(optional)</span></span>
-              <input type="number" min="0.01" step="0.01" value={wholesalePrice} onChange={event => setWholesalePrice(event.target.value)} placeholder="Set a bulk price" className="lux-input tabular-nums" />
-            </label>
-
-            <label>
-              <span className="lux-label">Opening stock</span>
-              <input type="number" min="0" step="1" value={variants.length ? variantStock : stockCount} readOnly={variants.length > 0} onChange={event => setStockCount(event.target.value)} className="lux-input font-bold tabular-nums" />
-              {variants.length > 0 && <span className="mt-1 block text-[11px] text-[var(--text-subtle)]">Total from variations.</span>}
-            </label>
-
-            <label>
-              <span className="lux-label">Barcode <span className="font-medium normal-case tracking-normal">(optional)</span></span>
-              <span className="relative block">
-                <Barcode className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
-                {/* This field exists to receive a typed or scanned code, so it opts out of the
-                    counter's global scanner capture: the value must stay put. */}
-                <input
-                  id="product-barcode"
-                  name="barcode"
-                  data-barcode-input="product-form"
-                  value={barcode}
-                  onChange={event => setBarcode(event.target.value)}
-                  autoComplete="off"
-                  placeholder="Scan or enter code"
-                  className="lux-input pl-9"
-                />
-              </span>
-            </label>
-
-            <label>
-              <span className="lux-label">Serial number <span className="font-medium normal-case tracking-normal">(optional)</span></span>
-              <input value={serialNumber} onChange={event => setSerialNumber(event.target.value)} autoComplete="off" placeholder="Supplier code" className="lux-input" />
-            </label>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-soft)_50%,transparent)] p-3">
-            <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" onChange={event => void addPhoto(event.target.files?.[0])} />
-            {image ? <img src={image} alt="Product preview" className="h-12 w-12 rounded-md object-cover" /> : <div className="grid h-12 w-12 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]"><Package className="h-5 w-5" /></div>}
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-[var(--text-primary)]">Product photo</p>
-              <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">Optional. The item can be sold without one.</p>
+                <label>
+                  <span className="lux-label">Wholesale (GHS) <span className="font-medium normal-case tracking-normal">(optional)</span></span>
+                  <input type="number" min="0.01" step="0.01" value={wholesalePrice} onChange={event => setWholesalePrice(event.target.value)} placeholder="Bulk price" className="lux-input tabular-nums" />
+                </label>
+              </div>
             </div>
-            {image && <button type="button" onClick={() => setImage('')} className="lux-btn lux-btn--ghost lux-btn--sm px-2" aria-label="Remove product photo"><X className="h-4 w-4" /></button>}
-            <button type="button" onClick={() => photoInput.current?.click()} disabled={isUploading} className="lux-btn lux-btn--outline lux-btn--sm">
-              <ImagePlus className="h-3.5 w-3.5" />{isUploading ? 'Uploading...' : image ? 'Change photo' : 'Add photo'}
-            </button>
+
+            {/* Right column: stock, codes, availability, photo */}
+            <div className="grid content-start gap-2.5">
+              <div className="grid grid-cols-2 gap-2.5">
+                <label>
+                  <span className="lux-label">Opening stock</span>
+                  <input type="number" min="0" step="1" value={variants.length ? variantStock : stockCount} readOnly={variants.length > 0} onChange={event => setStockCount(event.target.value)} className="lux-input font-bold tabular-nums" />
+                  {variants.length > 0 && <span className="mt-1 block text-[11px] text-[var(--text-subtle)]">Total from variations.</span>}
+                </label>
+
+                <label>
+                  <span className="lux-label">Serial number <span className="font-medium normal-case tracking-normal">(optional)</span></span>
+                  <input value={serialNumber} onChange={event => setSerialNumber(event.target.value)} autoComplete="off" placeholder="Supplier code" className="lux-input" />
+                </label>
+              </div>
+
+              <label>
+                <span className="lux-label">Barcode <span className="font-medium normal-case tracking-normal">(optional)</span></span>
+                <span className="relative block">
+                  <Barcode className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
+                  {/* This field exists to receive a typed or scanned code, so it opts out of the
+                      counter's global scanner capture: the value must stay put. */}
+                  <input
+                    id="product-barcode"
+                    name="barcode"
+                    data-barcode-input="product-form"
+                    value={barcode}
+                    onChange={event => setBarcode(event.target.value)}
+                    autoComplete="off"
+                    placeholder="Scan or enter code"
+                    className="lux-input pl-9"
+                  />
+                </span>
+              </label>
+
+              <label className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-color)] px-3 py-2.5">
+                <span><span className="block text-xs font-bold text-[var(--text-primary)]">Available at register</span><span className="mt-0.5 block text-[11px] text-[var(--text-muted)]">Inactive products stay in inventory but cannot be sold.</span></span>
+                <input type="checkbox" checked={isPublished} onChange={event => setIsPublished(event.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
+              </label>
+
+              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-soft)_50%,transparent)] p-3">
+                <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" onChange={event => void addPhoto(event.target.files?.[0])} />
+                {image ? <img src={image} alt="Product preview" className="h-12 w-12 rounded-md object-cover" /> : <div className="grid h-12 w-12 place-items-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]"><Package className="h-5 w-5" /></div>}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-[var(--text-primary)]">Product photo</p>
+                  <p className="mt-0.5 text-[11px] text-[var(--text-muted)]">Optional. The item can be sold without one.</p>
+                </div>
+                {image && <button type="button" onClick={() => setImage('')} className="lux-btn lux-btn--ghost lux-btn--sm px-2" aria-label="Remove product photo"><X className="h-4 w-4" /></button>}
+                <button type="button" onClick={() => photoInput.current?.click()} disabled={isUploading} className="lux-btn lux-btn--outline lux-btn--sm">
+                  <ImagePlus className="h-3.5 w-3.5" />{isUploading ? 'Uploading...' : image ? 'Change photo' : 'Add photo'}
+                </button>
+              </div>
+            </div>
           </div>
 
-          <details className="mt-4 rounded-lg border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-soft)_34%,transparent)] p-3">
+          <details className="mt-2.5 rounded-lg border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-soft)_34%,transparent)] px-3 py-2.5">
             <summary className="cursor-pointer text-sm font-bold text-[var(--text-primary)]">Variations <span className="font-normal text-[var(--text-subtle)]">(optional)</span></summary>
             <div className="mt-3 space-y-2">
               {variants.map((variant, index) => (
@@ -362,14 +384,9 @@ useEffect(() => {
               <button type="button" onClick={addVariant} className="lux-btn lux-btn--outline lux-btn--sm"><Plus className="h-3.5 w-3.5" />Add variation</button>
             </div>
           </details>
-
-          <label className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-[var(--border-color)] px-3 py-2.5">
-            <span><span className="block text-xs font-bold text-[var(--text-primary)]">Available at register</span><span className="mt-0.5 block text-[11px] text-[var(--text-muted)]">Inactive products stay in inventory but cannot be sold.</span></span>
-            <input type="checkbox" checked={isPublished} onChange={event => setIsPublished(event.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
-          </label>
         </form>
 
-        <footer className="glass-panel flex items-center justify-between gap-3 border-x-0 border-b-0 px-5 py-3 sm:px-6">
+        <footer className="glass-panel flex items-center justify-between gap-3 border-x-0 border-b-0 px-4 py-3 sm:px-5">
           <button type="button" onClick={onClose} disabled={isSaving} className="lux-btn lux-btn--outline">Cancel</button>
           <button type="submit" form="pos-product-form" disabled={isSaving} className="lux-btn lux-btn--primary"><Save className="h-4 w-4" />{isSaving ? 'Saving...' : productToEdit ? 'Save product' : 'Add product'}</button>
         </footer>

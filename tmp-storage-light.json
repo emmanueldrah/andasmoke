@@ -1,0 +1,22 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:3000",
+      "localStorage": [
+        {
+          "name": "anda_auth_token",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJxYS1hdWRpdC1hY2NvdW50LXZpc3VhbCIsImVtYWlsIjoiYXVkaXRAYW5kYXNtb2tlLmxvY2FsIiwicm9sZSI6ImFkbWluIiwiYWRtaW5Sb2xlIjoiU3VwZXIgQWRtaW4iLCJhZG1pbk5hbWUiOiJWaXN1YWwgQXVkaXQiLCJpYXQiOjE3OTE4MDQxNjcsImV4cCI6MTc5MTgzMjk2N30.7p_RSKLRd0WgB8ZIt4DU6eLTfhdMxVruXAf9n9NhMRc"
+        },
+        {
+          "name": "anda_admin_session",
+          "value": "{\"isLoggedIn\":true,\"adminId\":\"qa-audit-account-visual\",\"adminName\":\"Visual Audit\",\"adminRole\":\"Super Admin\",\"email\":\"audit@andasmoke.local\",\"avatar\":null}"
+        },
+        {
+          "name": "anda_theme_mode",
+          "value": "light"
+        }
+      ]
+    }
+  ]
+}
