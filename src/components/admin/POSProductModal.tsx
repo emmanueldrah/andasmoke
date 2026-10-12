@@ -235,14 +235,14 @@ useEffect(() => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,15,12,0.42)] p-3 backdrop-blur-md sm:p-6" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="clay-surface flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(96,70,50,0.28)] bg-[rgba(255,248,241,0.92)] text-[var(--text-primary)] shadow-[0_24px_60px_rgba(46,31,20,0.18)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
-        <header className="flex items-start justify-between gap-4 border-b border-[rgba(96,70,50,0.14)] bg-[rgba(255,255,255,0.42)] px-5 py-4 sm:px-6">
+      <section className="clay-surface flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(105,77,54,0.34)] bg-[rgba(250,245,239,0.98)] text-[var(--text-primary)] shadow-[0_28px_70px_rgba(34,24,18,0.22)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+        <header className="flex items-start justify-between gap-4 border-b border-[rgba(105,77,54,0.18)] bg-[rgba(255,255,255,0.52)] px-5 py-4 sm:px-6">
           <div>
-            <p className="eyebrow">Stockroom</p>
-            <h2 id="pos-product-title" className="brand-display mt-1 text-2xl font-semibold">{productToEdit ? 'Edit product' : 'Add product'}</h2>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">Set up a sellable item for the register.</p>
+            <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[rgba(101,70,49,0.92)]">Stockroom</p>
+            <h2 id="pos-product-title" className="brand-display mt-1 text-3xl font-semibold leading-tight text-[rgba(34,24,18,0.98)]">{productToEdit ? 'Edit product' : 'Add product'}</h2>
+            <p className="mt-1 text-sm text-[rgba(74,56,45,0.8)]">Set up a sellable item for the register.</p>
           </div>
-          <button type="button" onClick={onClose} disabled={isSaving} aria-label="Close" className="lux-btn lux-btn--ghost lux-btn--sm px-2"><X className="h-4 w-4" /></button>
+          <button type="button" onClick={onClose} disabled={isSaving} aria-label="Close" className="lux-btn lux-btn--ghost lux-btn--sm px-2 text-[rgba(89,62,46,0.95)]"><X className="h-4 w-4" /></button>
         </header>
 
         <form id="pos-product-form" onSubmit={event => void saveProduct(event)} className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
