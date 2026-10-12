@@ -234,9 +234,9 @@ useEffect(() => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-3 backdrop-blur-sm sm:p-6" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="clay-surface flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] shadow-[var(--shadow-card)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
-        <header className="glass-panel flex items-start justify-between gap-4 border-x-0 border-t-0 px-5 py-4 sm:px-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,15,12,0.42)] p-3 backdrop-blur-md sm:p-6" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="clay-surface flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(96,70,50,0.28)] bg-[rgba(255,248,241,0.92)] text-[var(--text-primary)] shadow-[0_24px_60px_rgba(46,31,20,0.18)] backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+        <header className="flex items-start justify-between gap-4 border-b border-[rgba(96,70,50,0.14)] bg-[rgba(255,255,255,0.42)] px-5 py-4 sm:px-6">
           <div>
             <p className="eyebrow">Stockroom</p>
             <h2 id="pos-product-title" className="brand-display mt-1 text-2xl font-semibold">{productToEdit ? 'Edit product' : 'Add product'}</h2>

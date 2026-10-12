@@ -383,19 +383,17 @@
   .lux-input,
   .lux-select {
     width: 100%;
-    border-radius: 0.6rem;
-    border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
-    /* Skeuo: a carved well, so typing looks like pressing into the surface. */
-    background: color-mix(in srgb, var(--bg-soft) 34%, transparent);
-    padding: 0.625rem 0.875rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    border-radius: 0.72rem;
+    border: 1px solid color-mix(in srgb, var(--border-color) 88%, transparent);
+    background: rgba(255, 255, 255, 0.58);
+    padding: 0.7rem 0.9rem;
+    font-size: 0.92rem;
+    font-weight: 600;
     color: var(--text-primary);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
     box-shadow:
-      var(--clay-well),
-      inset 0 -1px 0 var(--glass-sheen-soft),
-      0 1px 0 var(--glass-sheen);
+      inset 0 1px 2px rgba(60, 39, 30, 0.06),
+      0 1px 0 rgba(255,255,255,0.38);
   }
 
   .lux-input:focus,
@@ -421,8 +419,8 @@
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-subtle);
-    margin-bottom: 0.375rem;
+    color: rgba(89, 62, 46, 0.96);
+    margin-bottom: 0.5rem;
   }
 
   .lux-btn {
