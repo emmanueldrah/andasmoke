@@ -235,8 +235,8 @@ useEffect(() => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(12,8,6,0.62)] p-2 backdrop-blur-sm sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="light-sheet clay-surface flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(77,52,38,0.4)] bg-[#fffdfa] text-[var(--text-primary)] shadow-[0_28px_70px_rgba(0,0,0,0.45)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
-        <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[#f6efe7] px-4 py-2.5 sm:px-5">
+      <section className="form-sheet clay-surface flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-bg)] text-[var(--text-primary)] shadow-[0_28px_70px_rgba(0,0,0,0.45)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+        <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[var(--sheet-head)] px-4 py-2.5 sm:px-5">
           <div>
             <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[var(--highlight)]">Stockroom</p>
             <h2 id="pos-product-title" className="brand-display mt-0.5 text-2xl font-semibold leading-tight text-[var(--text-primary)]">{productToEdit ? 'Edit product' : 'Add product'}</h2>
