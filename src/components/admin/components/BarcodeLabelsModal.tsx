@@ -592,15 +592,15 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#090909]/70 p-2 sm:p-4 backdrop-blur-sm">
-      <div className="print:hidden flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] dark:border-[#2e2326] dark:bg-[#181314]">
-        <div className="flex items-center justify-between border-b border-stone-200 bg-stone-50 px-5 py-4 dark:border-[#2e2326] dark:bg-[#1f1719]">
+      <div className="light-sheet print:hidden flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-[rgba(77,52,38,0.3)] bg-[#ffffff] shadow-[0_30px_90px_rgba(0,0,0,0.18)]">
+        <div className="flex items-center justify-between border-b border-[rgba(77,52,38,0.3)] bg-[#f6efe7] px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
               <Barcode className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black tracking-tight text-stone-900 dark:text-stone-100">Barcode Labels</h2>
-              <p className="text-xs text-stone-500 dark:text-stone-400">Print clean product stickers for inventory and checkout</p>
+              <h2 className="text-lg font-black tracking-tight text-[#1b120e]">Barcode Labels</h2>
+              <p className="text-xs text-[#55443a]">Print clean product stickers for inventory and checkout</p>
             </div>
           </div>
 
@@ -609,7 +609,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               type="button"
               onClick={handlePrint}
               disabled={flatLabels.length === 0}
-              className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-white"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#1b120e] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#3a291f] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Printer className="h-4 w-4" />
               Print {flatLabels.length} {flatLabels.length === 1 ? 'label' : 'labels'}
@@ -618,22 +618,22 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close barcode modal"
-              className="rounded-xl p-2 text-stone-400 transition hover:bg-stone-200 hover:text-stone-700 dark:hover:bg-[#2b2024] dark:hover:text-stone-100"
+              className="rounded-xl p-2 text-[#6b584c] transition hover:bg-[#ece1d6] hover:text-[#1b120e]"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-b border-stone-200 bg-white px-5 py-3 dark:border-[#2e2326] dark:bg-[#181314]">
+        <div className="flex items-center justify-between gap-3 border-b border-[rgba(77,52,38,0.3)] bg-[#ffffff] px-5 py-3">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActiveTab('select')}
               className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
                 activeTab === 'select'
-                  ? 'border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-400 dark:bg-amber-500/10 dark:text-amber-300'
-                  : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 dark:border-[#382b2e] dark:bg-[#201b1b] dark:text-stone-300'
+                  ? 'border-amber-500 bg-amber-50 text-amber-700'
+                  : 'border-[rgba(77,52,38,0.3)] bg-[#ffffff] text-[#45342a] hover:border-[rgba(77,52,38,0.55)]'
               }`}
             >
               1. Select products
@@ -643,8 +643,8 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               onClick={() => setActiveTab('preview')}
               className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
                 activeTab === 'preview'
-                  ? 'border-amber-500 bg-amber-50 text-amber-700 dark:border-amber-400 dark:bg-amber-500/10 dark:text-amber-300'
-                  : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 dark:border-[#382b2e] dark:bg-[#201b1b] dark:text-stone-300'
+                  ? 'border-amber-500 bg-amber-50 text-amber-700'
+                  : 'border-[rgba(77,52,38,0.3)] bg-[#ffffff] text-[#45342a] hover:border-[rgba(77,52,38,0.55)]'
               }`}
             >
               2. Preview & layout
@@ -656,7 +656,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               type="button"
               onClick={handleAutoGenerateMissing}
               disabled={isGeneratingBarcodes}
-              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-700 transition hover:bg-amber-100 disabled:cursor-wait disabled:opacity-60 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"
+              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-700 transition hover:bg-amber-100 disabled:cursor-wait disabled:opacity-60"
             >
               {isGeneratingBarcodes ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
               {missingBarcodeCount} missing
@@ -667,27 +667,27 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
         <div className="flex-1 overflow-y-auto p-5">
           {activeTab === 'select' ? (
             <div className="space-y-4">
-              <div className="flex flex-col gap-3 rounded-2xl border border-stone-200 bg-stone-50 p-3 dark:border-[#2e2326] dark:bg-[#1f1719] sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 rounded-2xl border border-[rgba(77,52,38,0.3)] bg-[#f6efe7] p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => handleToggleSelectAll(true)} className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-700 transition hover:bg-stone-100 dark:border-[#382b2e] dark:bg-[#251d20] dark:text-stone-200">
+                  <button type="button" onClick={() => handleToggleSelectAll(true)} className="rounded-lg border border-[rgba(77,52,38,0.3)] bg-[#ffffff] px-3 py-1.5 text-[11px] font-bold text-[#2f2119] transition hover:bg-[#f3eae1]">
                     Select all
                   </button>
-                  <button type="button" onClick={() => handleToggleSelectAll(false)} className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-700 transition hover:bg-stone-100 dark:border-[#382b2e] dark:bg-[#251d20] dark:text-stone-200">
+                  <button type="button" onClick={() => handleToggleSelectAll(false)} className="rounded-lg border border-[rgba(77,52,38,0.3)] bg-[#ffffff] px-3 py-1.5 text-[11px] font-bold text-[#2f2119] transition hover:bg-[#f3eae1]">
                     Clear all
                   </button>
-                  <button type="button" onClick={() => handleApplyPresetQuantity('one')} className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-700 transition hover:bg-stone-100 dark:border-[#382b2e] dark:bg-[#251d20] dark:text-stone-200">
+                  <button type="button" onClick={() => handleApplyPresetQuantity('one')} className="rounded-lg border border-[rgba(77,52,38,0.3)] bg-[#ffffff] px-3 py-1.5 text-[11px] font-bold text-[#2f2119] transition hover:bg-[#f3eae1]">
                     1 each
                   </button>
-                  <button type="button" onClick={() => handleApplyPresetQuantity('stock')} className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-700 transition hover:bg-stone-100 dark:border-[#382b2e] dark:bg-[#251d20] dark:text-stone-200">
+                  <button type="button" onClick={() => handleApplyPresetQuantity('stock')} className="rounded-lg border border-[rgba(77,52,38,0.3)] bg-[#ffffff] px-3 py-1.5 text-[11px] font-bold text-[#2f2119] transition hover:bg-[#f3eae1]">
                     Match stock
                   </button>
-                  <button type="button" onClick={() => handleApplyPresetQuantity('five')} className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold text-stone-700 transition hover:bg-stone-100 dark:border-[#382b2e] dark:bg-[#251d20] dark:text-stone-200">
+                  <button type="button" onClick={() => handleApplyPresetQuantity('five')} className="rounded-lg border border-[rgba(77,52,38,0.3)] bg-[#ffffff] px-3 py-1.5 text-[11px] font-bold text-[#2f2119] transition hover:bg-[#f3eae1]">
                     5 each
                   </button>
                 </div>
 
                 {missingBarcodeCount > 0 && (
-                  <button type="button" onClick={handleAutoGenerateMissing} disabled={isGeneratingBarcodes} className="rounded-lg bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-amber-700 disabled:opacity-60">
+                  <button type="button" onClick={handleAutoGenerateMissing} disabled={isGeneratingBarcodes} className="rounded-lg bg-amber-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-amber-800 disabled:opacity-60">
                     {isGeneratingBarcodes ? 'Generating…' : `Generate ${missingBarcodeCount}`}
                   </button>
                 )}
@@ -695,22 +695,22 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b584c]" />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     placeholder="Search inventory..."
-                    className="w-full rounded-xl border border-stone-200 bg-white py-2.5 pl-9 pr-10 text-xs font-medium text-stone-900 outline-none transition focus:border-amber-500 dark:border-[#382b2e] dark:bg-[#1e1719] dark:text-stone-100"
+                    className="w-full rounded-xl border border-[rgba(77,52,38,0.3)] bg-[#ffffff] py-2.5 pl-9 pr-10 text-xs font-medium text-[#1b120e] outline-none transition focus:border-amber-500"
                   />
                   {searchTerm && (
-                    <button type="button" onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                    <button type="button" onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b584c] hover:text-[#1b120e]">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
 
-                <select value={filterBarcodeStatus} onChange={e => setFilterBarcodeStatus(e.target.value as any)} className="rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-xs font-bold text-stone-700 outline-none dark:border-[#382b2e] dark:bg-[#1e1719] dark:text-stone-200">
+                <select value={filterBarcodeStatus} onChange={e => setFilterBarcodeStatus(e.target.value as any)} className="rounded-xl border border-[rgba(77,52,38,0.3)] bg-[#ffffff] px-3 py-2.5 text-xs font-bold text-[#2f2119] outline-none">
                   <option value="all">All barcode status</option>
                   <option value="missing">Missing only</option>
                   <option value="has_barcode">With barcode</option>
@@ -718,7 +718,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               </div>
 
               {unsavedBarcodeItems.length > 0 && (
-                <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300">
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
                   <span className="font-semibold">{unsavedBarcodeItems.length} barcode change{unsavedBarcodeItems.length === 1 ? '' : 's'} not saved</span>
                   <button type="button" onClick={() => void handleSaveBarcodeChanges()} disabled={isSavingBarcodes} className="rounded-lg bg-amber-700 px-2.5 py-1.5 font-bold text-white transition hover:bg-amber-800 disabled:opacity-60">
                     {isSavingBarcodes ? 'Saving…' : 'Save'}
@@ -726,10 +726,10 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                 </div>
               )}
 
-              <div className="overflow-hidden rounded-2xl border border-stone-200 dark:border-[#2e2326]">
+              <div className="overflow-hidden rounded-2xl border border-[rgba(77,52,38,0.3)]">
                 <div className="max-h-[56vh] overflow-auto">
                   <table className="w-full border-collapse text-left text-xs">
-                    <thead className="sticky top-0 bg-stone-50 text-[10px] uppercase tracking-[0.12em] text-stone-500 dark:bg-[#1f1719] dark:text-stone-400">
+                    <thead className="sticky top-0 bg-[#f6efe7] text-[10px] uppercase tracking-[0.12em] text-[#55443a]">
                       <tr>
                         <th className="px-3 py-2.5 text-center">Print</th>
                         <th className="px-3 py-2.5">Product</th>
@@ -739,44 +739,44 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                         <th className="px-3 py-2.5 text-center">Qty</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100 dark:divide-[#251d20]">
+                    <tbody className="divide-y divide-[rgba(77,52,38,0.14)]">
                       {filteredItems.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-3 py-12 text-center text-stone-400">No products match your current filters.</td>
+                          <td colSpan={6} className="px-3 py-12 text-center text-[#6b584c]">No products match your current filters.</td>
                         </tr>
                       ) : (
                         filteredItems.map(item => (
-                          <tr key={item.id} className={item.selected ? 'bg-amber-50/30 dark:bg-amber-950/10' : 'bg-white dark:bg-[#181314]'}>
+                          <tr key={item.id} className={item.selected ? 'bg-amber-50/30' : 'bg-[#ffffff]'}>
                             <td className="px-3 py-2.5 text-center">
-                              <input type="checkbox" checked={item.selected} onChange={() => handleToggleItem(item.id)} className="h-4 w-4 rounded text-amber-600" />
+                              <input type="checkbox" checked={item.selected} onChange={() => handleToggleItem(item.id)} className="h-4 w-4 rounded accent-[#b45309]" />
                             </td>
                             <td className="px-3 py-2.5">
                               <div className="flex items-center gap-2.5">
                                 {item.image ? (
-                                  <img src={item.image} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-stone-200 dark:ring-stone-700" />
+                                  <img src={item.image} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-[rgba(77,52,38,0.2)]" />
                                 ) : (
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-stone-100 text-xs font-black text-stone-500 dark:bg-stone-800 dark:text-stone-300">{(item.productName || 'P').charAt(0)}</div>
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#efe6dc] text-xs font-black text-[#55443a]">{(item.productName || 'P').charAt(0)}</div>
                                 )}
                                 <div className="min-w-0">
-                                  <p className="truncate font-bold text-stone-900 dark:text-stone-100">{item.productName}</p>
-                                  <p className="truncate text-[11px] text-stone-500 dark:text-stone-400">{item.brand}{item.variantName ? ` · ${item.variantName}` : ''}</p>
+                                  <p className="truncate font-bold text-[#1b120e]">{item.productName}</p>
+                                  <p className="truncate text-[11px] text-[#55443a]">{item.brand}{item.variantName ? ` · ${item.variantName}` : ''}</p>
                                 </div>
                               </div>
                             </td>
                             <td className="px-3 py-2.5">
-                              <input value={item.barcode} onChange={e => handleUpdateBarcodeText(item.id, e.target.value)} className={`w-full rounded-lg border px-2.5 py-1.5 font-mono text-[11px] outline-none ${item.barcode ? 'border-stone-200 bg-stone-50 text-stone-900 dark:border-[#382b2e] dark:bg-[#1a1415] dark:text-stone-100' : 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200'}`} />
+                              <input value={item.barcode} onChange={e => handleUpdateBarcodeText(item.id, e.target.value)} className={`w-full rounded-lg border px-2.5 py-1.5 font-mono text-[11px] outline-none ${item.barcode ? 'border-[rgba(77,52,38,0.3)] bg-[#f6efe7] text-[#1b120e]' : 'border-amber-200 bg-amber-50 text-amber-800'}`} />
                             </td>
-                            <td className="px-3 py-2.5 text-right font-black text-stone-800 dark:text-stone-200">GH₵ {Number(item.price).toFixed(2)}</td>
+                            <td className="px-3 py-2.5 text-right font-black text-[#241811]">GH₵ {Number(item.price).toFixed(2)}</td>
                             <td className="px-3 py-2.5 text-center">
-                              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.stockCount <= 0 ? 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300' : item.stockCount <= 5 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300' : 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300'}`}>
+                              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.stockCount <= 0 ? 'bg-red-50 text-red-700' : item.stockCount <= 5 ? 'bg-amber-50 text-amber-700' : 'bg-[#efe6dc] text-[#2f2119]'}`}>
                                 {item.stockCount}
                               </span>
                             </td>
                             <td className="px-3 py-2.5">
-                              <div className="mx-auto inline-flex items-center overflow-hidden rounded-lg border border-stone-200 bg-white dark:border-[#382b2e] dark:bg-[#201b1a]">
-                                <button type="button" onClick={() => handleUpdateQuantity(item.id, -1)} className="px-2 py-1 text-stone-500 transition hover:bg-stone-100 dark:hover:bg-[#2a2024]">-</button>
-                                <input type="number" min={1} max={999} value={item.quantityToPrint} onChange={e => handleSetExactQuantity(item.id, parseInt(e.target.value, 10))} className="w-10 border-x border-stone-200 bg-transparent px-1 py-1 text-center text-xs font-bold text-stone-900 outline-none dark:border-[#382b2e] dark:text-stone-100" />
-                                <button type="button" onClick={() => handleUpdateQuantity(item.id, 1)} className="px-2 py-1 text-stone-500 transition hover:bg-stone-100 dark:hover:bg-[#2a2024]">+</button>
+                              <div className="mx-auto inline-flex items-center overflow-hidden rounded-lg border border-[rgba(77,52,38,0.3)] bg-[#ffffff]">
+                                <button type="button" onClick={() => handleUpdateQuantity(item.id, -1)} className="px-2 py-1 text-[#55443a] transition hover:bg-[#f3eae1]">-</button>
+                                <input type="number" min={1} max={999} value={item.quantityToPrint} onChange={e => handleSetExactQuantity(item.id, parseInt(e.target.value, 10))} className="w-10 border-x border-[rgba(77,52,38,0.3)] bg-transparent px-1 py-1 text-center text-xs font-bold text-[#1b120e] outline-none" />
+                                <button type="button" onClick={() => handleUpdateQuantity(item.id, 1)} className="px-2 py-1 text-[#55443a] transition hover:bg-[#f3eae1]">+</button>
                               </div>
                             </td>
                           </tr>
@@ -788,65 +788,65 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               </div>
 
               <div className="flex items-center justify-between gap-3 pt-1">
-                <p className="text-xs text-stone-500 dark:text-stone-400">
+                <p className="text-xs text-[#55443a]">
                   {totalLabelsCount} labels • {selectedItems.length} products selected
                 </p>
-                <button type="button" onClick={() => setActiveTab('preview')} className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-700">
+                <button type="button" onClick={() => setActiveTab('preview')} className="inline-flex items-center gap-2 rounded-xl bg-amber-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-800">
                   Layout preview <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
           ) : (
             <div className="space-y-5">
-              <div className="grid gap-4 rounded-2xl border border-stone-200 bg-stone-50 p-4 dark:border-[#2e2326] dark:bg-[#1f1719] md:grid-cols-[1.8fr_1fr]">
+              <div className="grid gap-4 rounded-2xl border border-[rgba(77,52,38,0.3)] bg-[#f6efe7] p-4 md:grid-cols-[1.8fr_1fr]">
                 <div>
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">Format</p>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#55443a]">Format</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {LABEL_TEMPLATES.map(t => (
-                      <button key={t.id} type="button" onClick={() => setSelectedTemplateId(t.id)} className={`rounded-2xl border p-3 text-left transition ${selectedTemplateId === t.id ? 'border-amber-500 bg-amber-50 text-amber-900 ring-1 ring-amber-500 dark:border-amber-400 dark:bg-amber-500/10 dark:text-amber-100' : 'border-stone-200 bg-white text-stone-700 hover:border-stone-300 dark:border-[#382b2e] dark:bg-[#251d20] dark:text-stone-200'}`}>
+                      <button key={t.id} type="button" onClick={() => setSelectedTemplateId(t.id)} className={`rounded-2xl border p-3 text-left transition ${selectedTemplateId === t.id ? 'border-amber-500 bg-amber-50 text-amber-900 ring-1 ring-amber-500' : 'border-[rgba(77,52,38,0.3)] bg-[#ffffff] text-[#2f2119] hover:border-[rgba(77,52,38,0.55)]'}`}>
                         <p className="text-xs font-black">{t.name}</p>
-                        <p className="mt-1 text-[10px] text-stone-500 dark:text-stone-400">{t.description}</p>
+                        <p className="mt-1 text-[10px] text-[#55443a]">{t.description}</p>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">Label elements</p>
-                  <div className="space-y-2 text-xs text-stone-700 dark:text-stone-300">
-                    <label className="flex items-center gap-2"><input type="checkbox" checked={showStoreName} onChange={e => setShowStoreName(e.target.checked)} className="rounded text-amber-600" />Store name</label>
-                    <label className="flex items-center gap-2"><input type="checkbox" checked={showProductName} onChange={e => setShowProductName(e.target.checked)} className="rounded text-amber-600" />Product name</label>
-                    <label className="flex items-center gap-2"><input type="checkbox" checked={showPrice} onChange={e => setShowPrice(e.target.checked)} className="rounded text-amber-600" />Price</label>
-                    <label className="flex items-center gap-2"><input type="checkbox" checked={showBarcodeText} onChange={e => setShowBarcodeText(e.target.checked)} className="rounded text-amber-600" />Barcode text</label>
-                    <label className="flex items-center gap-2"><input type="checkbox" checked={showCutBorders} onChange={e => setShowCutBorders(e.target.checked)} className="rounded text-amber-600" />Cut lines</label>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#55443a]">Label elements</p>
+                  <div className="space-y-2 text-xs text-[#2f2119]">
+                    <label className="flex items-center gap-2"><input type="checkbox" checked={showStoreName} onChange={e => setShowStoreName(e.target.checked)} className="rounded accent-[#b45309]" />Store name</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" checked={showProductName} onChange={e => setShowProductName(e.target.checked)} className="rounded accent-[#b45309]" />Product name</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" checked={showPrice} onChange={e => setShowPrice(e.target.checked)} className="rounded accent-[#b45309]" />Price</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" checked={showBarcodeText} onChange={e => setShowBarcodeText(e.target.checked)} className="rounded accent-[#b45309]" />Barcode text</label>
+                    <label className="flex items-center gap-2"><input type="checkbox" checked={showCutBorders} onChange={e => setShowCutBorders(e.target.checked)} className="rounded accent-[#b45309]" />Cut lines</label>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-stone-200 bg-stone-50 p-3 dark:border-[#2e2326] dark:bg-[#1f1719]">
+              <div className="rounded-2xl border border-[rgba(77,52,38,0.3)] bg-[#f6efe7] p-3">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">Preview</p>
-                  <button type="button" onClick={handlePrint} className="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-white">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#55443a]">Preview</p>
+                  <button type="button" onClick={handlePrint} className="inline-flex items-center gap-2 rounded-lg bg-[#1b120e] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#3a291f]">
                     <Printer className="h-3.5 w-3.5" /> Print now
                   </button>
                 </div>
 
-                <div className="flex justify-center overflow-auto rounded-[24px] bg-stone-200 p-4 dark:bg-[#120d0f]">
-                  <div className="shrink-0 bg-white shadow-xl" style={{ width: `${previewPageWidth}px`, aspectRatio: `${pageWidthMm} / ${pageHeightMm}`, boxSizing: 'border-box', paddingTop: template.category === 'thermal' ? 0 : `${template.pagePaddingTopMm * previewScale}px`, paddingInline: template.category === 'thermal' ? 0 : `${template.pagePaddingSideMm * previewScale}px` }}>
+                <div className="flex justify-center overflow-auto rounded-[24px] bg-[#e2d6ca] p-4">
+                  <div className="shrink-0 bg-[#ffffff] shadow-xl" style={{ width: `${previewPageWidth}px`, aspectRatio: `${pageWidthMm} / ${pageHeightMm}`, boxSizing: 'border-box', paddingTop: template.category === 'thermal' ? 0 : `${template.pagePaddingTopMm * previewScale}px`, paddingInline: template.category === 'thermal' ? 0 : `${template.pagePaddingSideMm * previewScale}px` }}>
                     <div className="grid h-full w-full" style={{ gridTemplateColumns: `repeat(${template.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${template.rows}, minmax(0, 1fr))`, columnGap: `${template.gapXmm * previewScale}px`, rowGap: `${template.gapYmm * previewScale}px` }}>
                       {flatLabels.slice(0, template.labelsPerPage).map((item, index) => (
-                        <div key={`preview-${item.id}-${index}`} className={`flex flex-col justify-between overflow-hidden bg-white px-2 py-1.5 text-black ${showCutBorders ? 'border border-dashed border-stone-400' : ''}`} style={{ aspectRatio: `${template.labelWidthMm} / ${template.labelHeightMm}` }}>
-                          <div className="flex items-center justify-between gap-1 border-b border-stone-200 pb-1">
-                            {showStoreName && <span className="truncate text-[7px] font-black uppercase tracking-wide text-stone-600">{storeSettings.storeName || 'ANDA C SMOKE HUB'}</span>}
+                        <div key={`preview-${item.id}-${index}`} className={`flex flex-col justify-between overflow-hidden bg-[#ffffff] px-2 py-1.5 text-black ${showCutBorders ? 'border border-dashed border-[#9c8b7e]' : ''}`} style={{ aspectRatio: `${template.labelWidthMm} / ${template.labelHeightMm}` }}>
+                          <div className="flex items-center justify-between gap-1 border-b border-[rgba(77,52,38,0.3)] pb-1">
+                            {showStoreName && <span className="truncate text-[7px] font-black uppercase tracking-wide text-[#45342a]">{storeSettings.storeName || 'ANDA C SMOKE HUB'}</span>}
                             {showPrice && <span className="ml-auto whitespace-nowrap text-[10px] font-black">GH₵ {Number(item.price).toFixed(2)}</span>}
                           </div>
 
                           {showProductName && (
                             <div className="min-w-0 py-1">
-                              <p className="truncate text-[6px] font-bold uppercase tracking-wide text-stone-500">{item.brand}</p>
-                              <p className="line-clamp-2 text-[9px] font-black leading-tight text-stone-900">
+                              <p className="truncate text-[6px] font-bold uppercase tracking-wide text-[#55443a]">{item.brand}</p>
+                              <p className="line-clamp-2 text-[9px] font-black leading-tight text-[#1b120e]">
                                 {item.productName}
-                                {showVariantName && item.variantName && <span className="font-medium text-stone-600"> · {item.variantName}</span>}
+                                {showVariantName && item.variantName && <span className="font-medium text-[#45342a]"> · {item.variantName}</span>}
                               </p>
                             </div>
                           )}
@@ -868,13 +868,13 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-stone-200 bg-stone-50 px-5 py-4 dark:border-[#2e2326] dark:bg-[#1f1719]">
-          <p className="text-xs text-stone-500 dark:text-stone-400">{flatLabels.length} labels • {template.name}</p>
+        <div className="flex items-center justify-between gap-4 border-t border-[rgba(77,52,38,0.3)] bg-[#f6efe7] px-5 py-4">
+          <p className="text-xs text-[#55443a]">{flatLabels.length} labels • {template.name}</p>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={onClose} className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-xs font-bold text-stone-700 transition hover:bg-stone-100 dark:border-[#382b2e] dark:bg-[#251d20] dark:text-stone-200">
+            <button type="button" onClick={onClose} className="rounded-xl border border-[rgba(77,52,38,0.3)] bg-[#ffffff] px-4 py-2 text-xs font-bold text-[#2f2119] transition hover:bg-[#f3eae1]">
               Close
             </button>
-            <button type="button" onClick={handlePrint} disabled={flatLabels.length === 0} className="rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-700 disabled:opacity-50">
+            <button type="button" onClick={handlePrint} disabled={flatLabels.length === 0} className="rounded-xl bg-amber-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-800 disabled:opacity-60">
               Print now
             </button>
           </div>
