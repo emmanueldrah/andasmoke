@@ -754,6 +754,10 @@ test('a cashier cannot apply a promo or discount, and refunds need a reason', as
   assert.equal(ownerPromo.status, 201, `a manager should be able to apply a promo: ${JSON.stringify(ownerPromo.body)}`);
   assert.equal(Number(ownerPromo.body.discount), 4.5);
 
+  const cashierOrders = await callApi(api.orders, { token: cashierToken, query: {} });
+  assert.ok(cashierOrders.body.orders.some(order => order.id === plain.body.id), 'a cashier should see their own sale');
+  assert.ok(!cashierOrders.body.orders.some(order => order.id === ownerPromo.body.id), 'a cashier must not see another staff member\'s sale');
+
   // ── Refund without a reason is refused ───────────────────────────────────
   const target = ownerPromo.body;
   const noReason = await callApi(api.orders, {

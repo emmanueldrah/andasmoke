@@ -1,6 +1,6 @@
 import type { ApiRequest, ApiResponse } from './_http.js';
 import { randomBytes } from 'crypto';
-import { asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../src/db/index.js';
 import { auditLogs, inventoryMovements, orders, posPayments, products, promoCodes } from '../src/db/schema.js';
@@ -80,8 +80,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       if (!auth) return;
       const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
       const offset = Math.max(Number(req.query.offset) || 0, 0);
+      const where = auth.adminRole === 'Cashier'
+        ? and(eq(orders.orderSource, 'pos'), eq(orders.cashierName, auth.adminName || auth.email))
+        : eq(orders.orderSource, 'pos');
       const results = await db.select().from(orders)
-        .where(eq(orders.orderSource, 'pos'))
+        .where(where)
         .orderBy(desc(orders.createdAt)).limit(limit).offset(offset);
       return res.status(200).json({ orders: results, pagination: { limit, offset } });
     }

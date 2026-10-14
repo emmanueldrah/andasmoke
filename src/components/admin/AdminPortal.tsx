@@ -27,7 +27,6 @@ import { AdminProductsScreen } from './screens/AdminProductsScreen';
 import { AdminAccountsManagementScreen } from './screens/AdminAccountsManagementScreen';
 import { POSProductModal } from './POSProductModal';
 import { AdminMyProfilePanel } from './components/AdminMyProfilePanel';
-import { BarcodeLabelsModal } from './components/BarcodeLabelsModal';
 import {
   AdminInventoryScreen,
   AdminPromotionsScreen,
@@ -152,6 +151,7 @@ export const AdminPortal: React.FC = () => {
   const { isDarkMode, toggleTheme } = useTheme();
 
   const requestedTab = new URLSearchParams(location.search).get('tab');
+  const isCashier = store.adminSession.adminRole === 'Cashier';
   const accessibleTabs = roleAccess[store.adminSession.adminRole] || roleAccess['Cashier'];
   const defaultTab: AdminTab = accessibleTabs.includes('pos') ? 'pos' : accessibleTabs[0] || 'inventory';
   const currentTab: AdminTab = accessibleTabs.includes(requestedTab as AdminTab) ? requestedTab as AdminTab : defaultTab;
@@ -159,7 +159,6 @@ export const AdminPortal: React.FC = () => {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
-  const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [profilePanelOpen, setProfilePanelOpen] = useState(false);
@@ -377,7 +376,7 @@ export const AdminPortal: React.FC = () => {
       <div className="flex min-h-screen items-center justify-center bg-[var(--bg-main)] text-[var(--text-muted)]">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--border-color)] border-t-[var(--accent)]" />
-          <p className="mt-3 text-sm font-semibold">Opening admin portal...</p>
+          <p className="mt-3 text-sm font-semibold">Opening {isCashier ? 'cashier' : 'admin'} portal...</p>
         </div>
       </div>
     );
@@ -441,9 +440,9 @@ export const AdminPortal: React.FC = () => {
               </button>
 
               <div className="min-w-0 flex-1">
-                <p className="eyebrow">{tabEyebrows[currentTab]}</p>
+                <p className="eyebrow">{isCashier ? 'Cashier portal' : tabEyebrows[currentTab]}</p>
                 <h1 className="brand-display -mt-0.5 truncate text-xl font-semibold leading-tight text-[var(--text-primary)]">
-                  {tabLabels[currentTab]}
+                  {isCashier ? 'Register' : tabLabels[currentTab]}
                 </h1>
               </div>
 
@@ -461,16 +460,6 @@ export const AdminPortal: React.FC = () => {
                     Add product
                   </button>
                 )}
-
-                <button
-                  type="button"
-                  onClick={() => setBarcodeModalOpen(true)}
-                  className="lux-btn lux-btn--outline lux-btn--sm"
-                  title="Print barcode labels"
-                >
-                  <Tag className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">Barcodes</span>
-                </button>
 
                 <button
                   onClick={() => void refreshAdminData()}
@@ -509,15 +498,13 @@ export const AdminPortal: React.FC = () => {
         </div>
       </div>
 
-      <POSProductModal
-        isOpen={productModalOpen}
-        onClose={() => setProductModalOpen(false)}
-        productToEdit={productToEdit}
-      />
-      <BarcodeLabelsModal
-        isOpen={barcodeModalOpen}
-        onClose={() => setBarcodeModalOpen(false)}
-      />
+      {!isCashier && (
+        <POSProductModal
+          isOpen={productModalOpen}
+          onClose={() => setProductModalOpen(false)}
+          productToEdit={productToEdit}
+        />
+      )}
       <AdminMyProfilePanel
         isOpen={profilePanelOpen}
         onClose={() => setProfilePanelOpen(false)}

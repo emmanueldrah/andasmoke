@@ -494,9 +494,15 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
     const limit = Math.min(Math.max(Number(getQuery(req.query, 'limit')) || 50, 1), 100);
     const id = getQuery(req.query, 'id');
     const values: unknown[] = [];
-    let where = '';
-    if (id) { values.push(id); where = `WHERE id = $${values.length}`; }
-    const { rows } = await pool.query(`SELECT * FROM orders ${where} ORDER BY created_at DESC LIMIT $${id ? 1 : 2}`, id ? values : [limit]);
+    const conditions: string[] = [];
+    if (id) { values.push(id); conditions.push(`id = $${values.length}`); }
+    if (auth.adminRole === 'Cashier') {
+      values.push(auth.adminName || auth.email);
+      conditions.push(`order_source = 'pos' AND cashier_name = $${values.length}`);
+    }
+    values.push(limit);
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const { rows } = await pool.query(`SELECT * FROM orders ${where} ORDER BY created_at DESC LIMIT $${values.length}`, values);
     return res.status(200).json(id ? (rows[0] ? fromDbRow(rows[0]) : { error: 'Order not found' }) : { orders: rows.map(fromDbRow) });
   }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });

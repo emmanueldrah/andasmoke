@@ -196,6 +196,7 @@ export function AdminPOSWorkspace() {
 
   /* Sales are attributed to whoever is signed in at this terminal. */
   const serverName = (adminSession.adminName || adminSession.email || 'Staff').trim();
+  const isCashier = adminSession.adminRole === 'Cashier';
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 30_000);
@@ -1103,23 +1104,25 @@ return (
             </div>
 
             <div className="mt-3 flex items-center justify-between gap-3 px-0.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setStockInTarget(null);
-                  setStockInMode(true);
-                  setStockInQuantity('1');
-                  setScannerValue('');
-                  setSearch('');
-                  showAlert('Scan a product to receive stock.', 'info');
-                  scannerRef.current?.focus();
-                }}
-                title="Receive stock by scanning a product"
-                className="lux-btn lux-btn--outline lux-btn--sm shrink-0"
-              >
-                <PackageOpen className="h-4 w-4" />
-                Stock in
-              </button>
+              {!isCashier && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStockInTarget(null);
+                    setStockInMode(true);
+                    setStockInQuantity('1');
+                    setScannerValue('');
+                    setSearch('');
+                    showAlert('Scan a product to receive stock.', 'info');
+                    scannerRef.current?.focus();
+                  }}
+                  title="Receive stock by scanning a product"
+                  className="lux-btn lux-btn--outline lux-btn--sm shrink-0"
+                >
+                  <PackageOpen className="h-4 w-4" />
+                  Stock in
+                </button>
+              )}
 
               <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
                 <p className="truncate text-[11px] text-[var(--text-muted)]">
@@ -1317,25 +1320,27 @@ return (
 
               {/* Discounts are the exception, not the rule, at a counter. Kept
                   one tap away but out of the way until it is actually wanted. */}
-              {discountOpen || discountAmount > 0 ? (
-                <div>
-                  <div className="flex gap-2">
-                    <label className="sr-only" htmlFor="pos-promo-code">Promotion code</label>
-                    <input id="pos-promo-code" value={promoCode} onChange={event => { setPromoCode(event.target.value); setDiscountMessage(''); }} placeholder="Discount code" className="lux-input min-w-0 flex-1" />
-                    <button type="button" onClick={() => void applyDiscount()} disabled={!promoCode.trim() || !cart.length} className="lux-btn lux-btn--outline lux-btn--sm shrink-0">Apply</button>
+              {!isCashier && (
+                discountOpen || discountAmount > 0 ? (
+                  <div>
+                    <div className="flex gap-2">
+                      <label className="sr-only" htmlFor="pos-promo-code">Promotion code</label>
+                      <input id="pos-promo-code" value={promoCode} onChange={event => { setPromoCode(event.target.value); setDiscountMessage(''); }} placeholder="Discount code" className="lux-input min-w-0 flex-1" />
+                      <button type="button" onClick={() => void applyDiscount()} disabled={!promoCode.trim() || !cart.length} className="lux-btn lux-btn--outline lux-btn--sm shrink-0">Apply</button>
+                    </div>
+                    {discountMessage && <p className={`mt-1 text-[11px] font-bold ${discountAmount > 0 ? 'text-[var(--jade)]' : 'text-[var(--highlight)]'}`}>{discountMessage}</p>}
                   </div>
-                  {discountMessage && <p className={`mt-1 text-[11px] font-bold ${discountAmount > 0 ? 'text-[var(--jade)]' : 'text-[var(--highlight)]'}`}>{discountMessage}</p>}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setDiscountOpen(true)}
-                  disabled={!cart.length}
-                  className="flex w-full items-center gap-1.5 rounded-lg px-1 py-0.5 text-[11px] font-bold text-[var(--text-subtle)] transition hover:text-[var(--accent)] disabled:opacity-40"
-                >
-                  <Plus className="h-3 w-3" />
-                  Add discount code
-                </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setDiscountOpen(true)}
+                    disabled={!cart.length}
+                    className="flex w-full items-center gap-1.5 rounded-lg px-1 py-0.5 text-[11px] font-bold text-[var(--text-subtle)] transition hover:text-[var(--accent)] disabled:opacity-40"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Add discount code
+                  </button>
+                )
               )}
 
               {/* ── Payment ──────────────────────────────────────────────────
@@ -1570,13 +1575,15 @@ return (
                     Create it as a new product, or add stock if it is already listed under a different code.
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openNewProductFor(unknownCode)}
-                      className="lux-btn lux-btn--primary lux-btn--sm"
-                    >
-                      Add as new product
-                    </button>
+                    {!isCashier && (
+                      <button
+                        type="button"
+                        onClick={() => openNewProductFor(unknownCode)}
+                        className="lux-btn lux-btn--primary lux-btn--sm"
+                      >
+                        Add as new product
+                      </button>
+                    )}
                     <button type="button" onClick={() => setUnknownCode(null)} className="lux-btn lux-btn--outline lux-btn--sm">
                       Dismiss
                     </button>
