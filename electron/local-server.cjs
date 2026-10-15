@@ -136,55 +136,62 @@ async function startLocalServer({ distDir, handlers, cloudApiOrigin, host = '127
     try {
       const requestUrl = new URL(req.url || '/', `http://${host}`);
 
-      if (cloudApiOrigin && requestUrl.pathname.startsWith('/api/')) {
-        return await proxyCloudApi(req, res, cloudApiOrigin);
-      }
-
       // ── Health ──────────────────────────────────────────────────────────
-      // Answered here, before any handler: it must not depend on the database,
-      // because "can the till take a sale" has to be answerable when the
-      // database is the thing that is broken.
-      if (requestUrl.pathname === '/api/health') {
+      // Answered here, before the cloud proxy: it must not depend on the
+      // database or the network, because "can the till take a sale" has to
+      // be answerable when either one is the thing that is broken.
+      if (requestUrl.pathname === '/api/health' || requestUrl.pathname === '/api/health/') {
         return res.status(200).json({
           ok: true,
           service: 'anda-smoke-hub-pos',
-          // The version of the running app, so a stale build can be spotted.
           startedAt: startedAt,
           uptimeSeconds: Math.round(process.uptime()),
         });
       }
 
+      // ── Local API handlers (when bundled handlers are provided) ──────────
+      // If handlers are present and the route is recognised, serve it locally
+      // so the till can work without an internet connection.
       const route = parseRoute(requestUrl.pathname);
-
-      if (route) {
+      if (handlers && route) {
         const handler = handlers[route.resource];
-        if (!handler) return res.status(404).json({ error: 'API route not found' });
+        if (handler) {
+          const rawBody = req.method === 'GET' || req.method === 'HEAD'
+            ? ''
+            : await readBody(req);
 
-        const rawBody = req.method === 'GET' || req.method === 'HEAD'
-          ? ''
-          : await readBody(req);
-
-        // Mirror the shape the handlers expect from the old serverless platform.
-        const query = {};
-        for (const [key, value] of requestUrl.searchParams.entries()) {
-          if (key === 'route') continue;
-          query[key] = value;
-        }
-        // `/api/products/<id>` and `/api/orders/<id>` are routed by path segment.
-        if (route.id) query.id = route.id;
-
-        let body = {};
-        if (rawBody) {
-          try {
-            body = JSON.parse(rawBody);
-          } catch {
-            return res.status(400).json({ error: 'Request body must be valid JSON' });
+          // Mirror the shape the handlers expect from the old serverless platform.
+          const query = {};
+          for (const [key, value] of requestUrl.searchParams.entries()) {
+            if (key === 'route') continue;
+            query[key] = value;
           }
-        }
+          // `/api/products/<id>` and `/api/orders/<id>` are routed by path segment.
+          if (route.id) query.id = route.id;
 
-        req.query = query;
-        req.body = body;
-        return await handler(req, res);
+          let body = {};
+          if (rawBody) {
+            try {
+              body = JSON.parse(rawBody);
+            } catch {
+              return res.status(400).json({ error: 'Request body must be valid JSON' });
+            }
+          }
+
+          req.query = query;
+          req.body = body;
+          return await handler(req, res);
+        }
+      }
+
+      // ── Cloud proxy ──────────────────────────────────────────────────────
+      // All other /api/ calls are forwarded to the hosted service.
+      if (cloudApiOrigin && requestUrl.pathname.startsWith('/api/')) {
+        return await proxyCloudApi(req, res, cloudApiOrigin);
+      }
+
+      if (requestUrl.pathname.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API route not found' });
       }
 
       // ── Product media stored on this machine ──

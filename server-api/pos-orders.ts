@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto';
 import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../src/db/index.js';
-import { auditLogs, inventoryMovements, orders, posPayments, products, promoCodes } from '../src/db/schema.js';
+import { auditLogs, inventoryMovements, orders, posPayments, posSyncQueue, products, promoCodes } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 import {
   applyPercentageMinor,
@@ -408,6 +408,12 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         }
         const linesVoided = verifiedItems.map(item => `${item.product.name} x${item.quantity}`);
         tx.insert(auditLogs).values({ action: 'POS_SALE_COMPLETED', entityType: 'order', entityId: order.id, actorName: auth.adminName, metadata: { orderNumber, total, wholesaleQuantity: verifiedItems.filter(item => item.priceType === 'wholesale').reduce((sum, item) => sum + item.quantity, 0), idempotencyKey: sale.idempotencyKey, deviceId: sale.deviceId || null, adminId: auth.sub, paymentMethod: sale.paymentMethod, voidedLines: linesVoided } }).run();
+        tx.insert(posSyncQueue).values({
+          action: 'POS_ORDER',
+          payload: sale as Record<string, unknown>,
+          idempotencyKey: sale.idempotencyKey,
+          status: 'PENDING',
+        }).run();
         return order;
       });
       return res.status(201).json(created);

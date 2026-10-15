@@ -6,12 +6,14 @@ process.env.ANDA_DATA_DIR = process.env.ANDA_DATA_DIR || app.getPath('userData')
 const CLOUD_API_ORIGIN = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
 
 const { startLocalServer } = require('./local-server.cjs');
+const { handlers } = require('./api-routes.cjs');
 
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 
 async function boot() {
   const { origin } = await startLocalServer({
     distDir: DIST_DIR,
+    handlers,
     cloudApiOrigin: CLOUD_API_ORIGIN,
     host: '127.0.0.1',
     port: 0,

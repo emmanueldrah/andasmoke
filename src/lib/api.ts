@@ -49,14 +49,14 @@ async function request<T>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    if ((response.status === 401 || response.status === 403) && typeof window !== 'undefined') {
-      const adminToken = localStorage.getItem('anda_auth_token');
-      const isAdminToken = Boolean(token && adminToken === token);
-      if (response.status === 401 || isAdminToken) {
-        localStorage.removeItem('anda_auth_token');
-        localStorage.removeItem('anda_admin_session');
-        window.dispatchEvent(new CustomEvent('anda-auth-expired', { detail: { tokenKey: 'anda_auth_token' } }));
-      }
+    // Only clear the session on 401 (invalid or expired token).
+    // A 403 means the session is valid but the role lacks permission — signing
+    // the user out on a permission error would log a cashier out any time they
+    // accidentally navigate to a manager-only screen.
+    if (response.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('anda_auth_token');
+      localStorage.removeItem('anda_admin_session');
+      window.dispatchEvent(new CustomEvent('anda-auth-expired', { detail: { tokenKey: 'anda_auth_token' } }));
     }
     throw new ApiError(response.status, data.error || 'Request failed', data);
   }

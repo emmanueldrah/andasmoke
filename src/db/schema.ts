@@ -589,6 +589,26 @@ export const wishlists = sqliteTable(
   }),
 );
 
+export const posSyncQueue = sqliteTable(
+  'pos_sync_queue',
+  {
+    id: text('id').primaryKey().$defaultFn(uuid),
+    action: text('action').notNull().default('POS_ORDER'),
+    payload: text('payload', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    idempotencyKey: text('idempotency_key').notNull().unique(),
+    status: text('status').notNull().default('PENDING'),
+    retryCount: integer('retry_count').notNull().default(0),
+    errorMessage: text('error_message'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(now),
+    syncedAt: integer('synced_at', { mode: 'timestamp' }),
+  },
+  (table) => ({
+    statusIdx: index('pos_sync_queue_status_idx').on(table.status),
+    createdAtIdx: index('pos_sync_queue_created_at_idx').on(table.createdAt),
+  }),
+);
+
+
 export const productsRelations = relations(products, ({ many }) => ({
   reviews: many(reviews),
   wishlists: many(wishlists),

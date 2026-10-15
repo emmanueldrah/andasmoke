@@ -121,41 +121,69 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
     });
   }
 
-  // Always run a comparison so a wrong email and a wrong PIN take the same time.
-  const validPin = admin ? await bcrypt.compare(parsed.data.pin, admin.pinHash) : false;
-  if (!admin || !admin.isActive || !validPin) {
-    // A locked-out account that was tried with the right PIN should still count
-    // as a failure if the account is inactive, so only advance the counter for a
-    // real account.
-    const attempts = (admin?.failedPinAttempts || 0) + (admin ? 1 : 0);
+  let currentAdmin = admin;
+  let validPin = currentAdmin ? await bcrypt.compare(parsed.data.pin, currentAdmin.pinHash) : false;
+
+  // If staff member does not exist in local SQLite, try cloud verification
+  // and cache their credentials locally so they can log in offline afterwards.
+  if (!currentAdmin && process.env.NODE_ENV !== 'test') {
+    const cloudOrigin = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
+    try {
+      const cloudRes = await fetch(`${cloudOrigin}/api/auth?action=admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, pin: parsed.data.pin }),
+        signal: AbortSignal.timeout(4000),
+      });
+      if (cloudRes.ok) {
+        const cloudData = (await cloudRes.json()) as any;
+        if (cloudData?.admin) {
+          const pinHash = await bcrypt.hash(parsed.data.pin, 12);
+          const [saved] = await db.insert(adminSessions).values({
+            adminName: cloudData.admin.adminName || email,
+            adminRole: cloudData.admin.adminRole || 'Cashier',
+            email: email,
+            phone: cloudData.admin.phone || '',
+            pinHash,
+            isActive: true,
+            lastLoginAt: now,
+          }).returning();
+          currentAdmin = saved;
+          validPin = true;
+        }
+      }
+    } catch {
+      // Offline, proceed with local check failure
+    }
+  }
+
+  if (!currentAdmin || !currentAdmin.isActive || !validPin) {
+    const attempts = (currentAdmin?.failedPinAttempts || 0) + (currentAdmin ? 1 : 0);
     const locked = attempts >= MAX_PIN_ATTEMPTS;
     const lockedUntil = locked
       ? new Date(now.getTime() + PIN_LOCKOUT_MS)
       : null;
 
-    if (admin) {
+    if (currentAdmin) {
       await db.update(adminSessions)
         .set({ failedPinAttempts: locked ? 0 : attempts, lockedUntil })
-        .where(eq(adminSessions.id, admin.id));
+        .where(eq(adminSessions.id, currentAdmin.id));
     }
 
-    // Recorded so repeated attempts on one account are visible in the log. The
-    // PIN and its hash are never stored, and neither is anything derived from
-    // what was typed — only the email, the count and the outcome.
     await db.insert(auditLogs).values({
       action: AUDIT_ACTIONS.LOGIN_FAILED,
       entityType: 'admin_session',
       entityId: email,
       actorName: email,
       metadata: {
-        adminId: admin?.id ?? null,
-        attempts: admin ? attempts : null,
-        locked: locked && Boolean(admin),
-        attemptsRemaining: admin && !locked ? MAX_PIN_ATTEMPTS - attempts : null,
+        adminId: currentAdmin?.id ?? null,
+        attempts: currentAdmin ? attempts : null,
+        locked: locked && Boolean(currentAdmin),
+        attemptsRemaining: currentAdmin && !locked ? MAX_PIN_ATTEMPTS - attempts : null,
       },
     });
 
-    if (locked && admin) {
+    if (locked && currentAdmin) {
       return res.status(429).json({
         error: `Too many wrong PINs. This account is locked for ${PIN_LOCKOUT_MINUTES} minutes.`,
         lockedUntil: lockedUntil!.toISOString(),
@@ -168,35 +196,33 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
   // A correct PIN clears the failure count and any expired lock.
   await db.update(adminSessions)
     .set({ lastLoginAt: now, failedPinAttempts: 0, lockedUntil: null })
-    .where(eq(adminSessions.id, admin.id));
+    .where(eq(adminSessions.id, currentAdmin.id));
 
-  // The session expires after the till's idle window rather than a fixed week,
-  // so an unattended till does not stay signed in.
   const idleTimeoutMs = getIdleTimeoutMs();
   const token = signStaffSession({
-    sub: admin.id,
-    email: admin.email,
+    sub: currentAdmin.id,
+    email: currentAdmin.email,
     role: 'admin',
-    adminRole: admin.adminRole,
-    adminName: admin.adminName,
+    adminRole: currentAdmin.adminRole,
+    adminName: currentAdmin.adminName,
   }, idleTimeoutMs);
 
   await db.insert(auditLogs).values({
     action: AUDIT_ACTIONS.LOGIN,
     entityType: 'admin_session',
-    entityId: admin.id,
-    actorName: admin.adminName,
-    metadata: { adminId: admin.id, adminRole: admin.adminRole, email: admin.email },
+    entityId: currentAdmin.id,
+    actorName: currentAdmin.adminName,
+    metadata: { adminId: currentAdmin.id, adminRole: currentAdmin.adminRole, email: currentAdmin.email },
   });
 
   return res.status(200).json({
     token,
     idleTimeoutMs,
     admin: {
-      id: admin.id,
-      adminName: admin.adminName,
-      adminRole: admin.adminRole,
-      email: admin.email,
+      id: currentAdmin.id,
+      adminName: currentAdmin.adminName,
+      adminRole: currentAdmin.adminRole,
+      email: currentAdmin.email,
     },
   });
 }

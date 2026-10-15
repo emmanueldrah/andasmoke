@@ -21,6 +21,7 @@ const {
   reports,
   settings,
   stockIn,
+  posSync,
 } = require('./api-bundle.cjs');
 
 const handlers = {
@@ -37,6 +38,7 @@ const handlers = {
   reports,
   settings,
   'stock-in': stockIn,
+  'pos-sync': posSync,
 };
 
 module.exports = { handlers };

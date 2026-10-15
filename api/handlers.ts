@@ -130,3 +130,4 @@ export { default as posShifts } from '../server-api/pos-shifts.js';
 export { default as products } from '../server-api/products.js';
 export { default as promoCodes } from '../server-api/promo-codes.js';
 export { default as settings } from '../server-api/pos-settings.js';
+export { default as posSync } from '../server-api/pos-sync.js';

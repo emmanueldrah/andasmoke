@@ -56,7 +56,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     }
 
     // Lets the restore screen show whether a file is usable before committing.
-    // Lets the restore screen show whether a file is usable before committing.
     if (req.method === 'POST' && action === 'verify') {
       const source = typeof req.body?.path === 'string' ? req.body.path.trim() : '';
       if (!source) return res.status(400).json({ error: 'Choose a backup file to check.' });

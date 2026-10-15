@@ -222,6 +222,20 @@ function createTables(sqlite: Database.Database): void {
     CREATE INDEX IF NOT EXISTS wishlists_session_id_idx ON wishlists (session_id);
     CREATE UNIQUE INDEX IF NOT EXISTS wishlists_unique_user_product ON wishlists (user_id, product_id);
     CREATE UNIQUE INDEX IF NOT EXISTS wishlists_unique_session_product ON wishlists (session_id, product_id);
+
+    CREATE TABLE IF NOT EXISTS pos_sync_queue (
+      id TEXT PRIMARY KEY,
+      action TEXT NOT NULL DEFAULT 'POS_ORDER',
+      payload TEXT NOT NULL,
+      idempotency_key TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      retry_count INTEGER NOT NULL DEFAULT 0,
+      error_message TEXT,
+      created_at INTEGER NOT NULL,
+      synced_at INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS pos_sync_queue_status_idx ON pos_sync_queue (status);
+    CREATE INDEX IF NOT EXISTS pos_sync_queue_created_at_idx ON pos_sync_queue (created_at);
   `);
 
   addMissingColumns(sqlite);
@@ -348,7 +362,8 @@ export function backfillPesewas(sqlite: Database.Database): void {
   };
 
   copy('products', 'price', 'price_pesewas');
-  copy('products', 'wholesale_price', 'cost_price_pesewas');
+  // NOTE: cost_price_pesewas has no legacy REAL column equivalent.
+  // wholesale_price is NOT the cost price, so we intentionally do not backfill it here.
   copy('orders', 'subtotal', 'subtotal_pesewas');
   copy('orders', 'discount', 'discount_pesewas');
   copy('orders', 'total', 'total_pesewas');

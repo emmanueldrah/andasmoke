@@ -131,7 +131,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error: any) {
-    if (error?.code === '23505') return res.status(409).json({ error: 'An admin account with this email already exists' });
+    if (error?.code === 'SQLITE_CONSTRAINT_UNIQUE' || /UNIQUE constraint failed/i.test(error?.message || ''))
+      return res.status(409).json({ error: 'An admin account with this email already exists' });
     console.error('Admin accounts API error:', error);
     return res.status(500).json({ error: 'Admin account operation failed' });
   }

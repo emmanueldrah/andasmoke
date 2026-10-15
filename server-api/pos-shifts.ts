@@ -199,15 +199,17 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       const history = await db.select().from(posShifts)
         .where(eq(posShifts.deviceId, deviceId))
         .orderBy(desc(posShifts.openedAt))
-        .limit(20) ?? [];
+        .limit(20);
 
       return res.status(200).json({
         shift: open ? await serializeShift(open, { withSummary: true }) : null,
-        history: history
-          .filter(row => isManager || row.cashierName === (auth.adminName || auth.email))
-          // A cashier's history is filtered before serialising, so an unauthorised row is
-  // never summarised.
-        .map(row => serializeShift(row)),
+        history: await Promise.all(
+          history
+            .filter(row => isManager || row.cashierName === (auth.adminName || auth.email))
+            // A cashier's history is filtered before serialising, so an unauthorised row is
+            // never summarised.
+            .map(row => serializeShift(row)),
+        ),
       });
     }
 

@@ -35,6 +35,7 @@ import { AdminPOSCatalogScreen } from './screens/AdminPOSCatalogScreen';
 import { AdminPOSWorkspace } from './screens/AdminPOSWorkspace';
 import { BrandMark } from '../common/BrandMark';
 import { checkLocalServer } from '../../lib/health';
+import { api } from '../../lib/api';
 import { AdminSession, Product } from '../../types';
 
 type AdminTab =
@@ -167,6 +168,42 @@ export const AdminPortal: React.FC = () => {
     try { return localStorage.getItem(RAIL_KEY) === '1'; } catch { return false; }
   });
   const [online, setOnline] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<{ pendingCount: number; syncedCount: number } | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const flushSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const res = await api.post<{ flushed: number; pending: number }>('/pos-sync?action=flush');
+      setSyncStatus(prev => prev ? { ...prev, pendingCount: res.pending } : { pendingCount: res.pending, syncedCount: 0 });
+      if (res.flushed > 0) {
+        showAlert(`Synced ${res.flushed} sale${res.flushed === 1 ? '' : 's'} to cloud`, 'success');
+      }
+    } catch {
+      // Offline / server unreachable
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    const fetchSync = () => {
+      void api.get<{ pendingCount: number; syncedCount: number }>('/pos-sync?action=status')
+        .then(res => {
+          if (!active) return;
+          setSyncStatus(res);
+          if (res.pendingCount > 0 && navigator.onLine) {
+            void flushSync();
+          }
+        })
+        .catch(() => {});
+    };
+    fetchSync();
+    const syncTimer = window.setInterval(fetchSync, 12_000);
+    return () => { active = false; window.clearInterval(syncTimer); };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -447,10 +484,24 @@ export const AdminPortal: React.FC = () => {
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
-                {!online && (
-                  <span className="hidden items-center gap-1.5 rounded-full bg-[var(--danger-soft)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[var(--danger)] sm:inline-flex">
-                    <WifiOff className="h-3 w-3" />
-                    Queuing sales
+                {syncStatus && syncStatus.pendingCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => void flushSync()}
+                    disabled={isSyncing}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/25 transition cursor-pointer"
+                    title="Click to sync pending sales to the cloud"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                    <span>{syncStatus.pendingCount} pending sync</span>
+                  </button>
+                ) : (
+                  <span
+                    className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                    title="All offline sales are backed up and synced to the cloud"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Cloud Synced</span>
                   </span>
                 )}
 

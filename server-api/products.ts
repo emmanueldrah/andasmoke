@@ -1,7 +1,7 @@
 import type { ApiRequest, ApiResponse } from './_http.js';
 import { db, getBarcodeSequence, setBarcodeSequence } from '../src/db/index.js';
 import { products } from '../src/db/schema.js';
-import { eq, and, or, ilike, desc, asc, sql, inArray, SQL } from 'drizzle-orm';
+import { eq, and, or, like, desc, asc, sql, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAdmin } from './_auth.js';
 import { AUDIT_ACTIONS, recordAudit } from './_audit.js';
@@ -222,8 +222,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       }
       if (search) {
         conditions.push(or(
-          ilike(products.name, `%${search}%`),
-          ilike(products.brand, `%${search}%`)
+          like(products.name, `%${search}%`),
+          like(products.brand, `%${search}%`)
         ) as SQL<unknown>);
       }
       // A scanner lookup is exact: the product's own barcode or serial, and the

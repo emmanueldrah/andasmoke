@@ -1,5 +1,5 @@
 import type { ApiRequest, ApiResponse } from './_http.js';
-import { asc, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../src/db/index.js';
 import { inventoryMovements, products } from '../src/db/schema.js';
@@ -134,7 +134,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (req.method === 'GET') {
       const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
       const rows = await db.select().from(inventoryMovements)
-        .orderBy(asc(inventoryMovements.createdAt))
+        .orderBy(desc(inventoryMovements.createdAt))
         .limit(limit);
       return res.status(200).json({ movements: rows });
     }
