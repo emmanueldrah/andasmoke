@@ -44,8 +44,8 @@
     --clay-cast: 0 10px 20px -10px color-mix(in srgb, var(--text-primary) 28%, transparent);
     /* The lounge mark, sitting behind every pane. Cut out to a transparent
        PNG so its white plate no longer washes out the background. */
-    --mark-opacity: 0.022;
-    --mark-blur: 4px;
+    --mark-opacity: 0.06;
+    --mark-blur: 2px;
     --mark-filter: none;
   }
 
@@ -93,7 +93,7 @@
     --clay-cast: 0 12px 26px -12px rgba(0, 0, 0, 0.66);
     /* The emblem is almost entirely black, so on a near-black page it would
        vanish. Inverting turns it into a light watermark. */
-    --mark-opacity: 0.03;
+    --mark-opacity: 0.08;
     --mark-filter: invert(1) saturate(0.9);
   }
 

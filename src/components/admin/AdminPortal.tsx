@@ -385,7 +385,7 @@ export const AdminPortal: React.FC = () => {
   const railWidth = railCollapsed ? 'lg:pl-[84px]' : 'lg:pl-[264px]';
 
   return (
-    <div className="admin-shell min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)]">
+    <div className="admin-shell min-h-screen text-[var(--text-primary)]">
       <div className="admin-shell__frame">
         {/* Desktop sidebar */}
         <aside
