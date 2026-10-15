@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -14,16 +14,14 @@ import {
   ShieldCheck,
   UserPlus,
   Store,
-  Delete,
-  RotateCcw,
-  Wifi,
-  WifiOff,
   Clock,
   Sparkles,
   KeyRound,
   CheckCircle2,
-  ChevronRight,
   User,
+  ChevronRight,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { BrandMark } from '../common/BrandMark';
 
@@ -50,457 +48,311 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
   const [setup, setSetup] = useState<SetupState>('checking');
   const [name, setName] = useState('');
   const [email, setEmail] = useState(() => {
-    try {
-      return localStorage.getItem('anda_last_login_email') || '';
-    } catch {
-      return '';
-    }
+    try { return localStorage.getItem('anda_last_login_email') || ''; } catch { return ''; }
   });
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+  const [showConfirmPin, setShowConfirmPin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState(false);
-  const [activeNumpadKey, setActiveNumpadKey] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const [cachedTeam, setCachedTeam] = useState<CachedTeamMember[]>([]);
-  const [selectedMemberEmail, setSelectedMemberEmail] = useState<string | null>(null);
+  const [selectedMember, setSelectedMember] = useState<CachedTeamMember | null>(null);
   const [manualEmailMode, setManualEmailMode] = useState(false);
 
-  const pinContainerRef = useRef<HTMLDivElement>(null);
+  const pinInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
-  // Live Accra digital clock
+  // Live Accra clock
   useEffect(() => {
-    const updateTime = () => {
+    const update = () => {
       const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString('en-GB', {
-          timeZone: 'Africa/Accra',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true,
-        })
-      );
-      setCurrentDate(
-        now.toLocaleDateString('en-GB', {
-          timeZone: 'Africa/Accra',
-          weekday: 'short',
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-        })
-      );
+      setCurrentTime(now.toLocaleTimeString('en-GB', { timeZone: 'Africa/Accra', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
+      setCurrentDate(now.toLocaleDateString('en-GB', { timeZone: 'Africa/Accra', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }));
     };
-
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
   }, []);
 
-  // Online / Offline monitor
+  // Online / offline
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
 
-  // Load cached team accounts for 1-tap cashier selection
+  // Load cached team for quick-select tiles
   useEffect(() => {
     try {
-      const rawAccounts = localStorage.getItem('anda_admin_accounts');
-      if (rawAccounts) {
-        const parsed = JSON.parse(rawAccounts);
+      const raw = localStorage.getItem('anda_admin_accounts');
+      if (raw) {
+        const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const members: CachedTeamMember[] = parsed.map((acc: any) => ({
-            id: String(acc.id || acc.email),
-            name: acc.fullName || acc.adminName || acc.name || 'Team Member',
-            email: acc.email || '',
-            role: acc.role || acc.adminRole || 'Cashier',
-            avatar: acc.avatar || acc.profileImage,
-          })).filter(m => Boolean(m.email));
-
+          const members: CachedTeamMember[] = parsed
+            .map((acc: any) => ({
+              id: String(acc.id || acc.email),
+              name: acc.fullName || acc.adminName || acc.name || 'Team Member',
+              email: acc.email || '',
+              role: acc.role || acc.adminRole || 'Staff',
+              avatar: acc.avatar || acc.profileImage,
+            }))
+            .filter(m => Boolean(m.email));
           setCachedTeam(members);
 
-          // If we had a remembered email, select them by default
+          // Pre-select the last logged-in user
           const lastEmail = localStorage.getItem('anda_last_login_email');
           if (lastEmail) {
             const match = members.find(m => m.email.toLowerCase() === lastEmail.toLowerCase());
-            if (match) {
-              setSelectedMemberEmail(match.email);
-            }
+            if (match) { setSelectedMember(match); setEmail(match.email); }
           }
         }
       }
-    } catch {
-      // Non-critical cache read
-    }
+    } catch { /* Non-critical */ }
   }, []);
 
   // Check setup status
   useEffect(() => {
     let active = true;
     api.get<{ needsSetup: boolean }>('/auth?action=setup-status')
-      .then((result) => { if (active) setSetup(result?.needsSetup ? 'needed' : 'done'); })
+      .then(r => { if (active) setSetup(r?.needsSetup ? 'needed' : 'done'); })
       .catch(() => { if (active) setSetup('done'); });
     return () => { active = false; };
   }, []);
 
-  const triggerErrorShake = (msg: string) => {
+  const triggerShake = (msg: string) => {
     setError(msg);
     setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 500);
+    setTimeout(() => setIsShaking(false), 450);
   };
 
-  const handleSetupSubmit = async (event?: React.FormEvent) => {
-    if (event) event.preventDefault();
+  const handleSetupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(null);
-    if (name.trim().length < 2) return triggerErrorShake('Enter the owner’s name.');
-    if (!email.trim()) return triggerErrorShake('Enter an email address for this account.');
-    if (pin.trim().length < 4) return triggerErrorShake('The PIN must be at least 4 characters.');
-    if (pin !== confirmPin) return triggerErrorShake('The two PINs do not match.');
+    if (name.trim().length < 2) return triggerShake("Enter the owner's full name.");
+    if (!email.trim()) return triggerShake('Enter an email address.');
+    if (pin.trim().length < 4) return triggerShake('PIN must be at least 4 characters.');
+    if (pin !== confirmPin) return triggerShake('PINs do not match.');
 
     setIsLoading(true);
     try {
       const result = await api.post<{ token: string; admin: { adminName: string } }>('/auth?action=setup', {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        pin: pin.trim(),
+        name: name.trim(), email: email.trim().toLowerCase(), pin: pin.trim(),
       });
       localStorage.setItem('anda_auth_token', result.token);
       localStorage.setItem('anda_last_login_email', email.trim().toLowerCase());
-      const signedIn = await loginAdmin(pin.trim(), email.trim().toLowerCase());
-      if (signedIn) {
-        showToast('Till set up. Welcome!');
-        onSuccess();
-      } else {
-        triggerErrorShake('Account created. Please sign in.');
-        setSetup('done');
-      }
-    } catch (caught: any) {
-      triggerErrorShake(caught instanceof ApiError ? caught.message : 'Could not create the owner account.');
-    } finally {
-      setIsLoading(false);
-    }
+      const ok = await loginAdmin(pin.trim(), email.trim().toLowerCase());
+      if (ok) { showToast('Till set up. Welcome!'); onSuccess(); }
+      else { triggerShake('Account created. Please sign in.'); setSetup('done'); }
+    } catch (err: any) {
+      triggerShake(err instanceof ApiError ? err.message : 'Could not create the account.');
+    } finally { setIsLoading(false); }
   };
 
-  const handleSignIn = async (event?: React.FormEvent) => {
-    if (event) event.preventDefault();
+  const handleSignIn = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError(null);
-    const targetEmail = (selectedMemberEmail || email).trim();
-    if (!targetEmail) return triggerErrorShake('Please select a cashier profile or enter your email.');
-    if (!pin.trim()) return triggerErrorShake('Enter your PIN to sign in.');
+    const targetEmail = (selectedMember?.email || email).trim();
+    if (!targetEmail) return triggerShake('Enter or select your email address.');
+    if (!pin.trim()) return triggerShake('Enter your PIN.');
 
     setIsLoading(true);
     try {
-      const success = await loginAdmin(pin.trim(), targetEmail.toLowerCase());
-      if (success) {
+      const ok = await loginAdmin(pin.trim(), targetEmail.toLowerCase());
+      if (ok) {
         localStorage.setItem('anda_last_login_email', targetEmail.toLowerCase());
-        showToast('Welcome back! Terminal unlocked.');
+        showToast('Signed in successfully.');
         onSuccess();
       } else {
         setPin('');
-        triggerErrorShake('Incorrect PIN or email. Please verify and try again.');
+        setTimeout(() => pinInputRef.current?.focus(), 50);
+        triggerShake('Incorrect email or PIN. Please try again.');
       }
     } catch {
-      triggerErrorShake('Cannot reach the till service. Please verify server connection.');
-    } finally {
-      setIsLoading(false);
-    }
+      triggerShake('Cannot reach the till service. Please restart the app.');
+    } finally { setIsLoading(false); }
   };
 
   const isSetup = setup === 'needed';
+  const showStaffTiles = !isSetup && cachedTeam.length > 0 && !manualEmailMode;
 
-  // Numpad key handlers
-  const handleNumpadPress = useCallback((digit: string) => {
-    setError(null);
-    setActiveNumpadKey(digit);
-    setTimeout(() => setActiveNumpadKey(null), 150);
-
-    setPin(prev => {
-      if (prev.length >= 10) return prev;
-      return prev + digit;
-    });
-  }, []);
-
-  const handleNumpadClear = useCallback(() => {
-    setError(null);
-    setPin('');
-    setActiveNumpadKey('C');
-    setTimeout(() => setActiveNumpadKey(null), 150);
-  }, []);
-
-  const handleNumpadBackspace = useCallback(() => {
-    setError(null);
-    setPin(prev => prev.slice(0, -1));
-    setActiveNumpadKey('backspace');
-    setTimeout(() => setActiveNumpadKey(null), 150);
-  }, []);
-
-  // Physical keyboard listener for touchscreen terminal / hardware numpad
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // If user is currently focused in a text input (like Name or Email), do not hijack typing
-      const activeTag = document.activeElement?.tagName?.toLowerCase();
-      const isInputFocused = activeTag === 'input' || activeTag === 'textarea';
-
-      if (isSetup) {
-        // In setup mode, standard inputs handle keyboard
-        return;
-      }
-
-      if (isInputFocused && document.activeElement?.id === 'manual-email-input') {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          (document.activeElement as HTMLElement)?.blur();
-          return;
-        }
-        return;
-      }
-
-      if (e.key >= '0' && e.key <= '9') {
-        e.preventDefault();
-        handleNumpadPress(e.key);
-      } else if (e.key === 'Backspace') {
-        e.preventDefault();
-        handleNumpadBackspace();
-      } else if (e.key === 'Escape' || e.key === 'Delete') {
-        e.preventDefault();
-        handleNumpadClear();
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (pin.length >= 1 && !isLoading) {
-          handleSignIn();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSetup, pin, isLoading, handleNumpadPress, handleNumpadBackspace, handleNumpadClear]);
-
-  const numpadButtons = [
-    { key: '1', sub: '' },
-    { key: '2', sub: 'ABC' },
-    { key: '3', sub: 'DEF' },
-    { key: '4', sub: 'GHI' },
-    { key: '5', sub: 'JKL' },
-    { key: '6', sub: 'MNO' },
-    { key: '7', sub: 'PQRS' },
-    { key: '8', sub: 'TUV' },
-    { key: '9', sub: 'WXYZ' },
-    { key: 'C', sub: 'CLEAR', isAction: true },
-    { key: '0', sub: 'OPER' },
-    { key: 'DEL', sub: 'BACK', isAction: true },
-  ];
-
-  const currentEmailDisplay = selectedMemberEmail || email;
-  const selectedMember = cachedTeam.find(m => m.email.toLowerCase() === currentEmailDisplay.toLowerCase());
+  const inputBase = 'lux-input w-full';
 
   return (
     <div
-      className="relative min-h-screen flex flex-col justify-between overflow-x-hidden text-[var(--text-primary)] font-sans transition-colors duration-300 select-none"
+      className="relative flex min-h-screen flex-col overflow-x-hidden font-sans text-[var(--text-primary)] transition-colors duration-300 select-none"
       style={{
         background: isDark
-          ? 'radial-gradient(circle at 15% 15%, rgba(197,150,81,0.18), transparent 40%), radial-gradient(circle at 85% 85%, rgba(71,123,104,0.14), transparent 45%), linear-gradient(135deg, #16110e, #130d0b 46%, #0a0807)'
-          : 'radial-gradient(circle at 15% 15%, rgba(197,150,81,0.14), transparent 40%), radial-gradient(circle at 85% 85%, rgba(71,123,104,0.10), transparent 45%), linear-gradient(135deg, #fdfbf7, #f7f1e7 46%, #eef4f0)',
+          ? 'radial-gradient(ellipse at 15% 10%, rgba(197,150,81,0.15) 0%, transparent 42%), radial-gradient(ellipse at 88% 88%, rgba(71,123,104,0.12) 0%, transparent 42%), linear-gradient(145deg, #18120f, #13100d 50%, #0c0907)'
+          : 'radial-gradient(ellipse at 15% 10%, rgba(197,150,81,0.12) 0%, transparent 42%), radial-gradient(ellipse at 88% 88%, rgba(71,123,104,0.08) 0%, transparent 42%), linear-gradient(145deg, #fdfaf6, #f6f0e6 50%, #edf3ef)',
       }}
     >
       <style>{`
-        @keyframes subtleShake {
+        @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          20% { transform: translateX(-8px); }
-          40% { transform: translateX(8px); }
-          60% { transform: translateX(-6px); }
-          80% { transform: translateX(6px); }
+          18% { transform: translateX(-8px); }
+          36% { transform: translateX(8px); }
+          54% { transform: translateX(-5px); }
+          72% { transform: translateX(5px); }
         }
-        .login-shake {
-          animation: subtleShake 0.4s ease-in-out;
+        .login-shake { animation: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
+        .fade-in { animation: fadeSlideIn 0.3s ease both; }
       `}</style>
 
-      {/* Decorative ambient background brand marks */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden opacity-[0.06] dark:opacity-[0.08]">
-        <div className="absolute -top-32 -left-32 h-[38rem] w-[38rem] rounded-full border border-[var(--accent-strong)]/30 blur-2xl" />
-        <div className="absolute -bottom-32 -right-32 h-[38rem] w-[38rem] rounded-full border border-[var(--jade)]/30 blur-2xl" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <BrandMark
-            name={storeSettings.storeName}
-            className="h-[36rem] w-[36rem] rounded-[32%] border border-white/5 opacity-40 filter drop-shadow-2xl"
-          />
-        </div>
+      {/* Watermark brand mark */}
+      <div className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden opacity-[0.05] dark:opacity-[0.07]">
+        <BrandMark name={storeSettings.storeName} className="h-[44rem] w-[44rem] rounded-[32%]" />
       </div>
 
-      {/* Top Application Bar */}
+      {/* ── Top Bar ──────────────────────────────────────────────────────────── */}
       <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-        {/* Left: Terminal Identity & Status */}
+        {/* Left: Brand Identity */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
-            <BrandMark name={storeSettings.storeName} className="h-8 w-8 rounded-lg" />
-          </div>
+          <BrandMark name={storeSettings.storeName} className="h-10 w-10 rounded-xl" />
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black tracking-wider text-[var(--text-primary)] uppercase">
+              <span className="text-xs font-black uppercase tracking-widest text-[var(--text-primary)]">
                 {storeSettings.storeName}
               </span>
               <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-strong)]">
-                {mode === 'pos' ? 'POS Till #01' : 'Admin'}
+                {mode === 'pos' ? 'POS Till' : 'Admin'}
               </span>
             </div>
-            <p className="text-[11px] font-medium text-[var(--text-muted)]">
-              Accra Lounge Terminal
-            </p>
+            <p className="text-[11px] text-[var(--text-muted)]">Accra · Ghana</p>
           </div>
         </div>
 
-        {/* Right: Live Clock, Connectivity Pill & Theme Toggle */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Live Clock Pill */}
-          <div className="hidden sm:flex items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)]/80 px-3.5 py-1.5 text-xs font-semibold text-[var(--text-muted)] shadow-sm backdrop-blur-md">
+        {/* Right: Clock + Sync + Theme */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Live clock */}
+          <div className="hidden items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)]/80 px-3.5 py-1.5 text-xs font-semibold text-[var(--text-muted)] shadow-sm backdrop-blur-md sm:flex">
             <Clock className="h-3.5 w-3.5 text-[var(--accent-strong)]" />
-            <span className="font-mono text-[11px] tracking-tight">{currentTime || '12:00:00 PM'}</span>
-            <span className="text-stone-300 dark:text-stone-600">•</span>
+            <span className="font-mono text-[11px]">{currentTime || '—'}</span>
+            <span className="text-[var(--border-color)]">·</span>
             <span className="text-[10px] text-[var(--text-subtle)]">{currentDate}</span>
           </div>
 
-          {/* Sync / Offline Status */}
-          <div
-            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold shadow-sm backdrop-blur-md ${
-              isOnline
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-            }`}
-            title={isOnline ? 'Cloud sync active & connected' : 'Working offline. Actions will sync when online.'}
-          >
-            <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-            {isOnline ? (
-              <span className="hidden md:inline">Live Cloud Sync</span>
-            ) : (
-              <span className="hidden md:inline">Offline Mode</span>
-            )}
+          {/* Connectivity */}
+          <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold shadow-sm ${
+            isOnline
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+              : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+          }`}>
+            <span className={`h-2 w-2 rounded-full ${isOnline ? 'animate-pulse bg-emerald-500' : 'bg-amber-500'}`} />
+            <span className="hidden md:inline">{isOnline ? 'Cloud Sync' : 'Offline'}</span>
           </div>
 
-          {/* Theme switcher */}
+          {/* Theme toggle */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex items-center gap-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)]/80 p-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-[var(--text-muted)] shadow-sm backdrop-blur-md transition hover:scale-105 hover:text-[var(--text-primary)]"
+            className="flex items-center gap-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)]/80 p-2 text-xs font-semibold text-[var(--text-muted)] shadow-sm backdrop-blur-md transition hover:scale-105 hover:text-[var(--text-primary)] sm:px-3 sm:py-1.5"
             title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
           >
-            {isDark ? (
-              <Sun className="h-4 w-4 text-[var(--highlight)] transition-transform hover:rotate-45" />
-            ) : (
-              <Moon className="h-4 w-4 text-[var(--text-subtle)] transition-transform hover:-rotate-12" />
-            )}
-            <span className="hidden sm:inline capitalize">{theme}</span>
+            {isDark
+              ? <Sun className="h-4 w-4 text-[var(--highlight)]" />
+              : <Moon className="h-4 w-4 text-[var(--text-subtle)]" />}
+            <span className="hidden capitalize sm:inline">{theme}</span>
           </button>
         </div>
       </header>
 
-      {/* Main Terminal Shell */}
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-3 sm:py-6">
-        <div
-          className={`w-full max-w-4xl overflow-hidden rounded-3xl border border-white/20 bg-white/70 shadow-[0_24px_70px_rgba(30,20,10,0.16)] backdrop-blur-xl dark:border-white/10 dark:bg-[#191310]/80 dark:shadow-[0_24px_70px_rgba(0,0,0,0.5)] transition-all duration-300 ${
-            isShaking ? 'login-shake' : ''
-          }`}
-        >
-          <div className="grid lg:grid-cols-[1fr_1.15fr]">
-            {/* Left Column: Ambient Brand Display & Cashier Quick Select */}
-            <div className="relative flex flex-col justify-between overflow-hidden border-b border-stone-200/50 p-6 dark:border-white/10 lg:border-b-0 lg:border-r sm:p-8 bg-gradient-to-br from-amber-500/10 via-stone-500/5 to-transparent">
-              <div className="relative z-10 space-y-6">
-                {/* Brand Seal & Header */}
+      {/* ── Main Card ────────────────────────────────────────────────────────── */}
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-4 sm:py-8">
+        <div className={`w-full max-w-5xl overflow-hidden rounded-3xl border border-white/20 bg-white/75 shadow-[0_28px_80px_rgba(30,18,8,0.14)] backdrop-blur-xl transition-all duration-300 dark:border-white/10 dark:bg-[#181210]/85 dark:shadow-[0_28px_80px_rgba(0,0,0,0.52)] ${isShaking ? 'login-shake' : ''}`}>
+          <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
+
+            {/* ── Left Panel: Brand + Info ────────────────────────────────── */}
+            <div className="relative flex flex-col justify-between overflow-hidden border-b border-stone-200/60 bg-gradient-to-br from-amber-600/10 via-stone-500/5 to-transparent p-6 dark:border-white/8 lg:border-b-0 lg:border-r sm:p-8">
+              {/* Decorative glow */}
+              <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[var(--accent)]/10 blur-3xl" />
+
+              <div className="relative space-y-6">
+                {/* Brand mark + heading */}
                 <div className="flex items-start gap-4">
-                  <div className="relative">
-                    <BrandMark
-                      name={storeSettings.storeName}
-                      className="h-16 w-16 rounded-2xl border border-[var(--accent-strong)]/30 shadow-lg"
-                    />
-                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-emerald-500 text-white shadow-sm">
-                      <Sparkles className="h-3 w-3" />
+                  <div className="relative shrink-0">
+                    <BrandMark name={storeSettings.storeName} className="h-16 w-16 rounded-2xl shadow-lg" />
+                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-emerald-500 dark:border-stone-900">
+                      <Sparkles className="h-3 w-3 text-white" />
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.24em] text-[var(--accent-strong)]">
-                      Authorized POS Terminal
-                    </span>
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent-strong)]">
+                      {mode === 'pos' ? 'Authorized POS Terminal' : 'Admin Portal'}
+                    </p>
                     <h1 className="mt-0.5 text-2xl font-black tracking-tight text-[var(--text-primary)] sm:text-3xl">
-                      {isSetup ? 'Initial Register Setup' : 'Terminal Unlock'}
+                      {isSetup ? 'Register Setup' : 'Sign In'}
                     </h1>
-                    <p className="mt-1 text-xs text-[var(--text-muted)] leading-relaxed">
+                    <p className="mt-1 max-w-xs text-xs leading-relaxed text-[var(--text-muted)]">
                       {isSetup
-                        ? 'Configure the primary super admin for this point-of-sale register.'
-                        : 'Tap your staff profile or enter your secure PIN to begin transactions.'}
+                        ? 'Create the primary super admin for this point-of-sale register.'
+                        : 'Enter your email and PIN to access your workspace.'}
                     </p>
                   </div>
                 </div>
 
-                {/* Quick Staff Roster (if accounts are cached from prior logins) */}
+                {/* Quick-select staff tiles (when accounts are cached) */}
                 {!isSetup && cachedTeam.length > 0 && (
-                  <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/50 p-4 backdrop-blur-md">
+                  <div className="fade-in rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/60 p-4 backdrop-blur-sm">
                     <div className="mb-3 flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5 text-[var(--accent-strong)]" />
                         <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                          Select Cashier
+                          Quick Select
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={() => {
-                          setManualEmailMode(!manualEmailMode);
-                          if (!manualEmailMode) setSelectedMemberEmail(null);
+                          setManualEmailMode(m => !m);
+                          if (!manualEmailMode) { setSelectedMember(null); setEmail(''); }
                         }}
-                        className="text-[11px] font-semibold text-[var(--accent-strong)] hover:underline"
+                        className="text-[11px] font-semibold text-[var(--accent-strong)] underline-offset-2 hover:underline"
                       >
-                        {manualEmailMode ? 'Back to staff tiles' : 'Manual email'}
+                        {manualEmailMode ? 'Back to roster' : 'Different account'}
                       </button>
                     </div>
 
                     {!manualEmailMode && (
                       <div className="grid grid-cols-2 gap-2">
-                        {cachedTeam.slice(0, 4).map((member) => {
-                          const isSelected = (selectedMemberEmail || email).toLowerCase() === member.email.toLowerCase();
+                        {cachedTeam.slice(0, 4).map(member => {
+                          const active = selectedMember?.email === member.email;
                           return (
                             <button
                               key={member.id}
                               type="button"
                               onClick={() => {
-                                setSelectedMemberEmail(member.email);
+                                setSelectedMember(member);
                                 setEmail(member.email);
                                 setError(null);
+                                setTimeout(() => pinInputRef.current?.focus(), 80);
                               }}
-                              className={`flex items-center gap-2.5 rounded-xl border p-2 text-left transition-all ${
-                                isSelected
-                                  ? 'border-[var(--accent-strong)] bg-[var(--accent-soft)] shadow-md ring-1 ring-[var(--accent-strong)]'
-                                  : 'border-transparent bg-white/40 hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10'
+                              className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all duration-150 ${
+                                active
+                                  ? 'border-[var(--accent-strong)] bg-[var(--accent-soft)] shadow-sm ring-1 ring-[var(--accent-strong)]/50'
+                                  : 'border-transparent bg-white/50 hover:bg-white/90 dark:bg-white/5 dark:hover:bg-white/10'
                               }`}
                             >
-                              <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-gradient-to-tr from-amber-600 to-stone-500 font-bold text-xs text-white uppercase shadow-sm">
-                                {member.avatar ? (
-                                  <img src={member.avatar} alt={member.name} className="h-full w-full rounded-lg object-cover" />
-                                ) : (
-                                  member.name.charAt(0)
-                                )}
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-[var(--accent)] to-[var(--accent-strong)] text-xs font-bold uppercase text-white shadow-sm">
+                                {member.avatar
+                                  ? <img src={member.avatar} alt={member.name} className="h-full w-full rounded-lg object-cover" />
+                                  : member.name.charAt(0)}
                               </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-xs font-bold text-[var(--text-primary)]">
-                                  {member.name}
-                                </p>
-                                <p className="truncate text-[10px] text-[var(--text-subtle)] font-medium">
-                                  {member.role}
-                                </p>
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-bold text-[var(--text-primary)]">{member.name}</p>
+                                <p className="truncate text-[10px] text-[var(--text-subtle)]">{member.role}</p>
                               </div>
-                              {isSelected && (
-                                <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--accent-strong)]" />
-                              )}
+                              {active && <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-[var(--accent-strong)]" />}
                             </button>
                           );
                         })}
@@ -509,362 +361,244 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                   </div>
                 )}
 
-                {/* Cloud & Security Specs */}
-                <div className="space-y-2 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/40 p-3.5 backdrop-blur-md">
-                  <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                {/* Security note */}
+                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/40 p-3.5">
+                  <div className="flex items-start gap-2.5">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
                     <div>
-                      <p className="text-xs font-bold text-[var(--text-primary)]">End-to-End Encrypted Till</p>
-                      <p className="text-[11px] text-[var(--text-subtle)]">
-                        Local transactions store offline and stream live to central cloud.
+                      <p className="text-xs font-bold text-[var(--text-primary)]">Encrypted local-first till</p>
+                      <p className="mt-0.5 text-[11px] leading-relaxed text-[var(--text-subtle)]">
+                        Transactions work offline and sync to cloud automatically.
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between border-t border-[var(--border-color)]/50 pt-2 text-[10px] font-semibold text-[var(--text-muted)]">
-                    <span>Register: TILL-01-MAIN</span>
-                    <span>Version 1.0.0</span>
-                  </div>
                 </div>
               </div>
 
-              {/* Store Footer Address */}
-              <div className="relative z-10 mt-6 flex items-center gap-2 text-xs text-[var(--text-subtle)]">
-                <Store className="h-3.5 w-3.5 shrink-0 text-[var(--accent-strong)]" />
-                <span className="truncate">
-                  {storeSettings.storeName} • {storeSettings.storeAddress || 'Accra, Ghana'}
-                </span>
+              {/* Footer */}
+              <div className="relative mt-6 flex items-center gap-2 text-xs text-[var(--text-subtle)]">
+                <Store className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{storeSettings.storeName} · {storeSettings.storeAddress || 'Accra, Ghana'}</span>
               </div>
             </div>
 
-            {/* Right Column: Keypad & Input Form */}
-            <div className="p-6 sm:p-8 flex flex-col justify-center">
+            {/* ── Right Panel: Sign-In / Setup Form ──────────────────────── */}
+            <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
               {setup === 'checking' ? (
-                <div className="py-16 text-center">
-                  <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--border-color)] border-t-[var(--accent-strong)]" />
-                  <p className="mt-4 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                    Initializing POS Terminal…
-                  </p>
+                <div className="flex flex-col items-center py-16 text-center">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border-color)] border-t-[var(--accent-strong)]" />
+                  <p className="mt-4 text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Initializing till…</p>
                 </div>
               ) : isSetup ? (
-                /* ── FIRST-RUN SETUP FORM ── */
+                /* ── FIRST-RUN SETUP ─────────────────────────────────────── */
                 <form onSubmit={handleSetupSubmit} className="space-y-4">
                   <div className="mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-strong)]">
-                      First Launch Wizard
-                    </span>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-strong)]">First-run wizard</p>
                     <h2 className="mt-1 text-xl font-black text-[var(--text-primary)]">Create Super Admin</h2>
                     <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                      Set up the primary administrative owner for this till.
+                      This runs once and creates the primary administrator account.
                     </p>
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-[var(--text-primary)]" htmlFor="setup-name">
-                      Owner / Admin Full Name
-                    </label>
+                    <label htmlFor="setup-name" className="lux-label">Full name</label>
                     <div className="relative">
                       <UserPlus className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
-                      <input
-                        id="setup-name"
-                        type="text"
-                        required
-                        autoFocus
-                        value={name}
-                        onChange={(e) => { setName(e.target.value); setError(null); }}
-                        placeholder="e.g. Emmanuel Boateng"
-                        className="lux-input pl-10"
-                      />
+                      <input id="setup-name" type="text" autoFocus required
+                        value={name} onChange={e => { setName(e.target.value); setError(null); }}
+                        placeholder="e.g. Emmanuel Boateng" className={`${inputBase} pl-10`} />
                     </div>
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs font-bold text-[var(--text-primary)]" htmlFor="setup-email">
-                      Admin Email Address
-                    </label>
+                    <label htmlFor="setup-email" className="lux-label">Email address</label>
                     <div className="relative">
                       <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
-                      <input
-                        id="setup-email"
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => { setEmail(e.target.value); setError(null); }}
-                        placeholder="admin@andasmokehub.com"
-                        className="lux-input pl-10"
-                      />
+                      <input id="setup-email" type="email" required
+                        value={email} onChange={e => { setEmail(e.target.value); setError(null); }}
+                        placeholder="admin@andasmokehub.com" className={`${inputBase} pl-10`} />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="mb-1 block text-xs font-bold text-[var(--text-primary)]" htmlFor="setup-pin">
-                        Security PIN
-                      </label>
+                      <label htmlFor="setup-pin" className="lux-label">PIN</label>
                       <div className="relative">
                         <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
-                        <input
-                          id="setup-pin"
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          minLength={4}
-                          value={pin}
-                          onChange={(e) => { setPin(e.target.value); setError(null); }}
-                          placeholder="Min 4 digits"
-                          className="lux-input pl-10 pr-9 font-mono"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(p => !p)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[var(--text-subtle)]"
-                        >
-                          {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        <input id="setup-pin" type={showPin ? 'text' : 'password'} required minLength={4}
+                          autoComplete="new-password"
+                          value={pin} onChange={e => { setPin(e.target.value); setError(null); }}
+                          placeholder="Min. 4 chars" className={`${inputBase} pl-10 pr-10 font-mono`} />
+                        <button type="button" onClick={() => setShowPin(p => !p)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--text-subtle)] hover:text-[var(--text-primary)]">
+                          {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
                     </div>
-
                     <div>
-                      <label className="mb-1 block text-xs font-bold text-[var(--text-primary)]" htmlFor="setup-pin-confirm">
-                        Confirm PIN
-                      </label>
+                      <label htmlFor="setup-pin-confirm" className="lux-label">Confirm PIN</label>
                       <div className="relative">
                         <KeyRound className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
-                        <input
-                          id="setup-pin-confirm"
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          minLength={4}
-                          value={confirmPin}
-                          onChange={(e) => { setConfirmPin(e.target.value); setError(null); }}
-                          placeholder="Repeat PIN"
-                          className="lux-input pl-10 font-mono"
-                        />
+                        <input id="setup-pin-confirm" type={showConfirmPin ? 'text' : 'password'} required minLength={4}
+                          autoComplete="new-password"
+                          value={confirmPin} onChange={e => { setConfirmPin(e.target.value); setError(null); }}
+                          placeholder="Repeat PIN" className={`${inputBase} pl-10 pr-10 font-mono`} />
+                        <button type="button" onClick={() => setShowConfirmPin(p => !p)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--text-subtle)] hover:text-[var(--text-primary)]">
+                          {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
                       </div>
                     </div>
                   </div>
 
                   {error && (
-                    <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs font-semibold text-red-600 dark:text-red-400">
+                    <div role="alert" className="fade-in flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs font-semibold text-red-600 dark:text-red-400">
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500" />
                       <span>{error}</span>
                     </div>
                   )}
 
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="lux-btn lux-btn--primary w-full py-3.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-transform active:scale-98"
-                  >
-                    {isLoading ? (
-                      <span>Initializing Terminal…</span>
-                    ) : (
-                      <>
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        <span>Complete Setup & Launch POS</span>
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
+                  <button type="submit" disabled={isLoading}
+                    className="lux-btn lux-btn--primary mt-1 w-full py-3.5 text-xs uppercase tracking-wider">
+                    {isLoading ? <span>Creating account…</span> : (
+                      <><UserPlus className="h-4 w-4" /><span>Create account & launch POS</span><ArrowRight className="h-4 w-4" /></>
                     )}
                   </button>
                 </form>
               ) : (
-                /* ── STANDARD POS SIGN-IN (TACTILE NUMPAD) ── */
-                <div className="space-y-4">
-                  {/* Selected User Badge / Manual Email Input */}
-                  {(manualEmailMode || cachedTeam.length === 0) ? (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-bold text-[var(--text-primary)]" htmlFor="manual-email-input">
-                          Staff Email
-                        </label>
-                        {cachedTeam.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setManualEmailMode(false)}
-                            className="text-[11px] font-semibold text-[var(--accent-strong)] hover:underline"
-                          >
-                            Select from staff roster
-                          </button>
-                        )}
-                      </div>
+                /* ── STANDARD SIGN-IN ────────────────────────────────────── */
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="mb-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-strong)]">Secure sign in</p>
+                    <h2 className="mt-1 text-2xl font-black tracking-tight text-[var(--text-primary)]">Welcome back</h2>
+                    {selectedMember && !manualEmailMode && (
+                      <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                        Signing in as <strong className="text-[var(--text-primary)]">{selectedMember.name}</strong>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email — shows inline when no staff tiles, or when manual mode */}
+                  {(!showStaffTiles || manualEmailMode) && (
+                    <div className="fade-in">
+                      <label htmlFor="login-email" className="lux-label">Email address</label>
                       <div className="relative">
                         <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
                         <input
-                          id="manual-email-input"
+                          id="login-email"
+                          ref={emailInputRef}
                           type="email"
                           required
+                          autoFocus={!selectedMember}
+                          autoComplete="username"
                           value={email}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            setSelectedMemberEmail(null);
-                            setError(null);
-                          }}
-                          placeholder="staff@andasmokehub.com"
-                          className="lux-input pl-10"
+                          onChange={e => { setEmail(e.target.value); setSelectedMember(null); setError(null); }}
+                          placeholder="you@andasmokehub.com"
+                          className={`${inputBase} pl-10`}
                         />
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-between rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/70 px-4 py-2.5 backdrop-blur-md shadow-sm">
+                  )}
+
+                  {/* When a staff tile is selected, show a compact identity badge */}
+                  {showStaffTiles && selectedMember && (
+                    <div className="fade-in flex items-center justify-between rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/70 px-4 py-3 backdrop-blur-sm">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-[var(--accent)] to-[var(--accent-strong)] text-white font-bold text-sm shadow-sm">
-                          {selectedMember?.avatar ? (
-                            <img src={selectedMember.avatar} alt={selectedMember.name} className="h-full w-full rounded-xl object-cover" />
-                          ) : (
-                            (selectedMember?.name || currentEmailDisplay || 'A').charAt(0).toUpperCase()
-                          )}
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[var(--accent)] to-[var(--accent-strong)] text-sm font-bold text-white shadow-sm">
+                          {selectedMember.avatar
+                            ? <img src={selectedMember.avatar} alt={selectedMember.name} className="h-full w-full rounded-xl object-cover" />
+                            : selectedMember.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-[var(--text-primary)]">
-                            {selectedMember?.name || currentEmailDisplay || 'Select Account'}
-                          </p>
-                          <p className="text-[10px] text-[var(--text-subtle)] font-medium">
-                            {selectedMember?.role || 'Authorized Staff'}
-                          </p>
+                          <p className="text-sm font-bold text-[var(--text-primary)]">{selectedMember.name}</p>
+                          <p className="text-[11px] text-[var(--text-subtle)]">{selectedMember.email}</p>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setManualEmailMode(true)}
-                        className="rounded-lg px-2.5 py-1 text-[11px] font-bold text-[var(--accent-strong)] hover:bg-[var(--accent-soft)] transition"
-                      >
+                      <button type="button" onClick={() => setManualEmailMode(true)}
+                        className="rounded-lg px-2.5 py-1 text-[11px] font-bold text-[var(--accent-strong)] hover:bg-[var(--accent-soft)] transition">
                         Change
                       </button>
                     </div>
                   )}
 
-                  {/* Tactile PIN Bullet Slot Display */}
-                  <div
-                    ref={pinContainerRef}
-                    className="relative flex flex-col items-center justify-center rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/90 p-4 shadow-inner dark:bg-black/20"
-                  >
-                    <div className="flex items-center justify-between w-full mb-2 px-1">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-subtle)]">
-                        Enter Security PIN
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(p => !p)}
-                        className="flex items-center gap-1 text-[11px] font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)]"
-                        title={showPassword ? 'Mask PIN' : 'Reveal PIN'}
-                      >
-                        {showPassword ? (
-                          <>
-                            <EyeOff className="h-3 w-3" />
-                            <span>Hide</span>
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="h-3 w-3" />
-                            <span>Peek</span>
-                          </>
-                        )}
-                      </button>
+                  {/* When no staff tiles and no member selected */}
+                  {showStaffTiles && !selectedMember && (
+                    <div className="fade-in">
+                      <label htmlFor="login-email" className="lux-label">Email address</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
+                        <input
+                          id="login-email"
+                          ref={emailInputRef}
+                          type="email"
+                          required
+                          autoComplete="username"
+                          value={email}
+                          onChange={e => { setEmail(e.target.value); setSelectedMember(null); setError(null); }}
+                          placeholder="you@andasmokehub.com"
+                          className={`${inputBase} pl-10`}
+                        />
+                      </div>
                     </div>
+                  )}
 
-                    {/* PIN Bullets */}
-                    <div className="my-1 flex items-center justify-center gap-3 h-10">
-                      {Array.from({ length: Math.max(4, pin.length) }).map((_, idx) => {
-                        const isFilled = idx < pin.length;
-                        const char = pin[idx];
-                        return (
-                          <div
-                            key={idx}
-                            className={`flex h-8 w-8 items-center justify-center rounded-xl border text-sm font-bold font-mono transition-all duration-150 ${
-                              isFilled
-                                ? 'border-[var(--accent-strong)] bg-gradient-to-tr from-[var(--accent)] to-[var(--accent-strong)] text-white shadow-[0_0_12px_rgba(197,150,81,0.5)] scale-105'
-                                : 'border-stone-300 bg-stone-100/50 text-transparent dark:border-stone-700 dark:bg-white/5'
-                            }`}
-                          >
-                            {isFilled ? (showPassword ? char : '●') : '○'}
-                          </div>
-                        );
-                      })}
+                  {/* PIN */}
+                  <div>
+                    <label htmlFor="login-pin" className="lux-label">PIN</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
+                      <input
+                        id="login-pin"
+                        ref={pinInputRef}
+                        type={showPin ? 'text' : 'password'}
+                        required
+                        minLength={4}
+                        autoComplete="current-password"
+                        autoFocus={Boolean(selectedMember && !manualEmailMode)}
+                        value={pin}
+                        onChange={e => { setPin(e.target.value); setError(null); }}
+                        placeholder="Enter your PIN"
+                        className={`${inputBase} pl-10 pr-10 font-mono tracking-widest`}
+                      />
+                      <button type="button" onClick={() => setShowPin(p => !p)}
+                        aria-label={showPin ? 'Hide PIN' : 'Show PIN'}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-[var(--text-subtle)] transition hover:text-[var(--text-primary)]">
+                        {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
 
-                  {/* Error Notification */}
                   {error && (
-                    <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-2.5 text-xs font-semibold text-red-600 dark:text-red-400">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-red-500 animate-ping" />
+                    <div role="alert" className="fade-in flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs font-semibold text-red-600 dark:text-red-400">
+                      <span className="h-1.5 w-1.5 shrink-0 animate-ping rounded-full bg-red-500" />
                       <span>{error}</span>
                     </div>
                   )}
 
-                  {/* On-Screen Tactile Numeric Keypad */}
-                  <div className="grid grid-cols-3 gap-2 sm:gap-2.5 pt-1">
-                    {numpadButtons.map((btn) => {
-                      const isActive = activeNumpadKey === btn.key || (btn.key === 'DEL' && activeNumpadKey === 'backspace');
-                      return (
-                        <button
-                          key={btn.key}
-                          type="button"
-                          onClick={() => {
-                            if (btn.key === 'C') handleNumpadClear();
-                            else if (btn.key === 'DEL') handleNumpadBackspace();
-                            else handleNumpadPress(btn.key);
-                          }}
-                          className={`group relative flex flex-col items-center justify-center rounded-2xl border py-3 sm:py-3.5 transition-all active:scale-95 touch-manipulation ${
-                            btn.isAction
-                              ? 'border-[var(--border-color)] bg-[var(--bg-soft)] text-[var(--text-muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]'
-                              : 'border-stone-200/80 bg-white/90 text-[var(--text-primary)] shadow-sm hover:border-[var(--accent-strong)]/40 hover:bg-stone-50 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.08]'
-                          } ${
-                            isActive
-                              ? 'ring-2 ring-[var(--accent-strong)] bg-[var(--accent-soft)] scale-95'
-                              : ''
-                          }`}
-                        >
-                          <span className="text-xl sm:text-2xl font-black tracking-tight leading-none">
-                            {btn.key === 'DEL' ? (
-                              <Delete className="h-5 w-5 sm:h-6 sm:w-6" />
-                            ) : btn.key === 'C' ? (
-                              <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-                            ) : (
-                              btn.key
-                            )}
-                          </span>
-                          {btn.sub && (
-                            <span className="mt-0.5 text-[9px] font-bold tracking-widest text-[var(--text-subtle)] uppercase">
-                              {btn.sub}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Submit / Unlock Action Button */}
-                  <button
-                    type="button"
-                    onClick={() => handleSignIn()}
-                    disabled={isLoading || pin.length === 0}
-                    className="lux-btn lux-btn--primary w-full py-3.5 text-xs font-bold uppercase tracking-wider shadow-lg transition-transform active:scale-98 disabled:opacity-40"
-                  >
-                    {isLoading ? (
-                      <span>Verifying Credentials…</span>
-                    ) : (
-                      <>
-                        <Lock className="h-4 w-4 mr-2" />
-                        <span>Unlock Register & Open POS</span>
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
+                  <button type="submit" disabled={isLoading}
+                    className="lux-btn lux-btn--primary mt-1 w-full py-3.5 text-xs uppercase tracking-wider">
+                    {isLoading ? <span>Signing in…</span> : (
+                      <><Lock className="h-4 w-4" /><span>Sign in</span><ArrowRight className="h-4 w-4" /></>
                     )}
                   </button>
 
-                  <p className="text-center text-[10px] text-[var(--text-subtle)] font-medium">
-                    Physical numpad supported • Press <kbd className="rounded bg-black/10 dark:bg-white/10 px-1 py-0.5 font-mono">Enter</kbd> to unlock
+                  <p className="text-center text-[11px] text-[var(--text-subtle)]">
+                    Press <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-soft)] px-1.5 py-0.5 font-mono text-[10px]">Tab</kbd> to move between fields
+                    · <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-soft)] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd> to sign in
                   </p>
-                </div>
+                </form>
               )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* Terminal Footer */}
-      <footer className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-3 text-[11px] text-[var(--text-subtle)] font-medium">
+      {/* Footer */}
+      <footer className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-3 text-[11px] text-[var(--text-subtle)]">
         <span>© {new Date().getFullYear()} {storeSettings.storeName}. All rights reserved.</span>
         <span className="flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Terminal Secure
+          Terminal secure · v1.0.0
         </span>
       </footer>
     </div>
