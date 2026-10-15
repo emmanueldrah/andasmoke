@@ -93,6 +93,20 @@ const tabEyebrows: Record<AdminTab, string> = {
   accounts: 'Manage',
 };
 
+// Navigation state belongs in readable paths, not implementation query strings.
+const tabPaths: Record<AdminTab, string> = {
+  pos: '/counter',
+  products: '/products',
+  inventory: '/inventory',
+  categories: '/categories',
+  promos: '/discounts',
+  accounts: '/team',
+};
+
+const pathTabs: Record<string, AdminTab> = Object.fromEntries(
+  Object.entries(tabPaths).map(([tab, path]) => [path, tab as AdminTab]),
+) as Record<string, AdminTab>;
+
 const RAIL_KEY = 'cr_admin_rail_collapsed';
 
 class AdminTabErrorBoundary extends React.Component<
@@ -151,10 +165,12 @@ export const AdminPortal: React.FC = () => {
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useTheme();
 
-  const requestedTab = new URLSearchParams(location.search).get('tab');
+  const tabFromPath = pathTabs[location.pathname];
+  const legacyRequestedTab = new URLSearchParams(location.search).get('tab');
   const isCashier = store.adminSession.adminRole === 'Cashier';
   const accessibleTabs = roleAccess[store.adminSession.adminRole] || roleAccess['Cashier'];
   const defaultTab: AdminTab = accessibleTabs.includes('pos') ? 'pos' : accessibleTabs[0] || 'inventory';
+  const requestedTab = tabFromPath || legacyRequestedTab;
   const currentTab: AdminTab = accessibleTabs.includes(requestedTab as AdminTab) ? requestedTab as AdminTab : defaultTab;
   const visibleNavItems = navItems.filter(item => accessibleTabs.includes(item.id));
 
@@ -230,6 +246,14 @@ export const AdminPortal: React.FC = () => {
     setMobileNavOpen(false);
   }, [currentTab]);
 
+  // Existing saved links keep working, then quietly become the readable URL.
+  useEffect(() => {
+    if (tabFromPath || !accessibleTabs.includes(legacyRequestedTab as AdminTab)) return;
+    const params = new URLSearchParams(location.search);
+    params.delete('tab');
+    navigate({ pathname: tabPaths[legacyRequestedTab as AdminTab], search: params.toString() ? `?${params}` : '' }, { replace: true });
+  }, [accessibleTabs, legacyRequestedTab, location.search, navigate, tabFromPath]);
+
   const toggleRail = () => {
     setRailCollapsed(prev => {
       const next = !prev;
@@ -279,8 +303,8 @@ export const AdminPortal: React.FC = () => {
   const handleTabChange = (tab: AdminTab) => {
     if (!accessibleTabs.includes(tab)) return;
     const params = new URLSearchParams(location.search);
-    params.set('tab', tab);
-    navigate({ pathname: location.pathname, search: `?${params.toString()}` }, { replace: true });
+    params.delete('tab');
+    navigate({ pathname: tabPaths[tab], search: params.toString() ? `?${params}` : '' }, { replace: true });
   };
 
   const renderNav = (collapsed: boolean) => (

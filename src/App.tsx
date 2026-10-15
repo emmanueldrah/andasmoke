@@ -11,7 +11,8 @@ function AppLayout() {
   const { storeSettings } = useStore();
   const location = useLocation();
 
-  const isAppRoute = location.pathname === '/' || location.pathname === '/pos' || location.pathname.startsWith('/admin');
+  const appRoutes = new Set(['/', '/pos', '/counter', '/products', '/inventory', '/categories', '/discounts', '/team']);
+  const isAppRoute = appRoutes.has(location.pathname) || location.pathname.startsWith('/admin');
   const pageTitle = `${storeSettings.storeName} | POS`;
 
   React.useEffect(() => {

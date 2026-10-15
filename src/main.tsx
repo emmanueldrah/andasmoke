@@ -11,6 +11,19 @@ import { AlertProvider } from './context/AlertContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import './index.css';
 
+// The chunk-recovery marker is only needed for the one reload that follows a
+// deployment. Remove it once the replacement app has loaded so shared links
+// remain clean (while preserving useful state such as the active `tab`).
+try {
+  const currentUrl = new URL(window.location.href);
+  if (currentUrl.searchParams.has('_reload')) {
+    currentUrl.searchParams.delete('_reload');
+    window.history.replaceState(window.history.state, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+  }
+} catch {
+  // Keep the app available if URL/history APIs are unavailable.
+}
+
 // Recover once when a deployment replaces a lazy-loaded chunk. Without this
 // guard a transient network failure can trigger a continuous page-reload loop.
 window.addEventListener('vite:preloadError', () => {
