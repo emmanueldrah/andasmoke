@@ -249,24 +249,24 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs flex justify-end font-sans animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 overflow-hidden bg-[rgba(20,14,11,0.4)] flex justify-end font-sans"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl bg-white dark:bg-[#181314] h-full shadow-2xl flex flex-col border-l border-stone-200 dark:border-[#2e2326] animate-in slide-in-from-right duration-200 overflow-hidden"
+        className="form-sheet form-sheet--side w-full max-w-xl h-full flex flex-col border-0 border-l animate-in slide-in-from-right duration-200 overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-stone-200 dark:border-[#2e2326] flex items-center justify-between bg-stone-50/80 dark:bg-[#1f1719]/80 shrink-0">
+        <div className="px-6 py-5 border-b border-[var(--sheet-line)] flex items-center justify-between bg-[var(--sheet-head)] shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
               <User className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-[var(--sheet-ink)] flex items-center gap-2">
                 My Profile & Account
               </h2>
-              <p className="text-xs text-stone-500 dark:text-stone-400">
+              <p className="text-xs text-[var(--sheet-ink-4)]">
                 Manage your credentials, avatar, and security
               </p>
             </div>
@@ -274,7 +274,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-200/50 dark:hover:bg-[#2b2023] transition-colors"
+            className="p-2 rounded-xl text-[var(--sheet-ink-4)] hover:text-[var(--sheet-ink)] hover:bg-[var(--sheet-hover)] transition-colors"
             aria-label="Close profile panel"
           >
             <X className="h-5 w-5" />
@@ -299,7 +299,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
             <button
               type="button"
               onClick={() => setAlert(null)}
-              className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+              className="text-[var(--sheet-ink-5)] hover:text-[var(--sheet-ink)]"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -307,16 +307,16 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
         )}
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 divide-y divide-stone-100 dark:divide-[#251d20]">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 divide-y divide-[var(--sheet-divide)]">
           {/* Section 1: Avatar & Quick Info */}
           <div className="pt-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-4 flex items-center gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-4 flex items-center gap-2">
               <Camera className="h-3.5 w-3.5 text-amber-600" /> Profile Picture & Avatar
             </h3>
             <div className="flex items-center gap-5">
               {/* Avatar circle */}
               <div className="relative group shrink-0">
-                <div className="h-20 w-20 rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-md bg-stone-100 dark:bg-[#251d20] flex items-center justify-center text-2xl font-bold text-amber-700 dark:text-amber-400">
+                <div className="h-20 w-20 rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-md bg-[var(--sheet-chip)] flex items-center justify-center text-2xl font-bold text-amber-700 dark:text-amber-400">
                   {avatar ? (
                     <img
                       src={avatar}
@@ -330,7 +330,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute -bottom-1.5 -right-1.5 p-1.5 rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-lg hover:scale-105 transition"
+                  className="absolute -bottom-1.5 -right-1.5 p-1.5 rounded-full bg-[var(--sheet-solid)] text-[var(--sheet-solid-ink)] shadow-lg hover:scale-105 transition"
                   title="Upload profile photo"
                 >
                   <Camera className="h-3.5 w-3.5" />
@@ -350,7 +350,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-1.5 rounded-lg border border-stone-200 dark:border-[#3b2d30] text-xs font-bold text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-[#241b1d] transition"
+                    className="px-3 py-1.5 rounded-lg border border-[var(--sheet-line-strong)] bg-[var(--sheet-button)] text-xs font-bold text-[var(--sheet-ink)] hover:bg-[var(--sheet-hover)] transition"
                   >
                     Change Photo
                   </button>
@@ -364,7 +364,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
                     </button>
                   )}
                 </div>
-                <p className="mt-2 text-[11px] text-stone-500 dark:text-stone-400">
+                <p className="mt-2 text-[11px] text-[var(--sheet-ink-4)]">
                   JPG, PNG, or WebP. Automatically optimized for fast dashboard load.
                 </p>
               </div>
@@ -373,66 +373,66 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
 
           {/* Section 2: Personal Information Form */}
           <form onSubmit={handleSaveProfile} className="pt-6 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-2 flex items-center gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-2 flex items-center gap-2">
               <User className="h-3.5 w-3.5 text-amber-600" /> Personal Details
             </h3>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-xs font-bold text-[var(--sheet-ink-2)] mb-1">
                 Display Name *
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--sheet-ink-5)]" />
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
                   placeholder="e.g. Ama Boateng"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-stone-200 dark:border-[#382b2e] bg-stone-50/50 dark:bg-[#1e1719] text-sm font-medium text-stone-900 dark:text-stone-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-xs font-bold text-[var(--sheet-ink-2)] mb-1">
                 Email Address *
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--sheet-ink-5)]" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="e.g. staff@store.com"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-stone-200 dark:border-[#382b2e] bg-stone-50/50 dark:bg-[#1e1719] text-sm font-medium text-stone-900 dark:text-stone-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-xs font-bold text-[var(--sheet-ink-2)] mb-1">
                 Phone Number
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--sheet-ink-5)]" />
                 <input
                   type="tel"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="e.g. 0244123456"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-stone-200 dark:border-[#382b2e] bg-stone-50/50 dark:bg-[#1e1719] text-sm font-medium text-stone-900 dark:text-stone-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                 />
               </div>
             </div>
 
             {/* Role Display (Read-Only) */}
-            <div className="rounded-xl border border-stone-200 dark:border-[#2e2326] bg-stone-50/60 dark:bg-[#1e1719]/60 p-3.5">
+            <div className="rounded-xl border border-[var(--sheet-line)] bg-[var(--sheet-panel)] p-3.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-stone-400" />
-                  <span className="text-xs font-bold text-stone-700 dark:text-stone-300">
+                  <Shield className="h-4 w-4 text-[var(--sheet-ink-5)]" />
+                  <span className="text-xs font-bold text-[var(--sheet-ink-2)]">
                     Assigned Role
                   </span>
                 </div>
@@ -441,7 +441,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
                   {adminSession.adminRole}
                 </span>
               </div>
-              <p className="mt-2 text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed">
+              <p className="mt-2 text-[11px] text-[var(--sheet-ink-4)] leading-relaxed">
                 {roleDescription}
               </p>
             </div>
@@ -463,31 +463,31 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
 
           {/* Section 3: Password / PIN Change Form */}
           <form onSubmit={handleChangePassword} className="pt-6 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-1 flex items-center gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-1 flex items-center gap-2">
               <KeyRound className="h-3.5 w-3.5 text-amber-600" /> Change Password / PIN
             </h3>
-            <p className="text-xs text-stone-500 dark:text-stone-400">
+            <p className="text-xs text-[var(--sheet-ink-4)]">
               Used when signing in to the admin portal or logging onto the POS counter station.
             </p>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+              <label className="block text-xs font-bold text-[var(--sheet-ink-2)] mb-1">
                 Current Password / PIN *
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--sheet-ink-5)]" />
                 <input
                   type={showCurrentPin ? 'text' : 'password'}
                   required
                   value={currentPin}
                   onChange={e => setCurrentPin(e.target.value)}
                   placeholder="Enter current PIN / password"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-stone-200 dark:border-[#382b2e] bg-stone-50/50 dark:bg-[#1e1719] text-sm font-medium text-stone-900 dark:text-stone-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPin(!showCurrentPin)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--sheet-ink-5)] hover:text-[var(--sheet-ink)]"
                 >
                   {showCurrentPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -496,23 +496,23 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                <label className="block text-xs font-bold text-[var(--sheet-ink-2)] mb-1">
                   New Password / PIN *
                 </label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--sheet-ink-5)]" />
                   <input
                     type={showNewPin ? 'text' : 'password'}
                     required
                     value={newPin}
                     onChange={e => setNewPin(e.target.value)}
                     placeholder="Min 4 characters"
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-stone-200 dark:border-[#382b2e] bg-stone-50/50 dark:bg-[#1e1719] text-sm font-medium text-stone-900 dark:text-stone-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPin(!showNewPin)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--sheet-ink-5)] hover:text-[var(--sheet-ink)]"
                   >
                     {showNewPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -520,23 +520,23 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
+                <label className="block text-xs font-bold text-[var(--sheet-ink-2)] mb-1">
                   Confirm Password *
                 </label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--sheet-ink-5)]" />
                   <input
                     type={showConfirmPin ? 'text' : 'password'}
                     required
                     value={confirmPin}
                     onChange={e => setConfirmPin(e.target.value)}
                     placeholder="Re-enter new password"
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-stone-200 dark:border-[#382b2e] bg-stone-50/50 dark:bg-[#1e1719] text-sm font-medium text-stone-900 dark:text-stone-100 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPin(!showConfirmPin)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--sheet-ink-5)] hover:text-[var(--sheet-ink)]"
                   >
                     {showConfirmPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -547,7 +547,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
             <button
               type="submit"
               disabled={isSavingPassword || !newPin || !currentPin}
-              className="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-white font-bold text-xs shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-xl bg-[var(--sheet-solid)] hover:bg-[var(--sheet-solid-hover)] text-[var(--sheet-solid-ink)] font-bold text-xs shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSavingPassword ? 'Updating Password...' : 'Update Password & PIN'}
             </button>
@@ -555,16 +555,16 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
 
           {/* Section 4: Session Security & Sign Out */}
           <div className="pt-6 pb-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-3 flex items-center gap-2">
-              <Shield className="h-3.5 w-3.5 text-stone-500" /> Active Session
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-3 flex items-center gap-2">
+              <Shield className="h-3.5 w-3.5 text-[var(--sheet-ink-4)]" /> Active Session
             </h3>
 
-            <div className="rounded-xl border border-stone-200 dark:border-[#2e2326] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-50/50 dark:bg-[#1c1617]/50">
+            <div className="rounded-xl border border-[var(--sheet-line)] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--sheet-panel)]">
               <div className="space-y-0.5">
-                <p className="text-xs font-bold text-stone-900 dark:text-stone-100">
+                <p className="text-xs font-bold text-[var(--sheet-ink)]">
                   Signed in as {adminSession.adminName}
                 </p>
-                <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                <p className="text-[11px] text-[var(--sheet-ink-4)]">
                   {adminSession.email} · {adminSession.adminRole}
                 </p>
               </div>

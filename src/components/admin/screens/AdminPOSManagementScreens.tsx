@@ -101,8 +101,8 @@ return (
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSelected(null)}>
-          <div className="w-full max-w-md rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-[var(--shadow-card)]" onClick={event => event.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,14,11,0.4)] p-4" onClick={() => setSelected(null)}>
+          <div className="form-sheet w-full max-w-md rounded-xl border p-6" onClick={event => event.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-[var(--text-primary)]">Adjust stock</h2>
               <button onClick={() => setSelected(null)} aria-label="Close" className="rounded-lg p-1.5 text-[var(--text-subtle)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)]"><X className="h-5 w-5" /></button>

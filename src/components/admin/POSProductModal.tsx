@@ -234,8 +234,8 @@ useEffect(() => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(12,8,6,0.62)] p-2 backdrop-blur-sm sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="form-sheet clay-surface flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-bg)] text-[var(--text-primary)] shadow-[0_28px_70px_rgba(0,0,0,0.45)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,14,11,0.4)] p-2 sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="form-sheet flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border text-[var(--text-primary)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
         <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[var(--sheet-head)] px-4 py-2.5 sm:px-5">
           <div>
             <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[var(--highlight)]">Stockroom</p>

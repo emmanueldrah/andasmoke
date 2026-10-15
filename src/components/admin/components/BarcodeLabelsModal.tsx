@@ -591,8 +591,8 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#090909]/70 p-2 sm:p-4 backdrop-blur-sm">
-      <div className="form-sheet print:hidden flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border border-[var(--sheet-line-strong)] bg-[var(--sheet-bg)] shadow-[0_30px_90px_rgba(0,0,0,0.18)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,14,11,0.4)] p-2 sm:p-4">
+      <div className="form-sheet print:hidden flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border">
         <div className="flex items-center justify-between border-b border-[var(--sheet-line)] bg-[var(--sheet-panel)] px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300">
@@ -729,7 +729,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               <div className="overflow-hidden rounded-2xl border border-[var(--sheet-line)]">
                 <div className="max-h-[56vh] overflow-auto">
                   <table className="w-full border-collapse text-left text-xs">
-                    <thead className="sticky top-0 bg-[var(--sheet-panel)] text-[10px] uppercase tracking-[0.12em] text-[var(--sheet-ink-4)]">
+                    <thead className="sticky top-0 z-10 bg-[var(--sheet-sticky)] text-[10px] uppercase tracking-[0.12em] text-[var(--sheet-ink-4)]">
                       <tr>
                         <th className="px-3 py-2.5 text-center">Print</th>
                         <th className="px-3 py-2.5">Product</th>
@@ -746,7 +746,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                         </tr>
                       ) : (
                         filteredItems.map(item => (
-                          <tr key={item.id} className={item.selected ? 'bg-amber-50/30 dark:bg-amber-500/10' : 'bg-[var(--sheet-bg)]'}>
+                          <tr key={item.id} className={item.selected ? 'bg-amber-50/30 dark:bg-amber-500/10' : 'bg-transparent'}>
                             <td className="px-3 py-2.5 text-center">
                               <input type="checkbox" checked={item.selected} onChange={() => handleToggleItem(item.id)} className="h-4 w-4 rounded accent-[var(--sheet-check)]" />
                             </td>

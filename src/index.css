@@ -444,15 +444,16 @@
     color: var(--text-muted);
   }
 
-  /* Form sheet: a solid (never see-through) panel for form windows such as
-     Add product and Barcode labels. Light mode is dark ink on paper; dark
-     mode is bright ink on a solid ember card. Every colour inside the
-     window comes from these tokens, so both themes stay high contrast. */
+  /* Form sheet: a frosted glass pane for windows such as Add product,
+     Barcode labels, Adjust stock and My profile. The pane blurs the page
+     behind it heavily, so the tint stays calm and the ink stays crisp.
+     Light mode is dark ink on milky glass; dark mode is bright ink on smoked
+     ember glass. Every colour inside the window comes from these tokens. */
   .form-sheet {
     color-scheme: light;
-    --bg-card: #ffffff;
-    --bg-card-alt: #fbf6f0;
-    --bg-soft: #f1e8df;
+    --bg-card: rgba(255, 255, 255, 0.62);
+    --bg-card-alt: rgba(255, 250, 244, 0.7);
+    --bg-soft: rgba(120, 90, 67, 0.1);
     --text-primary: #1b120e;
     --text-muted: #3f322b;
     --text-subtle: #5e4c42;
@@ -467,14 +468,18 @@
     --clay-base: 0 2px 0 rgba(27, 18, 14, 0.1);
     --clay-cast: 0 10px 20px -10px rgba(27, 18, 14, 0.3);
     /* Sheet surfaces and ink, used by the window markup directly. */
-    --sheet-bg: #fffdfa;
-    --sheet-head: #f6efe7;
-    --sheet-panel: #f6efe7;
-    --sheet-field: #ffffff;
-    --sheet-button: #ffffff;
-    --sheet-chip: #efe6dc;
-    --sheet-hover: #f1e6db;
-    --sheet-paper-bed: #e2d6ca;
+    --sheet-bg: rgba(255, 251, 246, 0.74);
+    --sheet-solid-bg: #fffdfa;
+    --sheet-sheen: rgba(255, 255, 255, 0.55);
+    --sheet-edge: rgba(255, 255, 255, 0.75);
+    --sheet-head: rgba(255, 255, 255, 0.42);
+    --sheet-panel: rgba(255, 255, 255, 0.46);
+    --sheet-sticky: rgba(248, 241, 233, 0.97);
+    --sheet-field: rgba(255, 255, 255, 0.88);
+    --sheet-button: rgba(255, 255, 255, 0.82);
+    --sheet-chip: rgba(120, 90, 67, 0.12);
+    --sheet-hover: rgba(156, 78, 53, 0.1);
+    --sheet-paper-bed: rgba(120, 90, 67, 0.16);
     --sheet-ink: #1b120e;
     --sheet-ink-2: #2f2119;
     --sheet-ink-3: #45342a;
@@ -488,13 +493,36 @@
     --sheet-solid-hover: #3a291f;
     --sheet-check: #b45309;
     color: var(--text-primary);
+    /* Chrome only frosts a positioned child of the overlay; a static/flex
+       child renders the tint but skips the blur. Anchor to the overlay and
+       let auto margins keep the pane centred. */
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    height: fit-content;
+    background:
+      linear-gradient(155deg, var(--sheet-sheen) 0%, transparent 38%),
+      var(--sheet-bg);
+    border-color: var(--sheet-line-strong);
+    box-shadow:
+      inset 0 1px 0 var(--sheet-edge),
+      0 30px 80px -20px rgba(27, 18, 14, 0.45);
+    backdrop-filter: blur(28px) saturate(165%);
+    -webkit-backdrop-filter: blur(28px) saturate(165%);
+  }
+
+  /* Side sheets (drawers) fill the height and hug their edge instead. */
+  .form-sheet--side {
+    inset: 0 0 0 auto;
+    margin: 0;
+    height: auto;
   }
 
   html.dark .form-sheet {
     color-scheme: dark;
-    --bg-card: #241b17;
-    --bg-card-alt: #2b211c;
-    --bg-soft: #2e231d;
+    --bg-card: rgba(255, 255, 255, 0.06);
+    --bg-card-alt: rgba(255, 255, 255, 0.08);
+    --bg-soft: rgba(255, 255, 255, 0.06);
     --text-primary: #f7efe4;
     --text-muted: #e3d4c0;
     --text-subtle: #c7ae94;
@@ -508,14 +536,18 @@
     --glass-sheen: rgba(255, 255, 255, 0.07);
     --clay-base: 0 2px 0 rgba(0, 0, 0, 0.5);
     --clay-cast: 0 12px 26px -12px rgba(0, 0, 0, 0.7);
-    --sheet-bg: #1c1512;
-    --sheet-head: #261d19;
-    --sheet-panel: #241b17;
-    --sheet-field: #120d0b;
-    --sheet-button: #30251f;
-    --sheet-chip: #33281f;
-    --sheet-hover: #3a2d25;
-    --sheet-paper-bed: #0e0a08;
+    --sheet-bg: rgba(30, 22, 18, 0.72);
+    --sheet-solid-bg: #1c1512;
+    --sheet-sheen: rgba(255, 255, 255, 0.06);
+    --sheet-edge: rgba(255, 255, 255, 0.12);
+    --sheet-head: rgba(255, 255, 255, 0.04);
+    --sheet-panel: rgba(255, 255, 255, 0.05);
+    --sheet-sticky: rgba(38, 29, 25, 0.97);
+    --sheet-field: rgba(10, 7, 6, 0.62);
+    --sheet-button: rgba(255, 255, 255, 0.08);
+    --sheet-chip: rgba(255, 255, 255, 0.08);
+    --sheet-hover: rgba(255, 255, 255, 0.12);
+    --sheet-paper-bed: rgba(0, 0, 0, 0.35);
     --sheet-ink: #f7efe4;
     --sheet-ink-2: #efe3d3;
     --sheet-ink-3: #e3d4c0;
@@ -528,6 +560,9 @@
     --sheet-solid-ink: #1b120e;
     --sheet-solid-hover: #ffffff;
     --sheet-check: #e39d64;
+    box-shadow:
+      inset 0 1px 0 var(--sheet-edge),
+      0 30px 80px -20px rgba(0, 0, 0, 0.7);
   }
 
   /* Fields sit as clear wells in both themes. */
@@ -1234,6 +1269,13 @@
     html.dark .lux-card { background: var(--bg-card); }
     html.dark .glass-panel { background: var(--bg-card); }
     html.dark .pos-sidebar { background: linear-gradient(177deg, #1c1511 0%, #14100d 48%, #0c0807 100%); }
+
+    .form-sheet,
+    html.dark .form-sheet {
+      background: var(--sheet-solid-bg);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 
   /* Backdrop-filter is unsupported or disabled: keep the panes readable. */
@@ -1243,6 +1285,8 @@
     .pos-sidebar { background: linear-gradient(177deg, #251b16 0%, #1c1512 46%, #14100d 100%); }
     html.dark .lux-card,
     html.dark .glass-panel { background: color-mix(in srgb, var(--bg-card) 96%, transparent); }
+    .form-sheet,
+    html.dark .form-sheet { background: var(--sheet-solid-bg); }
   }
 }
 

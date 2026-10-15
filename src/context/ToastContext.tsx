@@ -67,7 +67,7 @@ const ToastItem: React.FC<{ toast: Toast; onRemove: (id: string) => void }> = ({
     <div
       onMouseEnter={toast.persistent ? undefined : pauseTimer}
       onMouseLeave={toast.persistent ? undefined : resumeTimer}
-      className="toast-enter relative overflow-hidden pointer-events-auto flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-[#1E1915] text-[#FAF7F2] border border-[#3E342B]/80 shadow-xl"
+      className="toast-enter relative overflow-hidden pointer-events-auto flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-[rgba(30,25,21,0.82)] text-[#FAF7F2] border border-white/10 shadow-xl backdrop-blur-xl backdrop-saturate-150"
     >
       <div className="flex items-center gap-2">
         {toast.type === 'success' && <CheckCircle2 className={`w-4 h-4 ${iconColor} shrink-0`} />}
