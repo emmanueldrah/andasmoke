@@ -1331,6 +1331,220 @@
   }
 }
 
+/* --------------------------------------------------------------------------
+   Product visual language: Arctic Glass
+   A restrained blue system for a real-world POS.  These overrides deliberately
+   replace the earlier decorative "clay" treatment with clear hierarchy,
+   generous contrast and one consistent glass material.  Existing screens use
+   the shared tokens, so this applies to the register, inventory and dialogs.
+   -------------------------------------------------------------------------- */
+:root {
+  --font-sans: "Manrope", "Segoe UI", sans-serif;
+  --font-display: "Manrope", "Segoe UI", sans-serif;
+  --bg-main: rgba(239, 248, 252, 0.18);
+  --bg-card: rgba(255, 255, 255, 0.20);
+  --bg-card-alt: rgba(247, 252, 255, 0.24);
+  --bg-soft: rgba(219, 239, 248, 0.22);
+  --text-primary: #0b2534;
+  --text-muted: #3e6171;
+  --text-subtle: #638292;
+  --border-color: rgba(32, 102, 132, 0.20);
+  --accent: #087ea4;
+  --accent-strong: #0b9fbd;
+  --accent-ink: #f4fdff;
+  --accent-soft: rgba(8, 126, 164, 0.13);
+  --highlight: #147da0;
+  --jade: #087f72;
+  --jade-soft: rgba(8, 127, 114, 0.12);
+  --violet: #386aaf;
+  --violet-strong: #4e81c5;
+  --violet-soft: rgba(56, 106, 175, 0.12);
+  --olive: #687b44;
+  --olive-strong: #7d934f;
+  --danger: #bd4c55;
+  --danger-soft: rgba(189, 76, 85, 0.11);
+  --shadow-soft: 0 12px 30px rgba(18, 75, 100, 0.10);
+  --shadow-card: 0 20px 48px rgba(18, 75, 100, 0.14);
+  --glass-blur: 14px;
+  --glass-sheen: rgba(255, 255, 255, 0.72);
+  --glass-sheen-soft: rgba(255, 255, 255, 0.30);
+  --glass-edge: rgba(255, 255, 255, 0.68);
+  --mark-opacity: 0.18;
+  --mark-blur: 0px;
+  --mark-filter: saturate(0.85) contrast(1.05);
+}
+
+html.dark {
+  --bg-main: rgba(4, 29, 43, 0.14);
+  --bg-card: rgba(9, 48, 66, 0.18);
+  --bg-card-alt: rgba(12, 59, 79, 0.16);
+  --bg-soft: rgba(102, 192, 218, 0.09);
+  --text-primary: #ecfbff;
+  --text-muted: #bedbe5;
+  --text-subtle: #8eafbd;
+  --border-color: rgba(136, 220, 240, 0.18);
+  --accent: #38c3e2;
+  --accent-strong: #72dcf2;
+  --accent-ink: #032433;
+  --accent-soft: rgba(56, 195, 226, 0.16);
+  --highlight: #73d7ec;
+  --jade: #5bd9c4;
+  --jade-soft: rgba(91, 217, 196, 0.13);
+  --violet: #9fc5ff;
+  --violet-strong: #bed8ff;
+  --violet-soft: rgba(159, 197, 255, 0.13);
+  --olive: #d4dc91;
+  --olive-strong: #e0eaa4;
+  --danger: #ff9c9d;
+  --danger-soft: rgba(255, 156, 157, 0.14);
+  --shadow-soft: 0 16px 38px rgba(0, 11, 19, 0.30);
+  --shadow-card: 0 24px 60px rgba(0, 11, 19, 0.40);
+  --glass-sheen: rgba(232, 252, 255, 0.12);
+  --glass-sheen-soft: rgba(225, 251, 255, 0.07);
+  --glass-edge: rgba(190, 241, 252, 0.18);
+  --mark-opacity: 0.20;
+  --mark-filter: invert(1) sepia(0.18) saturate(0.9) hue-rotate(145deg);
+}
+
+body {
+  background:
+    radial-gradient(900px 600px at 90% -12%, rgba(52, 180, 212, 0.21), transparent 61%),
+    radial-gradient(760px 560px at -10% 100%, rgba(95, 175, 205, 0.15), transparent 60%),
+    linear-gradient(135deg, #edf9fc 0%, #e5f3f8 48%, #f7fcfd 100%);
+}
+
+html.dark body {
+  background:
+    radial-gradient(900px 600px at 92% -16%, rgba(25, 169, 205, 0.23), transparent 58%),
+    radial-gradient(860px 620px at -8% 108%, rgba(5, 98, 135, 0.22), transparent 60%),
+    linear-gradient(135deg, #031d2c 0%, #062c40 48%, #021923 100%) !important;
+}
+
+body::before { background-position: 88% 8%; background-size: min(520px, 42vw); }
+body::after { background-position: 5% 86%; background-size: min(420px, 34vw); }
+
+.admin-shell__frame {
+  border-color: var(--glass-edge);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 var(--glass-edge), 0 28px 64px -32px rgba(4, 47, 65, 0.30);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+}
+
+.glass-panel, .lux-card,
+html [class~="bg-white"], html [class~="bg-stone-50"], html [class~="bg-gray-50"], html [class~="bg-slate-50"], html [class~="bg-zinc-50"] {
+  background: linear-gradient(145deg, rgba(255,255,255,0.20), rgba(236,250,255,0.055)) !important;
+  border-color: var(--glass-edge) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), var(--shadow-soft) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(135%) !important;
+}
+
+html.dark .glass-panel, html.dark .lux-card,
+html.dark [class~="bg-white"], html.dark [class~="bg-stone-50"], html.dark [class~="bg-gray-50"], html.dark [class~="bg-slate-50"], html.dark [class~="bg-zinc-50"] {
+  background: linear-gradient(145deg, rgba(29,111,138,0.16), rgba(3,37,54,0.055)) !important;
+  border-color: var(--glass-edge) !important;
+  box-shadow: inset 0 1px 0 rgba(218,249,255,0.12), var(--shadow-card) !important;
+}
+
+.lux-btn { border-radius: 0.7rem; box-shadow: none; font-weight: 750; }
+.lux-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.lux-btn:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+.lux-btn--primary, .pos-pay {
+  background: linear-gradient(135deg, #087ea4, #0a9fc0) !important;
+  border-color: rgba(6, 94, 124, 0.72) !important;
+  color: #f5fdff !important;
+  box-shadow: 0 10px 22px -12px rgba(1, 82, 112, 0.78) !important;
+}
+html.dark .lux-btn--primary, html.dark .pos-pay {
+  background: linear-gradient(135deg, #129ab9, #39c5df) !important;
+  border-color: rgba(141, 232, 249, 0.26) !important;
+  color: #032433 !important;
+  box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.72) !important;
+}
+.lux-btn--outline, .lux-btn--ink { background: var(--bg-card); border-color: var(--border-color); box-shadow: none; }
+.lux-input, .lux-select, .pos-scan {
+  border-color: var(--border-color);
+  background: rgba(255,255,255,0.78);
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 2px rgba(14, 76, 100, 0.07);
+}
+html.dark .lux-input, html.dark .lux-select, html.dark .pos-scan { background: rgba(2,26,38,0.22); border-color: var(--border-color); }
+
+.pos-sidebar, html.dark .pos-sidebar {
+  background: linear-gradient(180deg, rgba(7,61,82,0.88), rgba(3,34,49,0.92)) !important;
+  border-right-color: rgba(183,239,249,0.16);
+  box-shadow: inset -1px 0 rgba(215,250,255,0.08), 20px 0 52px -28px rgba(0,20,30,0.68);
+}
+.pos-brand-name { background: none; color: #f0fcff; }
+.pos-nav-cta { background: #52d0e7; color: #042938; box-shadow: none; }
+.pos-nav-cta:hover { box-shadow: 0 8px 18px -12px rgba(0,0,0,0.75); }
+.pos-sidebar .text-amber-300, .pos-sidebar .text-amber-400 { color: #8ce5f4 !important; }
+
+.form-sheet {
+  --sheet-bg: rgba(247, 253, 255, 0.60);
+  --sheet-solid-bg: #f8fdff;
+  --sheet-sheen: rgba(255,255,255,0.68);
+  --sheet-edge: rgba(255,255,255,0.80);
+  --sheet-head: rgba(255,255,255,0.24);
+  --sheet-panel: rgba(255,255,255,0.30);
+  --sheet-sticky: rgba(238,248,252,0.96);
+  --sheet-field: rgba(255,255,255,0.86);
+  --sheet-button: rgba(255,255,255,0.72);
+  --sheet-chip: rgba(8,126,164,0.10);
+  --sheet-hover: rgba(8,126,164,0.10);
+  --sheet-ink: #0b2534;
+  --sheet-ink-2: #1a4254;
+  --sheet-ink-3: #315b6d;
+  --sheet-ink-4: #477184;
+  --sheet-ink-5: #638292;
+  --sheet-line: rgba(32,102,132,0.22);
+  --sheet-line-strong: rgba(32,102,132,0.34);
+  --sheet-solid: #0b2534;
+  --sheet-solid-ink: #ffffff;
+  --sheet-solid-hover: #16495c;
+}
+html.dark .form-sheet {
+  --sheet-bg: rgba(5,43,61,0.58);
+  --sheet-solid-bg: #062b3d;
+  --sheet-sheen: rgba(219,251,255,0.08);
+  --sheet-edge: rgba(190,241,252,0.18);
+  --sheet-head: rgba(196,244,255,0.05);
+  --sheet-panel: rgba(196,244,255,0.06);
+  --sheet-sticky: rgba(5,43,61,0.98);
+  --sheet-field: rgba(1,25,37,0.64);
+  --sheet-button: rgba(196,244,255,0.09);
+  --sheet-chip: rgba(56,195,226,0.13);
+  --sheet-hover: rgba(56,195,226,0.16);
+  --sheet-ink: #ecfbff;
+  --sheet-ink-2: #d3edf4;
+  --sheet-ink-3: #b8d8e2;
+  --sheet-ink-4: #a1c4cf;
+  --sheet-ink-5: #8eafbd;
+  --sheet-line: rgba(136,220,240,0.18);
+  --sheet-line-strong: rgba(136,220,240,0.30);
+  --sheet-solid: #ecfbff;
+  --sheet-solid-ink: #062b3d;
+  --sheet-solid-hover: #ffffff;
+}
+
+/* Legacy screen utilities: preserve their meaning but bring every remaining
+   old amber/stone surface into the shared blue glass system. */
+html [class*="bg-amber-"] { background-color: var(--accent-soft) !important; }
+html [class*="text-amber-"] { color: var(--accent) !important; }
+html [class*="border-amber-"] { border-color: color-mix(in srgb, var(--accent) 38%, transparent) !important; }
+html [class*="ring-amber-"] { --tw-ring-color: color-mix(in srgb, var(--accent) 45%, transparent) !important; }
+html [class*="bg-stone-"] { background-color: color-mix(in srgb, var(--bg-card) 76%, transparent) !important; }
+html [class*="text-stone-"] { color: var(--text-primary) !important; }
+html [class*="border-stone-"] { border-color: var(--border-color) !important; }
+html [class*="focus:border-amber-"]:focus { border-color: var(--accent) !important; }
+html [class*="focus:ring-amber-"]:focus { --tw-ring-color: var(--accent-soft) !important; }
+button[class*="bg-amber-"], a[class*="bg-amber-"] {
+  background: var(--accent) !important;
+  color: #f4fdff !important;
+}
+button[class*="bg-amber-"]:hover, a[class*="bg-amber-"]:hover { background: var(--accent-strong) !important; }
+
 .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-pulse-badge { animation: pulse-badge 1.5s ease-in-out infinite; }
 .animate-slide-left { animation: slide-left 15s linear infinite; }

@@ -1032,7 +1032,7 @@ return (
             className="flex items-center gap-2 rounded-full border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_70%,transparent)] py-1.5 pl-1.5 pr-3"
             title="This sale will be recorded against your name"
           >
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--accent)] text-[10px] font-extrabold text-[#1C1405]">
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--accent)] text-[10px] font-extrabold text-[var(--accent-ink)]">
               {(serverName || 'S').charAt(0).toUpperCase()}
             </span>
             <span className="min-w-0">
@@ -1144,7 +1144,7 @@ return (
                       {item.stock <= 5 && <p className="mt-1 text-[10px] font-extrabold uppercase tracking-wide text-[var(--highlight)]">Low stock</p>}
                       <div className="mt-2.5 flex items-center justify-between gap-2">
                         <span className="text-sm font-bold tabular-nums text-[var(--text-primary)]">{money(Number(item.variant?.price ?? item.product.price))}</span>
-                        <span className="rounded-lg bg-[var(--accent-soft)] p-1.5 text-[var(--accent)] transition group-hover:bg-[var(--accent)] group-hover:text-[#1C1405]"><Plus className="h-4 w-4" /></span>
+                        <span className="rounded-lg bg-[var(--accent-soft)] p-1.5 text-[var(--accent)] transition group-hover:bg-[var(--accent)] group-hover:text-[var(--accent-ink)]"><Plus className="h-4 w-4" /></span>
                       </div>
                     </div>
                   </button>

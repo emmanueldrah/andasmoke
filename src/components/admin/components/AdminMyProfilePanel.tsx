@@ -249,7 +249,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-hidden bg-[rgba(20,14,11,0.4)] flex justify-end font-sans"
+      className="fixed inset-0 z-50 overflow-hidden bg-[rgba(2,25,38,0.42)] flex justify-end font-sans"
       onClick={onClose}
     >
       <div
@@ -455,7 +455,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
                 <>Saving Changes...</>
               ) : (
                 <>
-                  <Sparkles className="h-3.5 w-3.5" /> Save Profile Changes
+                Save Profile Changes
                 </>
               )}
             </button>

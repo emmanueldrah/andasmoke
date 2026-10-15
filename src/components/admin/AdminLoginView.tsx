@@ -11,11 +11,9 @@ import {
   Mail,
   Sun,
   Moon,
-  ShieldCheck,
   UserPlus,
   Store,
   Clock,
-  Sparkles,
   KeyRound,
   CheckCircle2,
   User,
@@ -189,8 +187,8 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
       className="relative flex min-h-screen flex-col overflow-x-hidden font-sans text-[var(--text-primary)] transition-colors duration-300 select-none"
       style={{
         background: isDark
-          ? 'radial-gradient(ellipse at 15% 10%, rgba(197,150,81,0.15) 0%, transparent 42%), radial-gradient(ellipse at 88% 88%, rgba(71,123,104,0.12) 0%, transparent 42%), linear-gradient(145deg, #18120f, #13100d 50%, #0c0907)'
-          : 'radial-gradient(ellipse at 15% 10%, rgba(197,150,81,0.12) 0%, transparent 42%), radial-gradient(ellipse at 88% 88%, rgba(71,123,104,0.08) 0%, transparent 42%), linear-gradient(145deg, #fdfaf6, #f6f0e6 50%, #edf3ef)',
+          ? 'radial-gradient(ellipse at 14% 8%, rgba(48,195,226,0.20) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(13,111,149,0.22) 0%, transparent 46%), linear-gradient(145deg, #031d2c, #062c40 50%, #021923)'
+          : 'radial-gradient(ellipse at 14% 8%, rgba(48,180,212,0.20) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(95,175,205,0.16) 0%, transparent 46%), linear-gradient(145deg, #edf9fc, #e5f3f8 50%, #f7fcfd)',
       }}
     >
       <style>{`
@@ -209,9 +207,14 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
         .fade-in { animation: fadeSlideIn 0.3s ease both; }
       `}</style>
 
-      {/* Watermark brand mark */}
-      <div className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden opacity-[0.05] dark:opacity-[0.07]">
-        <BrandMark name={storeSettings.storeName} className="h-[44rem] w-[44rem] rounded-[32%]" />
+      {/* Brand watermark stays behind the glass surface, not inside a card. */}
+      <div className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden">
+        <img
+          src="/brand-mark.png"
+          alt=""
+          aria-hidden="true"
+          className="h-[48rem] w-[48rem] max-w-[96vw] object-contain opacity-[0.17] saturate-[0.8] dark:opacity-[0.20] dark:invert dark:hue-rotate-[145deg]"
+        />
       </div>
 
       {/* ── Top Bar ──────────────────────────────────────────────────────────── */}
@@ -269,34 +272,23 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
 
       {/* ── Main Card ────────────────────────────────────────────────────────── */}
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-4 sm:py-8">
-        <div className={`w-full max-w-5xl overflow-hidden rounded-3xl border border-white/20 bg-white/75 shadow-[0_28px_80px_rgba(30,18,8,0.14)] backdrop-blur-xl transition-all duration-300 dark:border-white/10 dark:bg-[#181210]/85 dark:shadow-[0_28px_80px_rgba(0,0,0,0.52)] ${isShaking ? 'login-shake' : ''}`}>
+        <div className={`glass-panel w-full max-w-5xl overflow-hidden rounded-3xl border transition-all duration-300 ${isShaking ? 'login-shake' : ''}`}>
           <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
 
             {/* ── Left Panel: Brand + Info ────────────────────────────────── */}
-            <div className="relative flex flex-col justify-between overflow-hidden border-b border-stone-200/60 bg-gradient-to-br from-amber-600/10 via-stone-500/5 to-transparent p-6 dark:border-white/8 lg:border-b-0 lg:border-r sm:p-8">
-              {/* Decorative glow */}
-              <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[var(--accent)]/10 blur-3xl" />
-
-              <div className="relative space-y-6">
+            <div className="relative flex flex-col justify-between border-b border-[var(--border-color)] bg-[rgba(16,151,187,0.05)] p-6 lg:border-b-0 lg:border-r sm:p-8">
+              <div className="space-y-6">
                 {/* Brand mark + heading */}
                 <div className="flex items-start gap-4">
-                  <div className="relative shrink-0">
-                    <BrandMark name={storeSettings.storeName} className="h-16 w-16 rounded-2xl shadow-lg" />
-                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-emerald-500 dark:border-stone-900">
-                      <Sparkles className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
+                  <BrandMark name={storeSettings.storeName} className="h-16 w-16 rounded-2xl" />
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--accent-strong)]">
-                      {mode === 'pos' ? 'Authorized POS Terminal' : 'Admin Portal'}
-                    </p>
-                    <h1 className="mt-0.5 text-2xl font-black tracking-tight text-[var(--text-primary)] sm:text-3xl">
-                      {isSetup ? 'Register Setup' : 'Sign In'}
+                    <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
+                      {isSetup ? 'Set up this register' : 'Point of sale'}
                     </h1>
-                    <p className="mt-1 max-w-xs text-xs leading-relaxed text-[var(--text-muted)]">
+                    <p className="mt-2 max-w-xs text-sm leading-relaxed text-[var(--text-muted)]">
                       {isSetup
-                        ? 'Create the primary super admin for this point-of-sale register.'
-                        : 'Enter your email and PIN to access your workspace.'}
+                        ? 'Create the first administrator account for this register.'
+                        : 'Use your email address and PIN to continue.'}
                     </p>
                   </div>
                 </div>
@@ -361,18 +353,6 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                   </div>
                 )}
 
-                {/* Security note */}
-                <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/40 p-3.5">
-                  <div className="flex items-start gap-2.5">
-                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                    <div>
-                      <p className="text-xs font-bold text-[var(--text-primary)]">Encrypted local-first till</p>
-                      <p className="mt-0.5 text-[11px] leading-relaxed text-[var(--text-subtle)]">
-                        Transactions work offline and sync to cloud automatically.
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Footer */}
@@ -393,8 +373,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                 /* ── FIRST-RUN SETUP ─────────────────────────────────────── */
                 <form onSubmit={handleSetupSubmit} className="space-y-4">
                   <div className="mb-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-strong)]">First-run wizard</p>
-                    <h2 className="mt-1 text-xl font-black text-[var(--text-primary)]">Create Super Admin</h2>
+                    <h2 className="text-xl font-bold text-[var(--text-primary)]">Create administrator account</h2>
                     <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                       This runs once and creates the primary administrator account.
                     </p>
@@ -469,8 +448,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                 /* ── STANDARD SIGN-IN ────────────────────────────────────── */
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="mb-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--accent-strong)]">Secure sign in</p>
-                    <h2 className="mt-1 text-2xl font-black tracking-tight text-[var(--text-primary)]">Welcome back</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Sign in</h2>
                     {selectedMember && !manualEmailMode && (
                       <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                         Signing in as <strong className="text-[var(--text-primary)]">{selectedMember.name}</strong>
@@ -582,10 +560,6 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                     )}
                   </button>
 
-                  <p className="text-center text-[11px] text-[var(--text-subtle)]">
-                    Press <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-soft)] px-1.5 py-0.5 font-mono text-[10px]">Tab</kbd> to move between fields
-                    · <kbd className="rounded border border-[var(--border-color)] bg-[var(--bg-soft)] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd> to sign in
-                  </p>
                 </form>
               )}
             </div>
@@ -598,7 +572,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
         <span>© {new Date().getFullYear()} {storeSettings.storeName}. All rights reserved.</span>
         <span className="flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          Terminal secure · v1.0.0
+          POS terminal · v1.0.0
         </span>
       </footer>
     </div>

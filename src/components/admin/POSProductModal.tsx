@@ -234,7 +234,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(20,14,11,0.4)] p-2 sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,25,38,0.42)] p-2 sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="form-sheet flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border text-[var(--text-primary)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
         <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[var(--sheet-head)] px-4 py-2.5 sm:px-5">
           <div>
