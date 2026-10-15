@@ -175,7 +175,7 @@ export const AdminPortal: React.FC = () => {
     if (isSyncing) return;
     setIsSyncing(true);
     try {
-      const res = await api.post<{ flushed: number; pending: number }>('/pos-sync?action=flush');
+      const res = await api.post<{ flushed: number; pending: number }>('/pos-sync?action=flush', {});
       setSyncStatus(prev => prev ? { ...prev, pendingCount: res.pending } : { pendingCount: res.pending, syncedCount: 0 });
       if (res.flushed > 0) {
         showAlert(`Synced ${res.flushed} sale${res.flushed === 1 ? '' : 's'} to cloud`, 'success');
@@ -203,6 +203,17 @@ export const AdminPortal: React.FC = () => {
     fetchSync();
     const syncTimer = window.setInterval(fetchSync, 12_000);
     return () => { active = false; window.clearInterval(syncTimer); };
+  }, []);
+
+  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
+
+  useEffect(() => {
+    const andaPos = (window as any).andaPos;
+    if (andaPos?.onUpdateDownloaded) {
+      return andaPos.onUpdateDownloaded((info: any) => {
+        setUpdateAvailable(info?.version || 'new');
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -484,6 +495,18 @@ export const AdminPortal: React.FC = () => {
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
+                {updateAvailable && (
+                  <button
+                    type="button"
+                    onClick={() => (window as any).andaPos?.restartAndInstallUpdate?.()}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/15 px-3 py-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 border border-blue-500/30 hover:bg-blue-500/25 transition cursor-pointer"
+                    title="Click to restart the till and apply update"
+                  >
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    <span>Update ready (v{updateAvailable}) - Restart</span>
+                  </button>
+                )}
+
                 {syncStatus && syncStatus.pendingCount > 0 ? (
                   <button
                     type="button"

@@ -604,7 +604,6 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
     let allocated = 0; let change = 0;
     const applied: typeof tenders = [];
     for (const tender of tenders) {
-      if (tender.method === 'momo-mtn' && (!tender.reference && !sale.paymentReference || !tender.senderPhone && !sale.paymentSenderPhone)) throw Object.assign(new Error('Mobile-money reference and sender phone are required.'), { statusCode:400 });
       const remaining = total - allocated;
       if (tender.amount > remaining && tender.method !== 'cash-on-delivery') throw Object.assign(new Error('A non-cash payment must match the amount exactly.'), {statusCode:400});
       const amount = Math.min(tender.amount, remaining);

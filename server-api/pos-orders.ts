@@ -157,9 +157,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       }
       if (sale.shippingFee !== 0) return res.status(400).json({ error: 'Counter sales cannot include delivery fees.' });
       const hasExplicitTenders = Array.isArray(req.body?.tenders) && req.body.tenders.length > 0;
-      if (!hasExplicitTenders && sale.paymentMethod === 'momo-mtn' && (!sale.paymentReference || !sale.paymentSenderPhone)) {
-        return res.status(400).json({ error: 'Mobile-money reference and sender phone are required.' });
-      }
 
       const created = db.transaction((tx) => {
         const [existing] = tx.select().from(orders).where(eq(orders.idempotencyKey, sale.idempotencyKey)).limit(1).all();
@@ -282,9 +279,6 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         const appliedTenders: typeof tenderRows = [];
 
         for (const tender of tenderRows) {
-          if (tender.method === 'momo-mtn' && (!tender.reference || !tender.senderPhone)) {
-            throw new Error('Mobile-money reference and sender phone are required.');
-          }
           const remaining = total - appliedTenders.reduce((sum, applied) => sum + applied.amount, 0);
           if (tender.amount > remaining) {
             if (tender.method === 'cash-on-delivery') {

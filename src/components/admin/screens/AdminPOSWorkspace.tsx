@@ -559,19 +559,6 @@ export function AdminPOSWorkspace() {
       return;
     }
 
-    // Every tender must be complete before the sale can be posted, so the
-    // cashier is told what is missing rather than the server refusing it.
-    for (const tender of tenders) {
-      if (tender.method === 'momo-mtn' && !tender.reference.trim()) {
-        showAlert('Add the mobile-money reference before completing the sale.', 'warning');
-        return;
-      }
-      if (tender.method === 'momo-mtn' && !tender.senderPhone.trim()) {
-        showAlert('Add the sender phone for the mobile-money payment.', 'warning');
-        return;
-      }
-    }
-
     // A non-cash tender cannot exceed what is owed: there is no drawer to give
     // change from, and accepting it would leave the till short.
     for (const tender of tenders) {
@@ -1444,14 +1431,14 @@ return (
                               aria-label={`Payment ${index + 1} reference`}
                               value={tender.reference}
                               onChange={event => setTenders(current => current.map(row => row.id === tender.id ? { ...row, reference: event.target.value } : row))}
-                              placeholder="Reference"
+                              placeholder="Ref / Tx ID (optional)"
                               className="lux-input text-xs"
                             />
                             <input
                               aria-label={`Payment ${index + 1} sender phone`}
                               value={tender.senderPhone}
                               onChange={event => setTenders(current => current.map(row => row.id === tender.id ? { ...row, senderPhone: event.target.value } : row))}
-                              placeholder="Sender phone"
+                              placeholder="Phone (optional)"
                               className="lux-input text-xs"
                             />
                           </div>
@@ -1497,12 +1484,12 @@ return (
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="sr-only" htmlFor="pos-payment-reference">Payment reference</label>
-                    <input id="pos-payment-reference" value={reference} onChange={event => setReference(event.target.value)} placeholder="Reference" className="lux-input" />
+                    <input id="pos-payment-reference" value={reference} onChange={event => setReference(event.target.value)} placeholder="Ref / Tx ID (optional)" className="lux-input" />
                   </div>
                   {payment === 'momo-mtn' && (
                     <div>
                       <label className="sr-only" htmlFor="pos-sender-phone">Sender phone</label>
-                      <input id="pos-sender-phone" value={senderPhone} onChange={event => setSenderPhone(event.target.value)} placeholder="Sender phone" className="lux-input" />
+                      <input id="pos-sender-phone" value={senderPhone} onChange={event => setSenderPhone(event.target.value)} placeholder="Phone (optional)" className="lux-input" />
                     </div>
                   )}
                 </div>

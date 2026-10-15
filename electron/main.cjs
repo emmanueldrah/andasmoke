@@ -58,6 +58,40 @@ app.whenReady().then(async () => {
     console.error('[pos] renderer failed to load, code ' + code);
   });
 
+  // ── Background Auto-Updater (packaged production installs) ───────────────
+  if (app.isPackaged) {
+    try {
+      const { autoUpdater } = require('electron-updater');
+      autoUpdater.autoDownload = true;
+      autoUpdater.autoInstallOnAppQuit = true;
+
+      autoUpdater.on('update-downloaded', (info) => {
+        console.log('[updater] Update downloaded:', info?.version);
+        win.webContents.send('pos:update-downloaded', { version: info?.version });
+      });
+
+      autoUpdater.on('error', (err) => {
+        console.warn('[updater] Update check:', err?.message || err);
+      });
+
+      ipcMain.handle('pos:restart-and-install', () => {
+        autoUpdater.quitAndInstall();
+      });
+
+      // Check for updates 15s after startup
+      setTimeout(() => {
+        autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+      }, 15_000);
+
+      // Check periodically every 2 hours
+      setInterval(() => {
+        autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+      }, 2 * 60 * 60 * 1000);
+    } catch (updaterErr) {
+      console.warn('[updater] Could not start updater:', updaterErr);
+    }
+  }
+
   app.on('activate', () => {
     if (!BrowserWindow.getAllWindows().length) win.show();
   });

@@ -1,8 +1,7 @@
 if (!process.env.CSC_LINK) {
-  console.error(
-    "Windows installer packaging requires a code-signing certificate. Set CSC_LINK to your trusted .p12/.pfx certificate path and CSC_KEY_PASSWORD if needed."
+  console.warn(
+    "Notice: CSC_LINK is not set. Packaging an unsigned Windows installer. Windows SmartScreen may show an untrusted publisher notice on installation."
   );
-  process.exit(1);
+} else {
+  console.log("Code-signing certificate reference configured; electron-builder will validate it during packaging.");
 }
-
-console.log("Code-signing certificate reference configured; electron-builder will validate it during packaging.");

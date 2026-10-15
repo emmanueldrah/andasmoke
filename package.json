@@ -57,6 +57,13 @@
     "directories": {
       "output": "release"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "emmanueldrah",
+        "repo": "andasmoke"
+      }
+    ],
     "electronDist": "node_modules/electron/dist",
     "files": [
       "electron/**/*",
