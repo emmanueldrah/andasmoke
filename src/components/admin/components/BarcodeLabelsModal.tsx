@@ -595,7 +595,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
       <div className="form-sheet print:hidden flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border">
         <div className="flex items-center justify-between border-b border-[var(--sheet-line)] bg-[var(--sheet-panel)] px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
               <Barcode className="h-5 w-5" />
             </div>
             <div>
@@ -632,7 +632,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               onClick={() => setActiveTab('select')}
               className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
                 activeTab === 'select'
-                  ? 'border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                  ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
                   : 'border-[var(--sheet-line)] bg-[var(--sheet-field)] text-[var(--sheet-ink-3)] hover:border-[var(--sheet-line-strong)]'
               }`}
             >
@@ -643,7 +643,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               onClick={() => setActiveTab('preview')}
               className={`rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
                 activeTab === 'preview'
-                  ? 'border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                  ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
                   : 'border-[var(--sheet-line)] bg-[var(--sheet-field)] text-[var(--sheet-ink-3)] hover:border-[var(--sheet-line-strong)]'
               }`}
             >
@@ -656,7 +656,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               type="button"
               onClick={handleAutoGenerateMissing}
               disabled={isGeneratingBarcodes}
-              className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/15 px-3 py-1.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-100 dark:hover:bg-amber-500/25 disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1.5 text-[11px] font-bold text-[var(--accent)] transition hover:bg-[var(--accent-soft)] disabled:cursor-wait disabled:opacity-60"
             >
               {isGeneratingBarcodes ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
               {missingBarcodeCount} missing
@@ -687,7 +687,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                 </div>
 
                 {missingBarcodeCount > 0 && (
-                  <button type="button" onClick={handleAutoGenerateMissing} disabled={isGeneratingBarcodes} className="rounded-lg bg-amber-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-amber-800 disabled:opacity-60">
+                  <button type="button" onClick={handleAutoGenerateMissing} disabled={isGeneratingBarcodes} className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-[11px] font-bold text-[var(--accent-ink)] transition hover:bg-[var(--accent-strong)] disabled:opacity-60">
                     {isGeneratingBarcodes ? 'Generating…' : `Generate ${missingBarcodeCount}`}
                   </button>
                 )}
@@ -701,7 +701,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     placeholder="Search inventory..."
-                    className="w-full rounded-xl border border-[var(--sheet-line)] bg-[var(--sheet-field)] py-2.5 pl-9 pr-10 text-xs font-medium text-[var(--sheet-ink)] outline-none transition focus:border-amber-500"
+                    className="w-full rounded-xl border border-[var(--sheet-line)] bg-[var(--sheet-field)] py-2.5 pl-9 pr-10 text-xs font-medium text-[var(--sheet-ink)] outline-none transition focus:border-[var(--accent)]"
                   />
                   {searchTerm && (
                     <button type="button" onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--sheet-ink-5)] hover:text-[var(--sheet-ink)]">
@@ -718,9 +718,9 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               </div>
 
               {unsavedBarcodeItems.length > 0 && (
-                <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/15 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-200">
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-2.5 text-xs text-[var(--accent)]">
                   <span className="font-semibold">{unsavedBarcodeItems.length} barcode change{unsavedBarcodeItems.length === 1 ? '' : 's'} not saved</span>
-                  <button type="button" onClick={() => void handleSaveBarcodeChanges()} disabled={isSavingBarcodes} className="rounded-lg bg-amber-700 px-2.5 py-1.5 font-bold text-white transition hover:bg-amber-800 disabled:opacity-60">
+                  <button type="button" onClick={() => void handleSaveBarcodeChanges()} disabled={isSavingBarcodes} className="rounded-lg bg-[var(--accent)] px-2.5 py-1.5 font-bold text-[var(--accent-ink)] transition hover:bg-[var(--accent-strong)] disabled:opacity-60">
                     {isSavingBarcodes ? 'Saving…' : 'Save'}
                   </button>
                 </div>
@@ -746,7 +746,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                         </tr>
                       ) : (
                         filteredItems.map(item => (
-                          <tr key={item.id} className={item.selected ? 'bg-amber-50/30 dark:bg-amber-500/10' : 'bg-transparent'}>
+                          <tr key={item.id} className={item.selected ? 'bg-[var(--accent-soft)]' : 'bg-transparent'}>
                             <td className="px-3 py-2.5 text-center">
                               <input type="checkbox" checked={item.selected} onChange={() => handleToggleItem(item.id)} className="h-4 w-4 rounded accent-[var(--sheet-check)]" />
                             </td>
@@ -764,11 +764,11 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                               </div>
                             </td>
                             <td className="px-3 py-2.5">
-                              <input value={item.barcode} onChange={e => handleUpdateBarcodeText(item.id, e.target.value)} className={`w-full rounded-lg border px-2.5 py-1.5 font-mono text-[11px] outline-none ${item.barcode ? 'border-[var(--sheet-line)] bg-[var(--sheet-panel)] text-[var(--sheet-ink)]' : 'border-amber-200 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-200'}`} />
+                              <input value={item.barcode} onChange={e => handleUpdateBarcodeText(item.id, e.target.value)} className={`w-full rounded-lg border px-2.5 py-1.5 font-mono text-[11px] outline-none ${item.barcode ? 'border-[var(--sheet-line)] bg-[var(--sheet-panel)] text-[var(--sheet-ink)]' : 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'}`} />
                             </td>
                             <td className="px-3 py-2.5 text-right font-black text-[var(--sheet-ink)]">GH₵ {Number(item.price).toFixed(2)}</td>
                             <td className="px-3 py-2.5 text-center">
-                              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.stockCount <= 0 ? 'bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-300' : item.stockCount <= 5 ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-[var(--sheet-chip)] text-[var(--sheet-ink-2)]'}`}>
+                              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.stockCount <= 0 ? 'bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-300' : item.stockCount <= 5 ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'bg-[var(--sheet-chip)] text-[var(--sheet-ink-2)]'}`}>
                                 {item.stockCount}
                               </span>
                             </td>
@@ -791,7 +791,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                 <p className="text-xs text-[var(--sheet-ink-4)]">
                   {totalLabelsCount} labels • {selectedItems.length} products selected
                 </p>
-                <button type="button" onClick={() => setActiveTab('preview')} className="inline-flex items-center gap-2 rounded-xl bg-amber-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-800">
+                <button type="button" onClick={() => setActiveTab('preview')} className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accent-ink)] transition hover:bg-[var(--accent-strong)]">
                   Layout preview <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
@@ -803,7 +803,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                   <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--sheet-ink-4)]">Format</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {LABEL_TEMPLATES.map(t => (
-                      <button key={t.id} type="button" onClick={() => setSelectedTemplateId(t.id)} className={`rounded-2xl border p-3 text-left transition ${selectedTemplateId === t.id ? 'border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-500/15 text-amber-900 dark:text-amber-100 ring-1 ring-amber-500' : 'border-[var(--sheet-line)] bg-[var(--sheet-button)] text-[var(--sheet-ink-2)] hover:border-[var(--sheet-line-strong)]'}`}>
+                      <button key={t.id} type="button" onClick={() => setSelectedTemplateId(t.id)} className={`rounded-2xl border p-3 text-left transition ${selectedTemplateId === t.id ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)] ring-1 ring-[var(--accent)]' : 'border-[var(--sheet-line)] bg-[var(--sheet-button)] text-[var(--sheet-ink-2)] hover:border-[var(--sheet-line-strong)]'}`}>
                         <p className="text-xs font-black">{t.name}</p>
                         <p className="mt-1 text-[10px] text-[var(--sheet-ink-4)]">{t.description}</p>
                       </button>
@@ -855,7 +855,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                             {item.barcode ? (
                               <div dangerouslySetInnerHTML={{ __html: generateCode128Svg(item.barcode, { height: 34, showText: showBarcodeText, fontSize: 9, quietZone: 8 }) }} className="h-12 w-full" />
                             ) : (
-                              <div className="w-full rounded border border-amber-200 bg-amber-50 px-2 py-1 text-center text-[8px] font-bold text-amber-800">Barcode needed</div>
+                              <div className="w-full rounded border border-[var(--accent)] bg-[var(--accent-soft)] px-2 py-1 text-center text-[8px] font-bold text-[var(--accent)]">Barcode needed</div>
                             )}
                           </div>
                         </div>
@@ -874,7 +874,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
             <button type="button" onClick={onClose} className="rounded-xl border border-[var(--sheet-line)] bg-[var(--sheet-button)] px-4 py-2 text-xs font-bold text-[var(--sheet-ink-2)] transition hover:bg-[var(--sheet-hover)]">
               Close
             </button>
-            <button type="button" onClick={handlePrint} disabled={flatLabels.length === 0} className="rounded-xl bg-amber-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-800 disabled:opacity-60">
+            <button type="button" onClick={handlePrint} disabled={flatLabels.length === 0} className="rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accent-ink)] transition hover:bg-[var(--accent-strong)] disabled:opacity-60">
               Print now
             </button>
           </div>
