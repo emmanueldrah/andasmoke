@@ -1341,10 +1341,10 @@
 :root {
   --font-sans: "Manrope", "Segoe UI", sans-serif;
   --font-display: "Manrope", "Segoe UI", sans-serif;
-  --bg-main: rgba(239, 248, 252, 0.18);
-  --bg-card: rgba(255, 255, 255, 0.20);
-  --bg-card-alt: rgba(247, 252, 255, 0.24);
-  --bg-soft: rgba(219, 239, 248, 0.22);
+  --bg-main: rgba(239, 248, 252, 0.48);
+  --bg-card: rgba(255, 255, 255, 0.58);
+  --bg-card-alt: rgba(247, 252, 255, 0.62);
+  --bg-soft: rgba(219, 239, 248, 0.50);
   --text-primary: #0b2534;
   --text-muted: #3e6171;
   --text-subtle: #638292;
@@ -1369,15 +1369,15 @@
   --glass-sheen: rgba(255, 255, 255, 0.72);
   --glass-sheen-soft: rgba(255, 255, 255, 0.30);
   --glass-edge: rgba(255, 255, 255, 0.68);
-  --mark-opacity: 0.18;
+  --mark-opacity: 0.07;
   --mark-blur: 0px;
   --mark-filter: saturate(0.85) contrast(1.05);
 }
 
 html.dark {
-  --bg-main: rgba(4, 29, 43, 0.14);
-  --bg-card: rgba(9, 48, 66, 0.18);
-  --bg-card-alt: rgba(12, 59, 79, 0.16);
+  --bg-main: rgba(4, 29, 43, 0.48);
+  --bg-card: rgba(9, 48, 66, 0.60);
+  --bg-card-alt: rgba(12, 59, 79, 0.56);
   --bg-soft: rgba(102, 192, 218, 0.09);
   --text-primary: #ecfbff;
   --text-muted: #bedbe5;
@@ -1402,7 +1402,7 @@ html.dark {
   --glass-sheen: rgba(232, 252, 255, 0.12);
   --glass-sheen-soft: rgba(225, 251, 255, 0.07);
   --glass-edge: rgba(190, 241, 252, 0.18);
-  --mark-opacity: 0.20;
+  --mark-opacity: 0.09;
   --mark-filter: invert(1) sepia(0.18) saturate(0.9) hue-rotate(145deg);
 }
 
@@ -1433,7 +1433,7 @@ body::after { background-position: 5% 86%; background-size: min(420px, 34vw); }
 
 .glass-panel, .lux-card,
 html [class~="bg-white"], html [class~="bg-stone-50"], html [class~="bg-gray-50"], html [class~="bg-slate-50"], html [class~="bg-zinc-50"] {
-  background: linear-gradient(145deg, rgba(255,255,255,0.20), rgba(236,250,255,0.055)) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,0.66), rgba(236,250,255,0.48)) !important;
   border-color: var(--glass-edge) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), var(--shadow-soft) !important;
   backdrop-filter: blur(var(--glass-blur)) saturate(135%) !important;
@@ -1442,7 +1442,7 @@ html [class~="bg-white"], html [class~="bg-stone-50"], html [class~="bg-gray-50"
 
 html.dark .glass-panel, html.dark .lux-card,
 html.dark [class~="bg-white"], html.dark [class~="bg-stone-50"], html.dark [class~="bg-gray-50"], html.dark [class~="bg-slate-50"], html.dark [class~="bg-zinc-50"] {
-  background: linear-gradient(145deg, rgba(29,111,138,0.16), rgba(3,37,54,0.055)) !important;
+  background: linear-gradient(145deg, rgba(19,82,105,0.82), rgba(3,42,60,0.74)) !important;
   border-color: var(--glass-edge) !important;
   box-shadow: inset 0 1px 0 rgba(218,249,255,0.12), var(--shadow-card) !important;
 }
@@ -1469,7 +1469,7 @@ html.dark .lux-btn--primary, html.dark .pos-pay {
   color: var(--text-primary);
   box-shadow: inset 0 1px 2px rgba(14, 76, 100, 0.07);
 }
-html.dark .lux-input, html.dark .lux-select, html.dark .pos-scan { background: rgba(2,26,38,0.22); border-color: var(--border-color); }
+html.dark .lux-input, html.dark .lux-select, html.dark .pos-scan { background: rgba(2,26,38,0.68); border-color: var(--border-color); }
 
 .pos-sidebar, html.dark .pos-sidebar {
   background: linear-gradient(180deg, rgba(7,61,82,0.88), rgba(3,34,49,0.92)) !important;
@@ -1505,12 +1505,12 @@ html.dark .lux-input, html.dark .lux-select, html.dark .pos-scan { background: r
   --sheet-solid-hover: #16495c;
 }
 html.dark .form-sheet {
-  --sheet-bg: rgba(5,43,61,0.58);
+  --sheet-bg: rgba(5,43,61,0.92);
   --sheet-solid-bg: #062b3d;
   --sheet-sheen: rgba(219,251,255,0.08);
   --sheet-edge: rgba(190,241,252,0.18);
-  --sheet-head: rgba(196,244,255,0.05);
-  --sheet-panel: rgba(196,244,255,0.06);
+  --sheet-head: rgba(196,244,255,0.10);
+  --sheet-panel: rgba(196,244,255,0.09);
   --sheet-sticky: rgba(5,43,61,0.98);
   --sheet-field: rgba(1,25,37,0.64);
   --sheet-button: rgba(196,244,255,0.09);
@@ -1526,6 +1526,24 @@ html.dark .form-sheet {
   --sheet-solid: #ecfbff;
   --sheet-solid-ink: #062b3d;
   --sheet-solid-hover: #ffffff;
+}
+
+/* A dialog is a work surface, not a window into a busy page. The brand mark
+   remains visible around it; these surfaces retain enough opacity for forms,
+   tables, and barcode settings to be read at a glance. */
+.form-sheet {
+  --sheet-bg: rgba(247, 253, 255, 0.90);
+  --sheet-head: rgba(255,255,255,0.64);
+  --sheet-panel: rgba(255,255,255,0.56);
+  --sheet-field: rgba(255,255,255,0.94);
+  backdrop-filter: blur(28px) saturate(125%);
+  -webkit-backdrop-filter: blur(28px) saturate(125%);
+}
+html.dark .form-sheet {
+  --sheet-bg: rgba(5,43,61,0.92);
+  --sheet-head: rgba(196,244,255,0.10);
+  --sheet-panel: rgba(196,244,255,0.09);
+  --sheet-field: rgba(1,25,37,0.82);
 }
 
 /* Legacy screen utilities: preserve their meaning but bring every remaining

@@ -213,7 +213,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
           src="/brand-mark.png"
           alt=""
           aria-hidden="true"
-          className="h-[48rem] w-[48rem] max-w-[96vw] object-contain opacity-[0.17] saturate-[0.8] dark:opacity-[0.20] dark:invert dark:hue-rotate-[145deg]"
+          className="h-[48rem] w-[48rem] max-w-[96vw] object-contain opacity-[0.07] saturate-[0.8] dark:opacity-[0.10] dark:invert dark:hue-rotate-[145deg]"
         />
       </div>
 
