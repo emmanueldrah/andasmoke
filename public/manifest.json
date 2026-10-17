@@ -5,7 +5,7 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#e8e2d8",
-  "theme_color": "#251b16",
+  "theme_color": "#031f2e",
   "icons": [
     { "src": "/brand-mark.png", "sizes": "512x512", "type": "image/png" }
   ]

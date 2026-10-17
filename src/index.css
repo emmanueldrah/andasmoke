@@ -1619,6 +1619,33 @@ html.dark .product-editor-panel { box-shadow: inset 0 1px 0 rgba(206,249,255,0.0
   .product-editor-section-head > span { display: none; }
 }
 
+/* Final palette authority: the original Ember & Onyx rules are retained above
+   for structural compatibility, but no page background or watermark may draw
+   a warm brown layer into the Arctic Glass interface. */
+html { background: #e8f6fa; }
+html.dark { background: #021923; }
+html:not(.dark) body {
+  background:
+    radial-gradient(900px 620px at 92% -14%, rgba(52, 185, 215, 0.20), transparent 59%),
+    radial-gradient(760px 520px at -8% 106%, rgba(24, 122, 161, 0.14), transparent 62%),
+    linear-gradient(145deg, #f4fcfe 0%, #e3f4f8 50%, #f8fdff 100%) !important;
+}
+html.dark body {
+  background:
+    radial-gradient(880px 600px at 94% -14%, rgba(28, 165, 203, 0.20), transparent 60%),
+    radial-gradient(760px 620px at -8% 108%, rgba(2, 101, 143, 0.27), transparent 63%),
+    linear-gradient(145deg, #042b3d 0%, #031f2e 48%, #011720 100%) !important;
+}
+body::before,
+body::after {
+  filter: grayscale(1) sepia(1) saturate(7) hue-rotate(128deg) brightness(1.22) contrast(0.82) !important;
+  mix-blend-mode: screen;
+}
+html:not(.dark) body::before { opacity: 0.035; }
+html:not(.dark) body::after { opacity: 0.02; }
+html.dark body::before { opacity: 0.045; }
+html.dark body::after { opacity: 0.025; }
+
 .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-pulse-badge { animation: pulse-badge 1.5s ease-in-out infinite; }
 .animate-slide-left { animation: slide-left 15s linear infinite; }
