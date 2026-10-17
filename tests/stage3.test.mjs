@@ -1110,7 +1110,7 @@ test('a session expires after the idle timeout and on sign-out', async () => {
   const { ownerToken } = await seedTill(api);
 
   const { DEFAULT_IDLE_TIMEOUT_MS, getIdleTimeoutMs } = api;
-  assert.equal(DEFAULT_IDLE_TIMEOUT_MS, 8 * 60 * 60 * 1000, 'the default idle timeout is eight hours');
+  assert.equal(DEFAULT_IDLE_TIMEOUT_MS, 24 * 60 * 60 * 1000, 'the default idle timeout is 24 hours');
   assert.equal(getIdleTimeoutMs(), DEFAULT_IDLE_TIMEOUT_MS, 'a new till uses the default');
 
   // The token carries the idle window as its expiry.

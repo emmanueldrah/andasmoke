@@ -13,14 +13,13 @@ const receiptSettingKeys = ['storeName', 'storeEmail', 'storePhone', 'storeAddre
 const HARDWARE_KEY = 'hardware.settings';
 
 /** How long a signed-in till may sit idle before the session is dropped. */
-export const DEFAULT_IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000; // eight hours
+export const DEFAULT_IDLE_TIMEOUT_MS = 24 * 60 * 60 * 1000; // one day
 
 const IDLE_TIMEOUT_KEY = 'session.idleTimeoutMs';
 
 export function getIdleTimeoutMs(): number {
   const stored = Number(getSetting(IDLE_TIMEOUT_KEY));
-  // Clamped: long enough for a full trading day, short enough that an unattended
-  // till does not stay signed in overnight.
+  // Clamped to a practical range so managers can balance convenience and security.
   return Number.isFinite(stored) && stored > 0
     ? Math.min(Math.max(stored, 5 * 60 * 1000), 7 * 24 * 60 * 60 * 1000)
     : DEFAULT_IDLE_TIMEOUT_MS;

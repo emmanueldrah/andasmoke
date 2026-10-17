@@ -16,7 +16,7 @@ async function boot() {
     handlers,
     cloudApiOrigin: CLOUD_API_ORIGIN,
     host: '127.0.0.1',
-    port: 0,
+    port: 4311,
   });
   console.log('[pos] local server on ' + origin);
   console.log('[pos] hosted API at ' + CLOUD_API_ORIGIN);
