@@ -188,7 +188,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
       style={{
         background: isDark
           ? 'radial-gradient(ellipse at 14% 8%, rgba(48,195,226,0.20) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(13,111,149,0.22) 0%, transparent 46%), linear-gradient(145deg, #031d2c, #062c40 50%, #021923)'
-          : 'radial-gradient(ellipse at 14% 8%, rgba(47,155,190,0.28) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(86,164,197,0.22) 0%, transparent 46%), linear-gradient(145deg, #d8ebf5, #c9e2ef 50%, #e0eef5)',
+          : 'radial-gradient(ellipse at 14% 8%, rgba(72,167,197,0.2) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(106,176,202,0.14) 0%, transparent 46%), linear-gradient(145deg, #eaf5fa, #e1f0f6 50%, #f3f9fc)',
       }}
     >
       <style>{`

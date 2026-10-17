@@ -7,16 +7,16 @@
     --font-sans: "Manrope", "Segoe UI", sans-serif;
     --font-display: "Fraunces", Georgia, serif;
     /* Sea-mist glass surfaces with deep blue text and sea-blue accents. */
-    --bg-main: rgba(234, 241, 244, 0.08);
-    --bg-card: rgba(247, 250, 251, 0.12);
-    --bg-card-alt: rgba(221, 233, 238, 0.08);
-    --bg-soft: rgba(218, 231, 236, 0.04);
+    --bg-main: rgba(234, 245, 250, 0.05);
+    --bg-card: rgba(250, 253, 255, 0.08);
+    --bg-card-alt: rgba(215, 235, 245, 0.06);
+    --bg-soft: rgba(218, 237, 246, 0.03);
     --text-primary: #173344;
     --text-muted: #496575;
     --text-subtle: #718895;
     --border-color: rgba(72, 114, 132, 0.2);
-    --control-bg: rgba(247, 250, 251, 0.76);
-    --control-border: rgba(72, 114, 132, 0.34);
+    --control-bg: rgba(250, 253, 255, 0.72);
+    --control-border: rgba(63, 119, 145, 0.3);
     --accent: #167995;
     --accent-strong: #13758f;
     --accent-soft: rgba(22, 121, 149, 0.12);
@@ -34,13 +34,13 @@
     --shadow-soft: 0 12px 30px rgba(30, 66, 82, 0.1);
     --shadow-card: 0 14px 32px rgba(30, 66, 82, 0.12);
     /* Glass layer: every surface sits on the backdrop as frosted panes. */
-    --glass-blur: 12px;
-    --glass-sheen: rgba(255, 255, 255, 0.68);
-    --glass-sheen-soft: rgba(255, 255, 255, 0.24);
-    --glass-reflection: rgba(255, 255, 255, 0.52);
+    --glass-blur: 16px;
+    --glass-sheen: rgba(255, 255, 255, 0.86);
+    --glass-sheen-soft: rgba(255, 255, 255, 0.34);
+    --glass-reflection: rgba(255, 255, 255, 0.7);
     --glass-tint: 72%;
     --glass-tint-deep: 52%;
-    --glass-edge: rgba(255, 255, 255, 0.72);
+    --glass-edge: rgba(255, 255, 255, 0.94);
     /* Clay layer: controls extruded from the pane with lit tops and cast bases. */
     --clay-lift: inset 0 1px 0 var(--glass-sheen);
     --clay-well: inset 0 2px 5px color-mix(in srgb, #244555 12%, transparent);
@@ -58,7 +58,7 @@
     min-height: 100%;
     height: 100%;
     overflow-y: auto;
-    background: #dceefa;
+    background: #eaf5fa;
   }
 
   html.dark {
@@ -91,6 +91,7 @@
     --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.28);
     --shadow-card: 0 20px 48px rgba(0, 0, 0, 0.22);
     /* Dark glass keeps a brighter rim so panes stay legible on near-black. */
+    --glass-blur: 12px;
     --glass-sheen: rgba(255, 255, 255, 0.10);
     --glass-sheen-soft: rgba(255, 255, 255, 0.06);
     --glass-reflection: rgba(255, 255, 255, 0.18);
@@ -119,9 +120,9 @@
     min-height: 100dvh;
     min-width: 0;
     background:
-      radial-gradient(1200px 540px at 90% -14%, rgba(47, 155, 190, 0.28), transparent 58%),
-      radial-gradient(900px 440px at -8% 0%, rgba(86, 164, 197, 0.22), transparent 52%),
-      linear-gradient(180deg, #d8ebf5 0%, #c9e2ef 55%, #e0eef5 100%);
+      radial-gradient(1200px 540px at 90% -14%, rgba(72, 167, 197, 0.2), transparent 58%),
+      radial-gradient(900px 440px at -8% 0%, rgba(106, 176, 202, 0.14), transparent 52%),
+      linear-gradient(180deg, #eaf5fa 0%, #e1f0f6 55%, #f3f9fc 100%);
     color: var(--text-primary);
     overflow-x: hidden;
     overflow-y: auto;
@@ -333,8 +334,8 @@
       );
     border: 1px solid var(--glass-edge);
     border-radius: 0.85rem;
-    backdrop-filter: blur(12px) saturate(145%);
-    -webkit-backdrop-filter: blur(12px) saturate(145%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, var(--glass-reflection) 92%, white),
       inset 1px 0 0 color-mix(in srgb, var(--glass-reflection) 70%, transparent),
@@ -361,8 +362,8 @@
       inset 1px 0 0 color-mix(in srgb, var(--glass-reflection) 70%, transparent),
       inset 0 0 0 1px color-mix(in srgb, var(--glass-edge) 35%, transparent),
       0 18px 42px -24px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(12px) saturate(145%);
-    -webkit-backdrop-filter: blur(12px) saturate(145%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(155%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
   }
 
   .glass-panel--dark {
@@ -373,12 +374,12 @@
 
   html:not(.dark) .admin-shell__sidebar {
     background:
-      radial-gradient(110% 48% at 52% 0%, rgba(52, 161, 194, 0.22), transparent 72%),
-      linear-gradient(177deg, rgba(230, 246, 253, 0.86), rgba(188, 221, 237, 0.72));
+      radial-gradient(110% 48% at 52% 0%, rgba(52, 161, 194, 0.2), transparent 72%),
+      linear-gradient(177deg, rgba(230, 246, 253, 0.68), rgba(188, 221, 237, 0.44));
     border-right-color: rgba(255, 255, 255, 0.74);
     box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.48), 18px 0 42px -28px rgba(24, 72, 91, 0.3);
-    backdrop-filter: blur(20px) saturate(170%);
-    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
   }
 
   html:not(.dark) .admin-shell__header {
