@@ -14,7 +14,7 @@ export default defineConfig(() => {
     publicDir: 'public',
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      watch: process.env.DISABLE_HMR === 'true' ? null : { ignored: ['**/release-theme-1.0.1/**'] },
       // The renderer always calls fetch('/api/...'). In Electron the local
       // server serves both the app and the API on one origin, so this proxy is
       // only needed for browser development (npm run dev + npm run dev:api).

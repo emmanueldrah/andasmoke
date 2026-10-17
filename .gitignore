@@ -27,6 +27,7 @@ media/
 # Electron packaging output
 release/
 release-updated/
+release-theme-1.0.1/
 
 # Logs and caches
 *.log
