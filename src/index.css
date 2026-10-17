@@ -7,10 +7,10 @@
     --font-sans: "Manrope", "Segoe UI", sans-serif;
     --font-display: "Fraunces", Georgia, serif;
     /* Sea-mist glass surfaces with deep blue text and sea-blue accents. */
-    --bg-main: rgba(234, 241, 244, 0.44);
-    --bg-card: rgba(247, 250, 251, 0.72);
-    --bg-card-alt: rgba(221, 233, 238, 0.64);
-    --bg-soft: rgba(218, 231, 236, 0.48);
+    --bg-main: rgba(234, 241, 244, 0.08);
+    --bg-card: rgba(247, 250, 251, 0.12);
+    --bg-card-alt: rgba(221, 233, 238, 0.08);
+    --bg-soft: rgba(218, 231, 236, 0.04);
     --text-primary: #173344;
     --text-muted: #496575;
     --text-subtle: #718895;
@@ -32,9 +32,10 @@
     --shadow-soft: 0 12px 30px rgba(30, 66, 82, 0.1);
     --shadow-card: 0 14px 32px rgba(30, 66, 82, 0.12);
     /* Glass layer: every surface sits on the backdrop as frosted panes. */
-    --glass-blur: 18px;
+    --glass-blur: 12px;
     --glass-sheen: rgba(255, 255, 255, 0.68);
     --glass-sheen-soft: rgba(255, 255, 255, 0.24);
+    --glass-reflection: rgba(255, 255, 255, 0.52);
     --glass-tint: 72%;
     --glass-tint-deep: 52%;
     --glass-edge: rgba(255, 255, 255, 0.72);
@@ -45,7 +46,7 @@
     --clay-cast: 0 10px 20px -10px color-mix(in srgb, var(--text-primary) 28%, transparent);
     /* The lounge mark, sitting behind every pane. Cut out to a transparent
        PNG so its white plate no longer washes out the background. */
-    --mark-opacity: 0.022;
+    --mark-opacity: 0.07;
     --mark-blur: 4px;
     --mark-filter: none;
   }
@@ -61,10 +62,10 @@
   html.dark {
     color-scheme: dark;
     /* Deep sea-blue surfaces keep dark mode cool and legible. */
-    --bg-main: rgba(5, 24, 36, 0.5);
-    --bg-card: rgba(8, 36, 52, 0.68);
-    --bg-card-alt: rgba(12, 49, 67, 0.58);
-    --bg-soft: rgba(7, 29, 43, 0.42);
+    --bg-main: rgba(5, 24, 36, 0.12);
+    --bg-card: rgba(8, 36, 52, 0.18);
+    --bg-card-alt: rgba(12, 49, 67, 0.13);
+    --bg-soft: rgba(7, 29, 43, 0.08);
     --text-primary: #f4ebdf;
     --text-muted: #d3c1a9;
     --text-subtle: #ab8d70;
@@ -88,6 +89,7 @@
     /* Dark glass keeps a brighter rim so panes stay legible on near-black. */
     --glass-sheen: rgba(255, 255, 255, 0.10);
     --glass-sheen-soft: rgba(255, 255, 255, 0.06);
+    --glass-reflection: rgba(255, 255, 255, 0.18);
     --glass-tint: 40%;
     --glass-tint-deep: 26%;
     --glass-edge: rgba(255, 255, 255, 0.10);
@@ -113,9 +115,9 @@
     min-height: 100dvh;
     min-width: 0;
     background:
-      radial-gradient(1200px 540px at 90% -14%, rgba(65, 147, 172, 0.18), transparent 58%),
-      radial-gradient(900px 440px at -8% 0%, rgba(79, 140, 157, 0.12), transparent 52%),
-      linear-gradient(180deg, #e5eef2 0%, #dfe9ee 55%, #e9f1f4 100%);
+      radial-gradient(1200px 540px at 90% -14%, rgba(53, 135, 160, 0.28), transparent 58%),
+      radial-gradient(900px 440px at -8% 0%, rgba(70, 132, 151, 0.2), transparent 52%),
+      linear-gradient(180deg, #dce8ed 0%, #d2e0e6 55%, #e1eaee 100%);
     color: var(--text-primary);
     overflow-x: hidden;
     overflow-y: auto;
@@ -317,19 +319,23 @@
 
   .lux-card {
     position: relative;
-    background: linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--bg-card) 80%, transparent) 0%,
-      color-mix(in srgb, var(--bg-card-alt) 76%, transparent) 72%,
-      color-mix(in srgb, var(--bg-soft) 84%, transparent) 100%
-    );
+    background:
+      linear-gradient(132deg, var(--glass-reflection) 0%, color-mix(in srgb, var(--glass-reflection) 42%, transparent) 9%, transparent 30%, transparent 74%, rgba(69, 167, 191, 0.12) 100%),
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--bg-card) 56%, transparent) 0%,
+        color-mix(in srgb, var(--bg-card-alt) 56%, transparent) 72%,
+        color-mix(in srgb, var(--bg-soft) 62%, transparent) 100%
+      );
     border: 1px solid var(--glass-edge);
     border-radius: 0.85rem;
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(12px) saturate(145%);
+    -webkit-backdrop-filter: blur(12px) saturate(145%);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.18),
-      0 20px 36px -22px rgba(0, 0, 0, 0.16);
+      inset 0 1px 0 color-mix(in srgb, var(--glass-reflection) 92%, white),
+      inset 1px 0 0 color-mix(in srgb, var(--glass-reflection) 70%, transparent),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+      0 20px 36px -22px rgba(30, 66, 82, 0.2);
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
   }
 
@@ -342,13 +348,17 @@
   }
 
   .glass-panel {
-    background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+    background:
+      linear-gradient(132deg, var(--glass-reflection) 0%, color-mix(in srgb, var(--glass-reflection) 42%, transparent) 9%, transparent 30%, transparent 74%, rgba(69, 167, 191, 0.12) 100%),
+      color-mix(in srgb, var(--bg-card) 28%, transparent);
     border: 1px solid var(--glass-edge);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      inset 0 1px 0 color-mix(in srgb, var(--glass-reflection) 92%, white),
+      inset 1px 0 0 color-mix(in srgb, var(--glass-reflection) 70%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--glass-edge) 35%, transparent),
       0 18px 42px -24px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(22px) saturate(170%);
-    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(12px) saturate(145%);
+    -webkit-backdrop-filter: blur(12px) saturate(145%);
   }
 
   .glass-panel--dark {
