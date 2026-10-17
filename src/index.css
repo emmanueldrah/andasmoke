@@ -15,6 +15,8 @@
     --text-muted: #496575;
     --text-subtle: #718895;
     --border-color: rgba(72, 114, 132, 0.2);
+    --control-bg: rgba(247, 250, 251, 0.76);
+    --control-border: rgba(72, 114, 132, 0.34);
     --accent: #167995;
     --accent-strong: #13758f;
     --accent-soft: rgba(22, 121, 149, 0.12);
@@ -70,6 +72,8 @@
     --text-muted: #d3c1a9;
     --text-subtle: #ab8d70;
     --border-color: rgba(105, 184, 207, 0.18);
+    --control-bg: rgba(8, 36, 52, 0.76);
+    --control-border: rgba(105, 184, 207, 0.3);
     --accent: #d18c57;
     --accent-strong: #e5bd72;
     --accent-soft: rgba(209, 140, 87, 0.14);
@@ -409,15 +413,15 @@
     width: 100%;
     min-height: 2.5rem;
     border-radius: 0.72rem;
-    border: 1px solid rgba(120, 90, 67, 0.42);
-    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid var(--control-border);
+    background: var(--control-bg);
     padding: 0.62rem 0.82rem;
     font-size: 0.9rem;
     font-weight: 600;
-    color: rgba(35, 27, 21, 0.96);
+    color: var(--text-primary);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
     box-shadow:
-      inset 0 1px 2px rgba(60, 39, 30, 0.08),
+      inset 0 1px 2px rgba(36, 69, 85, 0.08),
       0 1px 0 rgba(255,255,255,0.52);
   }
 
@@ -444,7 +448,7 @@
     font-weight: 800;
     letter-spacing: 0.11em;
     text-transform: uppercase;
-    color: rgba(68, 49, 38, 0.96);
+    color: var(--text-muted);
     margin-bottom: 0.45rem;
   }
 
