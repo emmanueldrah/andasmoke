@@ -521,7 +521,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Product Actions
   const addProduct = async (productData: Omit<Product, 'id'>): Promise<Product> => {
-    const newId = 'prod-' + Date.now();
+    const newId = 'prod-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
     try {
       const adminToken = localStorage.getItem('anda_auth_token');
       if (!adminToken) throw new Error('Administrator session required. Please sign in again.');

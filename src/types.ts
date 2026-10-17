@@ -114,7 +114,13 @@ export interface CartItem {
 
 export type DeliveryMethod = 'store-pickup';
 
-export type PaymentMethod = 'momo-mtn' | 'cash-on-delivery';
+export type PaymentMethod =
+  | 'momo-mtn'
+  | 'momo-telecel'
+  | 'momo-at'
+  | 'cash-on-delivery'
+  | 'card'
+  | 'apple-pay';
 
 export interface ShippingAddress {
   fullName: string;
@@ -125,7 +131,15 @@ export interface ShippingAddress {
   area: string;
 }
 
-export type OrderStatus = 'Delivered' | 'Refunded';
+export type OrderStatus =
+  | 'Pending Payment'
+  | 'Confirmed'
+  | 'Processing'
+  | 'Packing Order'
+  | 'Out for Delivery'
+  | 'Delivered'
+  | 'Refunded'
+  | 'Cancelled';
 
 export interface Order {
   id: string;

@@ -12,7 +12,7 @@
  * closed shift is what a manager later reconciles against the bank.
  */
 import type { ApiRequest, ApiResponse } from './_http.js';
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, getSqliteHandle } from '../src/db/index.js';
 import { orders, posPayments, posShifts } from '../src/db/schema.js';
@@ -58,33 +58,44 @@ const cashMovementSchema = z.object({
 async function computeExpectedCash(shift: {
   id: string;
   openedAt: Date;
+  closedAt?: Date | null;
   cashierName: string;
   openingCashPesewas?: number | null;
 }) {
   const opening = shift.openingCashPesewas ?? 0;
 
+  const salesConditions = [
+    eq(posPayments.method, 'cash-on-delivery'),
+    eq(orders.orderSource, 'pos'),
+    eq(orders.cashierName, shift.cashierName),
+    eq(orders.status, 'Delivered'),
+    gte(orders.createdAt, shift.openedAt),
+  ];
+  if (shift.closedAt) {
+    salesConditions.push(lte(orders.createdAt, shift.closedAt));
+  }
+
   const [sales] = await db.select({ total: sql<number>`coalesce(sum(${posPayments.amountPesewas}), 0)` })
     .from(posPayments)
     .innerJoin(orders, eq(orders.id, posPayments.orderId))
-    .where(and(
-      eq(posPayments.method, 'cash-on-delivery'),
-      eq(orders.orderSource, 'pos'),
-      eq(orders.cashierName, shift.cashierName),
-      eq(orders.status, 'Delivered'),
-      gte(orders.createdAt, shift.openedAt),
-    ));
+    .where(and(...salesConditions));
   const cashSales = Number(sales?.total || 0);
+
+  const refundConditions = [
+    eq(posPayments.method, 'cash-on-delivery'),
+    eq(orders.orderSource, 'pos'),
+    eq(orders.cashierName, shift.cashierName),
+    eq(orders.status, 'Refunded'),
+    gte(orders.createdAt, shift.openedAt),
+  ];
+  if (shift.closedAt) {
+    refundConditions.push(lte(orders.createdAt, shift.closedAt));
+  }
 
   const [refunds] = await db.select({ total: sql<number>`coalesce(sum(${posPayments.amountPesewas}), 0)` })
     .from(posPayments)
     .innerJoin(orders, eq(orders.id, posPayments.orderId))
-    .where(and(
-      eq(posPayments.method, 'cash-on-delivery'),
-      eq(orders.orderSource, 'pos'),
-      eq(orders.cashierName, shift.cashierName),
-      eq(orders.status, 'Refunded'),
-      gte(orders.createdAt, shift.openedAt),
-    ));
+    .where(and(...refundConditions));
   const cashRefunds = Number(refunds?.total || 0);
 
   const movements = listCashMovements(shift.id);
