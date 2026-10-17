@@ -6,40 +6,41 @@
   :root {
     --font-sans: "Manrope", "Segoe UI", sans-serif;
     --font-display: "Fraunces", Georgia, serif;
-    /* Shisha lounge identity: smoke plaster, ember, and brass */
-    --bg-main: rgba(255, 255, 255, 0.04);
-    --bg-card: rgba(255, 255, 255, 0.06);
-    --bg-card-alt: rgba(255, 255, 255, 0.03);
-    --bg-soft: rgba(255, 255, 255, 0.02);
-    --text-primary: #261d19;
-    --text-muted: #65544a;
-    --text-subtle: #897262;
-    --border-color: rgba(86, 56, 39, 0.16);
-    --accent: #9c4e35;
-    --accent-strong: #c59651;
-    --accent-soft: rgba(156, 78, 53, 0.12);
-    --highlight: #a86b39;
+    /* Sea-mist glass surfaces with deep blue text and sea-blue accents. */
+    --bg-main: rgba(234, 241, 244, 0.44);
+    --bg-card: rgba(247, 250, 251, 0.72);
+    --bg-card-alt: rgba(221, 233, 238, 0.64);
+    --bg-soft: rgba(218, 231, 236, 0.48);
+    --text-primary: #173344;
+    --text-muted: #496575;
+    --text-subtle: #718895;
+    --border-color: rgba(72, 114, 132, 0.2);
+    --accent: #167995;
+    --accent-strong: #13758f;
+    --accent-soft: rgba(22, 121, 149, 0.12);
+    --accent-ink: #ffffff;
+    --highlight: #23849a;
     --jade: #477b68;
     --jade-soft: rgba(71, 123, 104, 0.12);
     --violet: #795f7d;
     --violet-strong: #957798;
     --violet-soft: rgba(121, 95, 125, 0.1);
-    --olive: #7b704b;
-    --olive-strong: #93845a;
+    --olive: #66805f;
+    --olive-strong: #78956f;
     --danger: #a84332;
     --danger-soft: rgba(168, 67, 50, 0.1);
-    --shadow-soft: 0 12px 30px rgba(64, 43, 30, 0.10);
-    --shadow-card: 0 14px 32px rgba(64, 43, 30, 0.12);
+    --shadow-soft: 0 12px 30px rgba(30, 66, 82, 0.1);
+    --shadow-card: 0 14px 32px rgba(30, 66, 82, 0.12);
     /* Glass layer: every surface sits on the backdrop as frosted panes. */
     --glass-blur: 18px;
-    --glass-sheen: rgba(255, 255, 255, 0.52);
-    --glass-sheen-soft: rgba(255, 255, 255, 0.12);
+    --glass-sheen: rgba(255, 255, 255, 0.68);
+    --glass-sheen-soft: rgba(255, 255, 255, 0.24);
     --glass-tint: 72%;
     --glass-tint-deep: 52%;
-    --glass-edge: rgba(255, 255, 255, 0.26);
+    --glass-edge: rgba(255, 255, 255, 0.72);
     /* Clay layer: controls extruded from the pane with lit tops and cast bases. */
     --clay-lift: inset 0 1px 0 var(--glass-sheen);
-    --clay-well: inset 0 2px 5px color-mix(in srgb, #2b1d14 12%, transparent);
+    --clay-well: inset 0 2px 5px color-mix(in srgb, #244555 12%, transparent);
     --clay-base: 0 2px 0 color-mix(in srgb, var(--text-primary) 9%, transparent);
     --clay-cast: 0 10px 20px -10px color-mix(in srgb, var(--text-primary) 28%, transparent);
     /* The lounge mark, sitting behind every pane. Cut out to a transparent
@@ -54,7 +55,7 @@
     min-height: 100%;
     height: 100%;
     overflow-y: auto;
-    background: #f8f5f2;
+    background: #eaf1f4;
   }
 
   html.dark {
@@ -71,6 +72,7 @@
     --accent: #d18c57;
     --accent-strong: #e5bd72;
     --accent-soft: rgba(209, 140, 87, 0.14);
+    --accent-ink: #1d130d;
     --highlight: #e3bd70;
     --jade: #78ad91;
     --jade-soft: rgba(120, 173, 145, 0.12);
@@ -111,9 +113,9 @@
     min-height: 100dvh;
     min-width: 0;
     background:
-      radial-gradient(1200px 540px at 90% -14%, rgba(197, 150, 81, 0.11), transparent 58%),
-      radial-gradient(900px 440px at -8% 0%, rgba(71, 123, 104, 0.06), transparent 52%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.18));
+      radial-gradient(1200px 540px at 90% -14%, rgba(65, 147, 172, 0.18), transparent 58%),
+      radial-gradient(900px 440px at -8% 0%, rgba(79, 140, 157, 0.12), transparent 52%),
+      linear-gradient(180deg, #e5eef2 0%, #dfe9ee 55%, #e9f1f4 100%);
     color: var(--text-primary);
     overflow-x: hidden;
     overflow-y: auto;
@@ -175,8 +177,8 @@
   }
 
   select option {
-    background-color: #FCF9F2;
-    color: #221B13;
+    background-color: #f3f8fa;
+    color: #173344;
   }
 
   html.dark select option {
@@ -214,8 +216,8 @@
     position: relative;
     min-height: calc(100dvh - 1.5rem);
     border-radius: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-edge);
+    background: var(--bg-main);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.12),
       0 24px 52px -30px rgba(0, 0, 0, 0.24);
@@ -238,14 +240,18 @@
 
   .admin-shell__header {
     margin-left: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid var(--glass-edge);
+    background: var(--bg-card);
     backdrop-filter: blur(20px) saturate(170%);
     -webkit-backdrop-filter: blur(20px) saturate(170%);
   }
 
   .admin-shell__content {
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg-card) 28%, transparent),
+      color-mix(in srgb, var(--bg-soft) 18%, transparent)
+    );
   }
 
   /* Keep legacy utility classes readable while screens are migrated to tokens. */
@@ -313,11 +319,11 @@
     position: relative;
     background: linear-gradient(
       145deg,
-      rgba(255, 255, 255, 0.09) 0%,
-      rgba(255, 255, 255, 0.04) 72%,
-      rgba(255, 255, 255, 0.02) 100%
+      color-mix(in srgb, var(--bg-card) 80%, transparent) 0%,
+      color-mix(in srgb, var(--bg-card-alt) 76%, transparent) 72%,
+      color-mix(in srgb, var(--bg-soft) 84%, transparent) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--glass-edge);
     border-radius: 0.85rem;
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -336,8 +342,8 @@
   }
 
   .glass-panel {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: color-mix(in srgb, var(--bg-card) 72%, transparent);
+    border: 1px solid var(--glass-edge);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.14),
       0 18px 42px -24px rgba(0, 0, 0, 0.18);
@@ -463,13 +469,13 @@
   .lux-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
   .lux-btn--primary {
-    background: linear-gradient(135deg, #d2a15d 0%, #b6693d 100%);
-    color: #1d130d;
-    border-color: rgba(118, 77, 40, 0.5);
+    background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
+    color: var(--accent-ink);
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.58),
-      inset 0 -2px 0 rgba(121, 73, 33, 0.24),
-      0 4px 14px rgba(124, 80, 37, 0.27);
+      inset 0 -2px 0 color-mix(in srgb, var(--accent) 28%, transparent),
+      0 4px 14px color-mix(in srgb, var(--accent) 27%, transparent);
   }
 
   .lux-btn--primary:hover:not(:disabled) { filter: brightness(1.08); }

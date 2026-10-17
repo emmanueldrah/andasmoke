@@ -188,7 +188,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
       style={{
         background: isDark
           ? 'radial-gradient(ellipse at 14% 8%, rgba(48,195,226,0.20) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(13,111,149,0.22) 0%, transparent 46%), linear-gradient(145deg, #031d2c, #062c40 50%, #021923)'
-          : 'radial-gradient(ellipse at 14% 8%, rgba(48,180,212,0.20) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(95,175,205,0.16) 0%, transparent 46%), linear-gradient(145deg, #edf9fc, #e5f3f8 50%, #f7fcfd)',
+          : 'radial-gradient(ellipse at 14% 8%, rgba(65,147,172,0.12) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(79,140,157,0.10) 0%, transparent 46%), linear-gradient(145deg, #eaf1f4, #e3edf1 50%, #eef4f6)',
       }}
     >
       <style>{`
@@ -213,7 +213,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
           src="/brand-mark.png"
           alt=""
           aria-hidden="true"
-          className="h-[48rem] w-[48rem] max-w-[96vw] object-contain opacity-[0.07] grayscale sepia saturate-[1.7] hue-rotate-[130deg] dark:opacity-[0.10] dark:invert dark:hue-rotate-[128deg]"
+          className="h-[48rem] w-[48rem] max-w-[96vw] object-contain opacity-[0.04] grayscale sepia saturate-[1.7] hue-rotate-[130deg] dark:opacity-[0.10] dark:invert dark:hue-rotate-[128deg]"
         />
       </div>
 
