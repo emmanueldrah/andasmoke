@@ -902,6 +902,34 @@ test('wholesale checkout records wholesale units and deducts their full quantity
   rmSync(dir, { recursive: true, force: true });
 });
 
+test('wholesale checkout accepts an agreed unit amount and still protects the retail ceiling', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-negotiated-wholesale-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const { ownerToken } = await seedTill(api);
+  const product = await makeProduct(api, ownerToken, { price: '10.00', stockCount: 8 });
+
+  const sale = await callApi(api.orders, {
+    method: 'POST', query: { channel: 'pos' }, token: ownerToken,
+    body: {
+      idempotencyKey: `POS-negotiated-${Date.now()}-abcdefgh`, saleType: 'wholesale',
+      subtotal: 18, shippingFee: 0, discount: 0, total: 18,
+      paymentMethod: 'cash-on-delivery', cashReceived: 18, shippingAddress: WALLET,
+      items: [{ product: { id: product.id, price: 6 }, quantity: 3, priceType: 'wholesale', wholesaleUnitPrice: 6 }],
+      tenders: [{ method: 'cash-on-delivery', amount: 1800 }],
+    },
+  });
+
+  assert.equal(sale.status, 201, `negotiated wholesale sale failed: ${JSON.stringify(sale.body)}`);
+  assert.equal(sale.body.items[0].product.price, 6);
+  assert.equal(sale.body.total, 18);
+  const afterSale = await callApi(api.products, { token: ownerToken, query: { id: product.id } });
+  assert.equal(afterSale.body.stockCount, 5);
+
+  api.closeDataLayer();
+  rmSync(dir, { recursive: true, force: true });
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 // The four fixes from the review.
 // ─────────────────────────────────────────────────────────────────────────

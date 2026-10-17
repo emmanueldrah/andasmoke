@@ -14,11 +14,17 @@ import {
 } from '../src/lib/money.js';
 
 const saleSchema = z.object({
+  // A sale may contain retail fallbacks when a product has no bulk price; the
+  // line price type remains the accounting source of truth.
+  saleType: z.enum(['retail', 'wholesale']).optional(),
   items: z.array(z.object({
     product: z.object({ id: z.string(), price: z.coerce.number() }),
     quantity: z.number().int().positive(),
     selectedVariant: z.object({ id: z.string() }).optional(),
     priceType: z.enum(['retail', 'wholesale']).optional(),
+    // A manager/cashier may agree a per-unit wholesale amount at the counter.
+    // It is always verified against the live retail ceiling below.
+    wholesaleUnitPrice: z.coerce.number().positive().optional(),
   })).min(1),
   subtotal: z.coerce.number().positive(),
   shippingFee: z.coerce.number().min(0),
@@ -194,8 +200,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           // Older clients signal wholesale by sending the wholesale unit price.
           const enteredMinor = requireMinor(item.product.price, 'price');
           const priceType = item.priceType ?? (wholesaleMinor != null && Math.abs(enteredMinor - wholesaleMinor) <= 1 ? 'wholesale' : 'retail');
-          if (priceType === 'wholesale' && wholesaleMinor == null) throw new Error(`Wholesale price is not set for ${product.name}.`);
-          const unitPriceMinor = priceType === 'wholesale' ? wholesaleMinor! : retailMinor;
+          const negotiatedWholesaleMinor = item.wholesaleUnitPrice == null
+            ? null
+            : requireMinor(item.wholesaleUnitPrice, 'wholesale amount');
+          if (priceType === 'wholesale' && wholesaleMinor == null && negotiatedWholesaleMinor == null) throw new Error(`Wholesale price is not set for ${product.name}. Enter an agreed wholesale amount.`);
+          if (negotiatedWholesaleMinor != null && priceType !== 'wholesale') throw new Error(`A wholesale amount can only be used on a wholesale line.`);
+          if (negotiatedWholesaleMinor != null && negotiatedWholesaleMinor > retailMinor) throw new Error(`Wholesale amount cannot exceed the retail price for ${product.name}.`);
+          const unitPriceMinor = priceType === 'wholesale' ? negotiatedWholesaleMinor ?? wholesaleMinor! : retailMinor;
           const unitPrice = toMajor(unitPriceMinor);
           // Rounded per line in pesewas, so the printed lines add up to the printed total.
           calculatedSubtotal += unitPriceMinor * item.quantity;
@@ -401,7 +412,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           tx.insert(inventoryMovements).values({ productId, variantId, orderId: order.id, movementType: 'POS_SALE', quantity: -quantity, quantityBefore: priorStock, quantityAfter: Math.max(0, priorStock - quantity), actorName: auth.adminName, reason: `POS sale ${order.orderNumber}` }).run();
         }
         const linesVoided = verifiedItems.map(item => `${item.product.name} x${item.quantity}`);
-        tx.insert(auditLogs).values({ action: 'POS_SALE_COMPLETED', entityType: 'order', entityId: order.id, actorName: auth.adminName, metadata: { orderNumber, total, wholesaleQuantity: verifiedItems.filter(item => item.priceType === 'wholesale').reduce((sum, item) => sum + item.quantity, 0), idempotencyKey: sale.idempotencyKey, deviceId: sale.deviceId || null, adminId: auth.sub, paymentMethod: sale.paymentMethod, voidedLines: linesVoided } }).run();
+        tx.insert(auditLogs).values({ action: 'POS_SALE_COMPLETED', entityType: 'order', entityId: order.id, actorName: auth.adminName, metadata: { orderNumber, total, saleType: sale.saleType ?? 'retail', wholesaleQuantity: verifiedItems.filter(item => item.priceType === 'wholesale').reduce((sum, item) => sum + item.quantity, 0), wholesaleBuyer: sale.saleType === 'wholesale' ? sale.shippingAddress.fullName : null, idempotencyKey: sale.idempotencyKey, deviceId: sale.deviceId || null, adminId: auth.sub, paymentMethod: sale.paymentMethod, voidedLines: linesVoided } }).run();
         tx.insert(posSyncQueue).values({
           action: 'POS_ORDER',
           payload: sale as Record<string, unknown>,

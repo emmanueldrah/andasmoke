@@ -29,7 +29,7 @@ import { checkLocalServer, startHealthChecks, type ServerHealth } from '../../..
 import { resolveStorePhone } from '../../../lib/storeContact';
 import type { Order, PaymentMethod, Product, ProductVariant } from '../../../types';
 
-type PosLine = { product: Product; variant?: ProductVariant; quantity: number; priceType: 'retail' | 'wholesale' };
+type PosLine = { product: Product; variant?: ProductVariant; quantity: number; priceType: 'retail' | 'wholesale'; wholesaleUnitPrice?: number };
 type PosItem = { product: Product; variant?: ProductVariant; title: string; stock: number; barcode?: string };
 type PaymentChoice = 'cash-on-delivery' | 'momo-mtn';
 
@@ -150,6 +150,9 @@ export function AdminPOSWorkspace() {
   const scannerRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<PosLine[]>([]);
+  const [saleMode, setSaleMode] = useState<'retail' | 'wholesale'>('retail');
+  const [wholesaleBuyer, setWholesaleBuyer] = useState('');
+  const [wholesalePhone, setWholesalePhone] = useState('');
   const [payment, setPayment] = useState<PaymentChoice>('cash-on-delivery');
   const [scannerValue, setScannerValue] = useState('');
   const [cashReceived, setCashReceived] = useState('');
@@ -253,7 +256,9 @@ export function AdminPOSWorkspace() {
   const priceFor = (line: PosLine) => {
     const retailPrice = Number(line.variant?.price ?? line.product.price);
     const wholesalePrice = line.variant?.wholesalePrice ?? line.product.wholesalePrice;
-    return line.priceType === 'wholesale' && wholesalePrice != null ? Number(wholesalePrice) : retailPrice;
+    return line.priceType === 'wholesale'
+      ? line.wholesaleUnitPrice ?? (wholesalePrice != null ? Number(wholesalePrice) : retailPrice)
+      : retailPrice;
   };
   const hasWholesalePrice = (line: PosLine) => line.variant?.wholesalePrice != null || line.product.wholesalePrice != null;
   const itemCount = cart.reduce((sum, line) => sum + line.quantity, 0);
@@ -330,12 +335,29 @@ export function AdminPOSWorkspace() {
       }
       return current
         ? previous.map(line => lineKey(line) === key ? { ...line, quantity: line.quantity + 1 } : line)
-        : [...previous, { product: item.product, variant: item.variant, quantity: 1, priceType: 'retail' }];
+        : [...previous, { product: item.product, variant: item.variant, quantity: 1, priceType: saleMode === 'wholesale' && (item.variant?.wholesalePrice ?? item.product.wholesalePrice) != null ? 'wholesale' : 'retail' }];
     });
   };
 
   const updatePriceType = (line: PosLine, priceType: PosLine['priceType']) => {
-    setCart(previous => previous.map(item => lineKey(item) === lineKey(line) ? { ...item, priceType } : item));
+    setCart(previous => previous.map(item => lineKey(item) === lineKey(line) ? { ...item, priceType, wholesaleUnitPrice: priceType === 'retail' ? undefined : item.wholesaleUnitPrice } : item));
+  };
+
+  const updateWholesaleAmount = (line: PosLine, value: string) => {
+    const amount = Number(value);
+    setCart(previous => previous.map(item => lineKey(item) === lineKey(line)
+      ? { ...item, priceType: 'wholesale', wholesaleUnitPrice: value.trim() && Number.isFinite(amount) && amount > 0 ? amount : undefined }
+      : item));
+  };
+
+  /** Switch the ticket as a whole without inventing a wholesale price where none exists. */
+  const setTicketMode = (mode: 'retail' | 'wholesale') => {
+    setSaleMode(mode);
+    setCart(previous => previous.map(line => ({
+      ...line,
+      priceType: mode === 'wholesale' && hasWholesalePrice(line) ? 'wholesale' : 'retail',
+      wholesaleUnitPrice: mode === 'retail' ? undefined : line.wholesaleUnitPrice,
+    })));
   };
 
   const updateLine = (line: PosLine, quantity: number) => {
@@ -554,6 +576,10 @@ export function AdminPOSWorkspace() {
 
   const completeSale = async () => {
     if (!cart.length || submitting) return;
+    if (saleMode === 'wholesale' && (!wholesaleBuyer.trim() || !wholesalePhone.trim())) {
+      showAlert('Add the wholesale buyer name and phone before completing this sale.', 'warning');
+      return;
+    }
     if (!online) {
       showAlert('The cloud POS service is unavailable. Reconnect before completing a sale.', 'error');
       return;
@@ -577,7 +603,7 @@ export function AdminPOSWorkspace() {
     const receiptWindow = window.open('', '_blank');
     try {
       const payload = {
-        orderSource: 'pos', idempotencyKey: saleKey, subtotal: grossSubtotal, shippingFee: 0, discount: discountMinor / 100, total,
+        orderSource: 'pos', saleType: saleMode, idempotencyKey: saleKey, subtotal: grossSubtotal, shippingFee: 0, discount: discountMinor / 100, total,
         appliedPromoCode: promoCode.trim() || undefined,
         // Retained for older builds and for the receipt's summary line; the
         // tenders below are what the server uses.
@@ -592,16 +618,17 @@ export function AdminPOSWorkspace() {
           senderPhone: tender.senderPhone.trim() || undefined,
         })),
         shippingAddress: {
-          fullName: 'Walk-in customer',
-          phone: tenders.find(t => t.method === 'momo-mtn')?.senderPhone.trim() || 'In-store sale',
-          city: 'In-store',
-          area: 'POS counter',
+          fullName: saleMode === 'wholesale' ? wholesaleBuyer.trim() : 'Walk-in customer',
+          phone: saleMode === 'wholesale' ? wholesalePhone.trim() : tenders.find(t => t.method === 'momo-mtn')?.senderPhone.trim() || 'In-store sale',
+          city: saleMode === 'wholesale' ? 'Wholesale account' : 'In-store',
+          area: saleMode === 'wholesale' ? 'POS wholesale counter' : 'POS counter',
         },
         items: cart.map(line => ({
           product: { id: line.product.id, name: line.product.name, brand: line.product.brand, price: priceFor(line), image: line.variant?.image || line.product.image, unit: line.product.unit, category: line.product.category, inStock: true, stockCount: Number(line.variant?.stockCount ?? line.product.stockCount) },
           quantity: line.quantity,
           selectedVariant: line.variant ? { id: line.variant.id, name: line.variant.name, price: priceFor(line), inStock: true } : undefined,
           priceType: line.priceType,
+          wholesaleUnitPrice: line.priceType === 'wholesale' && line.wholesaleUnitPrice != null ? line.wholesaleUnitPrice : undefined,
         })),
       };
       const order = await api.post<Order>('/orders?channel=pos', payload);
@@ -615,7 +642,7 @@ export function AdminPOSWorkspace() {
         change: changeMinor / 100,
       });
       showAlert(`Sale ${order.orderNumber} completed. Stock was updated.`, 'success');
-      setCart([]); setCashReceived(''); setReference(''); setSenderPhone(''); setPromoCode(''); setDiscountAmount(0); setDiscountMessage(''); setDiscountOpen(false); setSaleKey(`POS-${crypto.randomUUID()}`);
+      setCart([]); setCashReceived(''); setReference(''); setSenderPhone(''); setPromoCode(''); setDiscountAmount(0); setDiscountMessage(''); setDiscountOpen(false); setSaleMode('retail'); setWholesaleBuyer(''); setWholesalePhone(''); setSaleKey(`POS-${crypto.randomUUID()}`);
       setTenders([]); setSplitPayment(false);
       await Promise.all([fetchProducts({ includeUnpublished: true }), fetchOrders()]);
     } catch (error: any) {
@@ -1054,6 +1081,31 @@ return (
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_400px]">
         {/* ── LEFT: scan, then stock ── */}
         <div className="min-w-0 space-y-4">
+          <section className="lux-card p-3 sm:p-4" aria-label="Sale type">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="eyebrow">Sale type</p>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">Wholesale applies each available bulk price and keeps the buyer on the sale record.</p>
+              </div>
+              <div className="inline-flex rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1" role="group" aria-label="Choose sale type">
+                {(['retail', 'wholesale'] as const).map(mode => (
+                  <button key={mode} type="button" aria-pressed={saleMode === mode} onClick={() => setTicketMode(mode)} className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize transition ${saleMode === mode ? 'bg-[var(--accent)] text-[var(--accent-ink)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {saleMode === 'wholesale' && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <label className="lux-label">Buyer / business
+                  <input value={wholesaleBuyer} onChange={event => setWholesaleBuyer(event.target.value)} placeholder="Business or buyer name" className="lux-input mt-1 w-full" />
+                </label>
+                <label className="lux-label">Buyer phone
+                  <input value={wholesalePhone} onChange={event => setWholesalePhone(event.target.value)} placeholder="Phone number" inputMode="tel" className="lux-input mt-1 w-full" />
+                </label>
+              </div>
+            )}
+          </section>
           {/* One field: scan a code or type a name. */}
           <div className="lux-card p-3 sm:p-4">
             <div className="flex items-stretch gap-3">
@@ -1143,7 +1195,7 @@ return (
                       {item.variant && <p className="mt-0.5 truncate text-xs font-semibold text-[var(--accent-strong)]">{item.variant.name}</p>}
                       {item.stock <= 5 && <p className="mt-1 text-[10px] font-extrabold uppercase tracking-wide text-[var(--highlight)]">Low stock</p>}
                       <div className="mt-2.5 flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold tabular-nums text-[var(--text-primary)]">{money(Number(item.variant?.price ?? item.product.price))}</span>
+                        <span className="text-sm font-bold tabular-nums text-[var(--text-primary)]">{money(saleMode === 'wholesale' && (item.variant?.wholesalePrice ?? item.product.wholesalePrice) != null ? Number(item.variant?.wholesalePrice ?? item.product.wholesalePrice) : Number(item.variant?.price ?? item.product.price))}</span>
                         <span className="rounded-lg bg-[var(--accent-soft)] p-1.5 text-[var(--accent)] transition group-hover:bg-[var(--accent)] group-hover:text-[var(--accent-ink)]"><Plus className="h-4 w-4" /></span>
                       </div>
                     </div>
@@ -1193,7 +1245,9 @@ return (
                             <span className="truncate">{order.cashierName || 'Unrecorded'}</span>
                           </span>
                         </td>
-                        <td className="px-3 py-3 text-[var(--text-primary)]">{order.shippingAddress?.fullName || 'Walk-in customer'}</td>
+                        <td className="px-3 py-3 text-[var(--text-primary)]">
+                          <span className="flex items-center gap-1.5"><span>{order.shippingAddress?.fullName || 'Walk-in customer'}</span>{order.items?.some(item => item.priceType === 'wholesale') && <span className="lux-chip lux-chip--neutral text-[9px]">Wholesale</span>}</span>
+                        </td>
                         <td className="px-3 py-3 capitalize text-[var(--text-muted)]">{order.paymentMethod.replaceAll('-', ' ')}</td>
                         <td className="px-3 py-3 font-bold tabular-nums text-[var(--text-primary)]">{money(Number(order.total))}</td>
                         <td className="whitespace-nowrap px-3 py-3 text-xs tabular-nums text-[var(--text-muted)]">{new Date(order.createdAt).toLocaleString()}</td>
@@ -1218,7 +1272,10 @@ return (
         <aside className="min-w-0 lg:sticky lg:top-[4.5rem]">
           <section className="lux-card flex max-h-[calc(100vh-5.5rem)] flex-col overflow-hidden p-0">
             <div className="flex items-center justify-between gap-2 border-b border-[var(--border-color)] px-3.5 py-2.5">
-              <h2 className="brand-display text-base font-semibold text-[var(--text-primary)]">Current sale</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="brand-display text-base font-semibold text-[var(--text-primary)]">Current sale</h2>
+                {saleMode === 'wholesale' && <span className="lux-chip lux-chip--neutral text-[9px]">Wholesale</span>}
+              </div>
               <span className="lux-chip lux-chip--neutral shrink-0">{itemCount} item{itemCount === 1 ? '' : 's'}</span>
             </div>
 
@@ -1258,6 +1315,16 @@ return (
                                 {priceType}
                               </button>
                             ))}
+                          </div>
+                        )}
+                        {saleMode === 'wholesale' && (
+                          <div className="mt-2 grid grid-cols-2 gap-1.5">
+                            <label className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-subtle)]">Qty
+                              <input aria-label={`Wholesale quantity for ${line.product.name}`} type="number" min="1" max={Number(line.variant?.stockCount ?? line.product.stockCount)} step="1" value={line.quantity} onChange={event => updateLine(line, Number(event.target.value))} className="lux-input mt-0.5 h-8 w-full px-2 text-xs" />
+                            </label>
+                            <label className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-subtle)]">Wholesale amount
+                              <input aria-label={`Wholesale unit amount for ${line.product.name}`} type="number" min="0.01" max={Number(line.variant?.price ?? line.product.price)} step="0.01" value={line.wholesaleUnitPrice ?? line.variant?.wholesalePrice ?? line.product.wholesalePrice ?? ''} onChange={event => updateWholesaleAmount(line, event.target.value)} placeholder="Per unit" className="lux-input mt-0.5 h-8 w-full px-2 text-xs tabular-nums" />
+                            </label>
                           </div>
                         )}
                       </div>
