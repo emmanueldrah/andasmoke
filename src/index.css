@@ -58,7 +58,7 @@
     min-height: 100%;
     height: 100%;
     overflow-y: auto;
-    background: #eaf1f4;
+    background: #d7e4e9;
   }
 
   html.dark {
@@ -119,9 +119,9 @@
     min-height: 100dvh;
     min-width: 0;
     background:
-      radial-gradient(1200px 540px at 90% -14%, rgba(53, 135, 160, 0.28), transparent 58%),
-      radial-gradient(900px 440px at -8% 0%, rgba(70, 132, 151, 0.2), transparent 52%),
-      linear-gradient(180deg, #dce8ed 0%, #d2e0e6 55%, #e1eaee 100%);
+      radial-gradient(1200px 540px at 90% -14%, rgba(42, 132, 158, 0.3), transparent 58%),
+      radial-gradient(900px 440px at -8% 0%, rgba(59, 122, 143, 0.22), transparent 52%),
+      linear-gradient(180deg, #d4e2e8 0%, #c9d9e1 55%, #d9e7ec 100%);
     color: var(--text-primary);
     overflow-x: hidden;
     overflow-y: auto;
@@ -369,6 +369,24 @@
     background: rgba(255, 255, 255, 0.06);
     border-color: rgba(255, 255, 255, 0.14);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 30px rgba(0, 0, 0, 0.14);
+  }
+
+  html:not(.dark) .admin-shell__sidebar {
+    background:
+      radial-gradient(110% 48% at 52% 0%, rgba(61, 164, 187, 0.2), transparent 72%),
+      linear-gradient(177deg, rgba(231, 245, 249, 0.82), rgba(199, 224, 233, 0.68));
+    border-right-color: rgba(255, 255, 255, 0.74);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.48), 18px 0 42px -28px rgba(24, 72, 91, 0.3);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+  }
+
+  html:not(.dark) .admin-shell__header {
+    background:
+      linear-gradient(105deg, rgba(24, 125, 151, 0.2), rgba(249, 253, 254, 0.58) 52%, rgba(69, 158, 179, 0.16));
+    border-bottom-color: rgba(45, 107, 127, 0.22);
+    backdrop-filter: blur(22px) saturate(175%);
+    -webkit-backdrop-filter: blur(22px) saturate(175%);
   }
 
   .brand-seal {
