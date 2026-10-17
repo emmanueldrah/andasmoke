@@ -1568,6 +1568,57 @@ button[class*="bg-amber-"], a[class*="bg-amber-"] {
 }
 button[class*="bg-amber-"]:hover, a[class*="bg-amber-"]:hover { background: var(--accent-strong) !important; }
 
+/* Product editor: deliberately structured like a short stockroom workflow,
+   rather than a flat sheet of inputs. */
+.product-editor-sheet {
+  background: var(--sheet-bg);
+  box-shadow: 0 28px 80px rgba(4, 38, 56, 0.28);
+}
+.product-editor-head {
+  background: linear-gradient(112deg, var(--sheet-head), color-mix(in srgb, var(--accent-soft) 58%, transparent));
+}
+.product-editor-mark {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: 0.85rem;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 74%, transparent);
+}
+.product-editor-panel {
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: var(--sheet-panel);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.product-editor-panel--operations { background: color-mix(in srgb, var(--sheet-panel) 78%, var(--accent-soft)); }
+.product-editor-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.product-editor-section-head .eyebrow { font-size: 0.6rem; }
+.product-editor-section-head h3 { margin: 0.15rem 0 0; font-size: 0.95rem; font-weight: 750; color: var(--text-primary); }
+.product-editor-section-head > span { max-width: 11rem; text-align: right; font-size: 0.67rem; line-height: 1.25; color: var(--text-subtle); }
+.product-price-grid { background: color-mix(in srgb, var(--accent-soft) 43%, transparent); }
+.product-editor-help { display: block; margin-top: 0.35rem; font-size: 0.65rem; line-height: 1.35; color: var(--text-muted); }
+.product-variants { background: color-mix(in srgb, var(--sheet-panel) 75%, transparent); }
+.product-variants[open] { box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); }
+.product-editor-footer { background: color-mix(in srgb, var(--sheet-head) 86%, transparent); }
+html.dark .product-editor-sheet { box-shadow: 0 28px 90px rgba(0, 0, 0, 0.48); }
+html.dark .product-editor-panel { box-shadow: inset 0 1px 0 rgba(206,249,255,0.06); }
+@media (max-width: 640px) {
+  .product-editor-panel { padding: 0.85rem; }
+  .product-editor-section-head > span { display: none; }
+}
+
 .animate-fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-pulse-badge { animation: pulse-badge 1.5s ease-in-out infinite; }
 .animate-slide-left { animation: slide-left 15s linear infinite; }

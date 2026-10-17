@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Barcode, ImagePlus, Package, Plus, Save, Trash2, X } from 'lucide-react';
+import { Barcode, ImagePlus, Package, Plus, Save, Tag, Trash2, X } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useToast } from '../../context/ToastContext';
 import { uploadProductImage } from '../../lib/imageUpload';
@@ -235,12 +235,15 @@ useEffect(() => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,25,38,0.42)] p-2 sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="form-sheet flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border text-[var(--text-primary)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
-        <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[var(--sheet-head)] px-4 py-2.5 sm:px-5">
-          <div>
-            <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em] text-[var(--highlight)]">Stockroom</p>
-            <h2 id="pos-product-title" className="brand-display mt-0.5 text-2xl font-semibold leading-tight text-[var(--text-primary)]">{productToEdit ? 'Edit product' : 'Add product'}</h2>
-            <p className="mt-0.5 text-xs text-[var(--text-muted)]">Set up a sellable item for the register.</p>
+      <section className="form-sheet product-editor-sheet flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[1.35rem] border text-[var(--text-primary)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+        <header className="product-editor-head flex items-start justify-between gap-4 border-b border-[var(--border-color)] px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="product-editor-mark"><Package className="h-5 w-5" /></span>
+            <div>
+              <p className="eyebrow text-[10px] font-black uppercase tracking-[0.22em] text-[var(--highlight)]">Stockroom catalogue</p>
+              <h2 id="pos-product-title" className="brand-display mt-0.5 text-2xl font-semibold leading-tight text-[var(--text-primary)]">{productToEdit ? 'Edit product' : 'New product'}</h2>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Product details, pricing, and register stock in one place.</p>
+            </div>
           </div>
           <button type="button" onClick={onClose} disabled={isSaving} aria-label="Close" className="lux-btn lux-btn--outline lux-btn--sm px-2"><X className="h-4 w-4" /></button>
         </header>
@@ -248,10 +251,11 @@ useEffect(() => {
         {/* Two columns at till sizes so the whole form fits without scrolling:
             identity and pricing on the left, stock, codes, availability, and
             the photo on the right. Narrow windows fall back to one column. */}
-        <form id="pos-product-form" onSubmit={event => void saveProduct(event)} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-2.5 sm:px-5">
-          <div className="grid items-start gap-3 md:grid-cols-2">
+        <form id="pos-product-form" onSubmit={event => void saveProduct(event)} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
+          <div className="product-editor-grid grid items-start gap-4 lg:grid-cols-[1.12fr_.88fr]">
             {/* Left column: what the item is and what it costs */}
-            <div className="grid content-start gap-2">
+            <section className="product-editor-panel grid content-start gap-3">
+              <div className="product-editor-section-head"><div><p className="eyebrow">Catalogue</p><h3>What are you adding?</h3></div><span>Required fields marked by price</span></div>
               <label>
                 <span className="lux-label">Product name</span>
                 <input autoFocus required autoComplete="off" value={name} onChange={event => setName(event.target.value)} placeholder="e.g. Double Apple flavor" className="lux-input" />
@@ -291,21 +295,23 @@ useEffect(() => {
                 </label>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="product-price-grid grid grid-cols-2 gap-3 rounded-xl border border-[var(--border-color)] p-3">
                 <label>
                   <span className="lux-label">Selling price (GHS)</span>
                   <input required type="number" min="0.01" step="0.01" value={price} onChange={event => setPrice(event.target.value)} placeholder="0.00" className="lux-input font-bold tabular-nums" />
                 </label>
 
                 <label>
-                  <span className="lux-label">Wholesale (GHS) <span className="font-medium normal-case tracking-normal">(optional)</span></span>
+                  <span className="lux-label flex items-center gap-1"><Tag className="h-3 w-3" />Wholesale price (GHS) <span className="font-medium normal-case tracking-normal">(optional)</span></span>
                   <input type="number" min="0.01" step="0.01" value={wholesalePrice} onChange={event => setWholesalePrice(event.target.value)} placeholder="Bulk price" className="lux-input tabular-nums" />
+                  <span className="product-editor-help">The default bulk unit price. It can be adjusted at checkout.</span>
                 </label>
               </div>
-            </div>
+            </section>
 
             {/* Right column: stock, codes, availability, photo */}
-            <div className="grid content-start gap-2">
+            <section className="product-editor-panel product-editor-panel--operations grid content-start gap-3">
+              <div className="product-editor-section-head"><div><p className="eyebrow">Register setup</p><h3>Stock & identification</h3></div><span>{variants.length ? `${variantStock} across variations` : `${stockCount || 0} opening units`}</span></div>
               <div className="grid grid-cols-2 gap-2">
                 <label>
                   <span className="lux-label">Opening stock</span>
@@ -355,11 +361,11 @@ useEffect(() => {
                   <ImagePlus className="h-3.5 w-3.5" />{isUploading ? 'Uploading...' : image ? 'Change photo' : 'Add photo'}
                 </button>
               </div>
-            </div>
+            </section>
           </div>
 
-          <details className="mt-2.5 rounded-lg border border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-soft)_34%,transparent)] px-3 py-2.5">
-            <summary className="cursor-pointer text-sm font-bold text-[var(--text-primary)]">Variations <span className="font-normal text-[var(--text-subtle)]">(optional)</span></summary>
+          <details className="product-variants mt-4 rounded-xl border border-[var(--border-color)] px-4 py-3">
+            <summary className="cursor-pointer text-sm font-bold text-[var(--text-primary)]">Variations <span className="font-normal text-[var(--text-subtle)]">(optional — sizes, flavours, colours)</span></summary>
             <div className="mt-3 space-y-2">
               {variants.map((variant, index) => (
                 <div key={variant.id} className="grid gap-2 rounded-md border border-[var(--border-color)] bg-[var(--bg-card)] p-3 sm:grid-cols-[1.3fr_0.9fr_0.9fr_0.7fr_auto]">
@@ -386,7 +392,7 @@ useEffect(() => {
           </details>
         </form>
 
-        <footer className="glass-panel flex items-center justify-between gap-3 border-x-0 border-b-0 px-4 py-3 sm:px-5">
+        <footer className="product-editor-footer glass-panel flex items-center justify-between gap-3 border-x-0 border-b-0 px-4 py-3 sm:px-6">
           <button type="button" onClick={onClose} disabled={isSaving} className="lux-btn lux-btn--outline">Cancel</button>
           <button type="submit" form="pos-product-form" disabled={isSaving} className="lux-btn lux-btn--primary"><Save className="h-4 w-4" />{isSaving ? 'Saving...' : productToEdit ? 'Save product' : 'Add product'}</button>
         </footer>
