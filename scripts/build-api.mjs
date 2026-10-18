@@ -12,8 +12,13 @@ mkdirSync(dirname(outfile), { recursive: true });
  * process can require. better-sqlite3 stays external because it is a native
  * module and must be resolved from node_modules at runtime.
  */
+/**
+ * The entry lives in `local-api/`, not `api/`. Every file under `api/` becomes a
+ * Vercel Function, and this bundle opens a better-sqlite3 database, which cannot
+ * run in a hosted function. The hosted API is `api/[...route].ts` alone.
+ */
 await build({
-  entryPoints: [resolve(root, 'api/handlers.ts')],
+  entryPoints: [resolve(root, 'local-api/handlers.ts')],
   outfile,
   bundle: true,
   platform: 'node',

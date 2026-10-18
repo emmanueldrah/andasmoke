@@ -23,6 +23,11 @@ export default defineConfig(() => {
           target: `http://127.0.0.1:${process.env.ANDA_API_PORT || 4310}`,
           changeOrigin: false,
         },
+        // Product photos live in .data/media, outside the Vite tree.
+        '/media': {
+          target: `http://127.0.0.1:${process.env.ANDA_API_PORT || 4310}`,
+          changeOrigin: false,
+        },
       },
     },
     build: {

@@ -2,14 +2,46 @@ const { app } = require('electron');
 const path = require('node:path');
 
 app.setName('anda-smoke-hub-pos');
+
+/* Unpackaged dev runs share the project's .data folder with `npm run dev:api`,
+   so the desktop till and the browser show the same products and sales. A
+   packaged install keeps its own database under %APPDATA%. */
+const ROOT_DIR = path.join(__dirname, '..');
+if (!app.isPackaged && !process.env.ANDA_DATA_DIR) {
+  process.env.ANDA_DATA_DIR = path.join(ROOT_DIR, '.data');
+}
 process.env.ANDA_DATA_DIR = process.env.ANDA_DATA_DIR || app.getPath('userData');
 process.env.ANDA_CLOUD_API_ORIGIN = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
 const CLOUD_API_ORIGIN = process.env.ANDA_CLOUD_API_ORIGIN;
 
+/* Windows groups taskbar buttons by AppUserModelID. Without this the taskbar
+   shows the generic Electron icon instead of the shop emblem, even though the
+   BrowserWindow has an icon set. */
+if (process.platform === 'win32') {
+  app.setAppUserModelId('gh.anda.smokehub.pos');
+}
+
 const { startLocalServer } = require('./local-server.cjs');
 const { handlers } = require('./api-routes.cjs');
 
-const DIST_DIR = path.join(__dirname, '..', 'dist');
+const DIST_DIR = path.join(ROOT_DIR, 'dist');
+
+/* Window/taskbar icon. Prefer the built copy, but fall back to public/ so dev
+   runs still carry the emblem before the first `npm run build`. */
+const ICON_CANDIDATES = [
+  path.join(DIST_DIR, 'brand-mark.ico'),
+  path.join(ROOT_DIR, 'public', 'brand-mark.ico'),
+];
+function resolveAppIcon() {
+  const fs = require('node:fs');
+  return ICON_CANDIDATES.find(p => fs.existsSync(p));
+}
+
+/* `npm run pos:desktop:dev` passes --dev-url=http://127.0.0.1:3000. The window
+   then loads Vite directly: source edits hot-reload, and /api is proxied to
+   the dev API, so the desktop app and the browser stay identical. */
+const devUrlArg = process.argv.find(a => a.startsWith('--dev-url='));
+const DEV_URL = devUrlArg ? devUrlArg.slice('--dev-url='.length) : (process.env.ANDA_DEV_URL || null);
 
 async function boot() {
   const { origin } = await startLocalServer({
@@ -25,7 +57,11 @@ async function boot() {
 }
 
 app.whenReady().then(async () => {
-  const origin = await boot();
+  // In dev-URL mode the renderer comes from Vite (port 3000) and its /api and
+  // /media calls are proxied to the dev API, which reads the same .data
+  // database. No local server needed.
+  const origin = DEV_URL ? DEV_URL : await boot();
+  if (DEV_URL) console.log('[pos] dev mode: loading ' + DEV_URL + ' (edit src/ and the window hot-reloads)');
 
   const { BrowserWindow, ipcMain } = require('electron');
 
@@ -42,7 +78,7 @@ app.whenReady().then(async () => {
     minWidth: 1024,
     minHeight: 700,
     title: 'Anda C Smoke Hub POS',
-    icon: path.join(DIST_DIR, 'brand-mark.ico'),
+    icon: resolveAppIcon(),
     backgroundColor: '#faf6f0',
     webPreferences: {
       contextIsolation: true,

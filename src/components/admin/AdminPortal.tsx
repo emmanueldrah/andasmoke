@@ -167,6 +167,7 @@ export const AdminPortal: React.FC = () => {
 
   const tabFromPath = pathTabs[location.pathname];
   const legacyRequestedTab = new URLSearchParams(location.search).get('tab');
+  const isDesktopApp = Boolean(window.andaPos?.onUpdateDownloaded);
   const isCashier = store.adminSession.adminRole === 'Cashier';
   const accessibleTabs = roleAccess[store.adminSession.adminRole] || roleAccess['Cashier'];
   const defaultTab: AdminTab = accessibleTabs.includes('pos') ? 'pos' : accessibleTabs[0] || 'inventory';
@@ -190,11 +191,23 @@ export const AdminPortal: React.FC = () => {
     failedCount: number;
     lastError?: string | null;
     cloudConnected: boolean;
+    lastSyncedAt?: string | null;
+    lastPull?: { at: string; updated: number; deleted: number; kept?: number; heldBack?: boolean } | null;
+    cloudOrigin?: string | null;
   } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncNotice, setSyncNotice] = useState('');
   const syncInProgress = useRef(false);
 
-  const flushSync = async (retryFailed = false) => {
+  const refreshSyncStatus = async () => {
+    try {
+      setSyncStatus(await api.get<NonNullable<typeof syncStatus>>('/pos-sync?action=status'));
+    } catch {
+      // The local till service is not answering yet.
+    }
+  };
+
+  const flushSync = async (retryFailed = false, manual = false) => {
     if (syncInProgress.current) return;
     syncInProgress.current = true;
     setIsSyncing(true);
@@ -205,10 +218,15 @@ export const AdminPortal: React.FC = () => {
       );
       setSyncStatus(prev => prev ? { ...prev, pendingCount: res.pending, failedCount: res.failed } : null);
       if (res.flushed > 0) {
+        setSyncNotice('');
         showAlert(`Synced ${res.flushed} change${res.flushed === 1 ? '' : 's'} to cloud`, 'success');
       }
-    } catch {
-      // Offline / server unreachable
+    } catch (error: any) {
+      // A failure here means the website refused the change, so say why instead
+      // of leaving the till looking idle.
+      const message = String(error?.message || 'Could not reach the website.');
+      setSyncNotice(message);
+      if (manual) showAlert(message, 'error');
     } finally {
       syncInProgress.current = false;
       setIsSyncing(false);
@@ -216,6 +234,7 @@ export const AdminPortal: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!isDesktopApp) return;
     let active = true;
     let backfillQueued = false;
     let lastCloudPull = 0;
@@ -232,11 +251,14 @@ export const AdminPortal: React.FC = () => {
         try {
           const pulled = await api.post<{ updated: number; deleted: number }>('/pos-sync?action=pull-products', {});
           lastCloudPull = Date.now();
+          setSyncNotice('');
           if (active && (pulled.updated > 0 || pulled.deleted > 0)) {
             await store.fetchProducts({ includeUnpublished: true });
           }
-        } catch {
-          // Keep local catalog available if the hosted service is unavailable.
+        } catch (error: any) {
+          // Wait a full cycle before troubling the website again, but say what failed.
+          lastCloudPull = Date.now();
+          setSyncNotice(String(error?.message || 'Could not refresh the website catalog.'));
         }
       }
       try {
@@ -249,7 +271,7 @@ export const AdminPortal: React.FC = () => {
     void fetchSync();
     const syncTimer = window.setInterval(fetchSync, 12_000);
     return () => { active = false; window.clearInterval(syncTimer); };
-  }, [isCashier, store.adminSession.isLoggedIn, store.fetchProducts]);
+  }, [isDesktopApp, isCashier, store.adminSession.isLoggedIn, store.fetchProducts]);
 
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
 
@@ -561,45 +583,58 @@ export const AdminPortal: React.FC = () => {
                   </button>
                 )}
 
-                {syncStatus && syncStatus.failedCount > 0 ? (
+                {isDesktopApp && (syncStatus && syncStatus.failedCount > 0 ? (
                   <button
                     type="button"
                     onClick={() => void flushSync(true)}
                     disabled={isSyncing}
                     className="inline-flex items-center gap-1.5 rounded-full border border-[var(--danger)] bg-[var(--danger-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--danger)] transition cursor-pointer"
-                    title={syncStatus.lastError || 'Some desktop changes could not sync. Click to retry.'}
+                    title={`${syncNotice || syncStatus.lastError || 'Some desktop changes could not reach the website.'} Click to retry.`}
                   >
                     <AlertTriangle className="h-3 w-3" />
                     <span>{syncStatus.failedCount} sync failed</span>
                   </button>
+                ) : syncNotice && syncStatus?.cloudConnected ? (
+                  <button
+                    type="button"
+                    onClick={() => void flushSync(true)}
+                    disabled={isSyncing}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--danger)] bg-[var(--danger-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--danger)] transition cursor-pointer"
+                    title={syncNotice}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Sync needs attention</span>
+                  </button>
                 ) : syncStatus && syncStatus.pendingCount > 0 ? (
                   <button
                     type="button"
-                    onClick={() => void flushSync()}
+                    onClick={() => void flushSync(false, true)}
                     disabled={isSyncing}
                     className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--accent)] transition hover:bg-[var(--accent-soft)] cursor-pointer"
-                    title="Click to sync pending product and sales changes to the cloud"
+                    title="Click to sync pending product and sales changes to the website"
                   >
                     <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
                     <span>{syncStatus.pendingCount} changes pending</span>
                   </button>
                 ) : syncStatus?.cloudConnected ? (
                   <span
-                    className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                    title="Desktop products and sales are synced to the cloud"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                    title={`This till shares its products and sales with ${(syncStatus.cloudOrigin || '').replace(/^https?:\/\//, '')}. Last upload ${syncStatus.lastSyncedAt ? new Date(syncStatus.lastSyncedAt).toLocaleString() : 'not needed yet'}${syncStatus.lastPull ? `, last website catalog pull ${new Date(syncStatus.lastPull.at).toLocaleString()}` : ''}.`}
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Cloud Synced</span>
+                    <span>Website synced</span>
                   </span>
                 ) : (
-                  <span
-                    className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-soft)] px-3 py-1 text-[11px] font-medium text-[var(--text-muted)] border border-[var(--border-color)]"
-                    title="Sign in while online to connect desktop changes to the website"
+                  <button
+                    type="button"
+                    onClick={() => void refreshSyncStatus()}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-soft)] px-3 py-1 text-[11px] font-medium text-[var(--text-muted)] border border-[var(--border-color)] cursor-pointer"
+                    title="This till is not linked to the live website yet. Sign in here with the same email and PIN you use on the website, while the till is online, and products and sales then move both ways on their own. Click to check again."
                   >
                     <WifiOff className="h-3 w-3" />
-                    <span>Cloud not linked</span>
-                  </span>
-                )}
+                    <span>Website not linked</span>
+                  </button>
+                ))}
 
                 {currentTab === 'products' && (
                   <button onClick={handleAddProduct} className="lux-btn lux-btn--primary lux-btn--sm hidden sm:inline-flex">

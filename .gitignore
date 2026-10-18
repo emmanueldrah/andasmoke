@@ -42,3 +42,5 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+# Scratch screenshots from visual audits
+tmp-audit/

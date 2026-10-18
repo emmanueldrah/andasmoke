@@ -1,7 +1,7 @@
 {
   "name": "anda-smoke-hub-pos",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -15,6 +15,7 @@
     "lint": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
     "pos:desktop": "npm run build && electron electron/main.cjs",
+    "pos:desktop:dev": "electron electron/main.cjs --dev-url=http://127.0.0.1:3000",
     "pos:desktop:package": "node scripts/check-windows-signing.mjs && npm run build && electron-builder --win nsis",
     "spike": "node tests/spike-desktop.mjs"
   },
@@ -54,8 +55,9 @@
   "build": {
     "appId": "gh.anda.smokehub.pos",
     "productName": "Anda C Smoke Hub POS",
+    "companyName": "Anda C Smoke Hub",
     "directories": {
-      "output": "release-theme-1.0.5"
+      "output": "release-theme-1.0.6"
     },
     "publish": [
       {

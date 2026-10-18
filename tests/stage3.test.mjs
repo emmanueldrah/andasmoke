@@ -1338,6 +1338,72 @@ test('cloud products pull to desktop without overwriting queued local edits', as
   }
 });
 
+test('a broken or empty website reply keeps the till catalog intact', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-reply-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const { ownerToken } = await seedTill(api);
+  const localProduct = await makeProduct(api, ownerToken);
+  const originalFetch = globalThis.fetch;
+  const sqlite = api.getSqliteHandle();
+  const productCount = () => sqlite.prepare('SELECT count(*) AS count FROM products').get().count;
+  const syncCall = (action, method = 'POST') => callApi(api.posSync, {
+    method,
+    query: { action },
+    token: ownerToken,
+    cloudToken: 'Bearer cloud-staff-token',
+    body: {},
+  });
+
+  // A deployment that rewrites unknown paths back to the single page app answers
+  // every /api call with 200 and HTML. That looks like an empty catalog and must
+  // never be read as one.
+  const spaPage = '<!doctype html><html><head><title>POS</title></head><body><div id="root"></div></body></html>';
+  globalThis.fetch = async () => new Response(spaPage, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+
+  try {
+    const blockedBootstrap = await syncCall('bootstrap-products');
+    assert.equal(blockedBootstrap.status, 502);
+    assert.match(blockedBootstrap.body.error, /page instead of data/);
+
+    const blockedFlush = await syncCall('flush');
+    assert.equal(blockedFlush.body.flushed, 0, 'a page reply stores nothing');
+    assert.ok(blockedFlush.body.pending >= 1, 'the change stays queued');
+    assert.equal(productCount(), 1);
+
+    const statusAfterPage = await syncCall('status', 'GET');
+    assert.match(String(statusAfterPage.body.lastError), /page instead of data/);
+
+    // The website now answers properly but shows no products at all.
+    globalThis.fetch = async (_url, options) => {
+      const method = String(options?.method || 'GET').toUpperCase();
+      if (method === 'GET') {
+        return new Response(JSON.stringify({ products: [], pagination: { total: 0, limit: 500, offset: 0, hasMore: false } }), {
+          status: 200, headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ product: { id: localProduct.id } }), {
+        status: 201, headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    assert.equal((await syncCall('bootstrap-products')).status, 200);
+    const flushed = await syncCall('flush');
+    assert.equal(flushed.body.flushed, 1);
+    assert.equal(flushed.body.pending, 0);
+
+    const pulled = await syncCall('pull-products');
+    assert.equal(pulled.status, 200);
+    assert.equal(pulled.body.deleted, 0, 'an empty website list does not delete till products');
+    assert.equal(pulled.body.heldBack, true);
+    assert.equal(productCount(), 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('desktop sign-in returns a cloud token for catalog synchronization', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-login-'));
   process.env.ANDA_DATA_DIR = dir;

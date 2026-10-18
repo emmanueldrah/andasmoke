@@ -26,5 +26,7 @@ declare module '*.svg' {
 interface Window {
   andaPos?: {
     print: () => Promise<boolean>;
+    onUpdateDownloaded: (callback: (info: { version?: string }) => void) => () => void;
+    restartAndInstallUpdate: () => Promise<void>;
   };
 }

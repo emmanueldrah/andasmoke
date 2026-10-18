@@ -2,7 +2,7 @@ import type { ApiRequest, ApiResponse } from './_http.js';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, getSetting, setSetting } from '../src/db/index.js';
-import { posSyncQueue, products } from '../src/db/schema.js';
+import { posSyncQueue, products, inventoryMovements, orders } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 
 const { readStoredProductImage, saveProductImage } = require('../electron/media.cjs') as {
@@ -43,12 +43,44 @@ function readCloudAuthorization(req: ApiRequest): string {
     : '';
 }
 
-async function responseJson(response: Response): Promise<Record<string, any>> {
-  try {
-    return await response.json() as Record<string, any>;
-  } catch {
-    return {};
+/**
+ * A hosted reply is only trusted when it actually carries JSON. A deployment
+ * that rewrites unknown paths back to index.html answers 200 with HTML, and an
+ * empty-looking catalog read that way would first push every local product and
+ * then delete every local product on the next pull. Anything that is not JSON
+ * stops the sync with a message the till can show.
+ */
+async function readCloudJson(response: Response, failingMessage: string): Promise<Record<string, any>> {
+  const status = response.status;
+  const text = await response.text();
+  let parsed: unknown = null;
+  try { parsed = JSON.parse(text); } catch { parsed = null; }
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error(response.ok
+      ? `${failingMessage} The website answered with a page instead of data (HTTP ${status}), so its API is not reachable yet.`
+      : `${failingMessage} The website answered HTTP ${status} without a message.`);
   }
+  const body = parsed as Record<string, any>;
+  if (!response.ok) throw new Error(body.error || `${failingMessage} (HTTP ${status})`);
+  return body;
+}
+
+/** Products that appear in a sale or a stock movement can never be dropped locally. */
+async function productIdsWithHistory(ids: string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const tracked = new Set(ids);
+  const movements = await db.select({ productId: inventoryMovements.productId })
+    .from(inventoryMovements)
+    .where(inArray(inventoryMovements.productId, ids));
+  const withHistory = new Set(movements.map(row => row.productId));
+  const lines = await db.select({ items: orders.items }).from(orders);
+  for (const line of lines) {
+    for (const entry of Array.isArray(line.items) ? line.items : []) {
+      const id = String(entry?.product?.id || '');
+      if (id && tracked.has(id)) withHistory.add(id);
+    }
+  }
+  return withHistory;
 }
 
 async function queueInitialProducts(cloudOrigin: string, cloudAuthorization: string) {
@@ -63,9 +95,11 @@ async function queueInitialProducts(cloudOrigin: string, cloudAuthorization: str
     url.searchParams.set('limit', '500');
     url.searchParams.set('offset', String(offset));
     const response = await fetch(url, { headers: { Authorization: cloudAuthorization } });
-    const body = await responseJson(response);
-    if (!response.ok) throw new Error(body.error || 'Could not read the website product catalog.');
-    const page = Array.isArray(body.products) ? body.products : [];
+    const body = await readCloudJson(response, 'Could not read the website product catalog.');
+    if (!Array.isArray(body.products)) {
+      throw new Error('Could not read the website product catalog. It replied without a product list.');
+    }
+    const page = body.products as Record<string, any>[];
     for (const product of page) if (product?.id) cloudIds.add(String(product.id));
     if (page.length < 500) break;
     offset += page.length;
@@ -161,9 +195,11 @@ async function pullCloudProducts(cloudOrigin: string, cloudAuthorization: string
     url.searchParams.set('offset', String(offset));
     if (canSeeUnpublished) url.searchParams.set('includeUnpublished', 'true');
     const response = await fetch(url, { headers: { Authorization: cloudAuthorization } });
-    const body = await responseJson(response);
-    if (!response.ok) throw new Error(body.error || 'Could not refresh the website catalog.');
-    const page = Array.isArray(body.products) ? body.products : [];
+    const body = await readCloudJson(response, 'Could not refresh the website catalog.');
+    if (!Array.isArray(body.products)) {
+      throw new Error('Could not refresh the website catalog. It replied without a product list.');
+    }
+    const page = body.products as Record<string, any>[];
     cloudProducts.push(...page);
     if (page.length < 500) break;
     offset += page.length;
@@ -196,16 +232,46 @@ async function pullCloudProducts(cloudOrigin: string, cloudAuthorization: string
   }
 
   let deleted = 0;
+  let kept = 0;
+  let heldBack = false;
   if (canSeeUnpublished && getSetting('sync.products.backfill.v1') === 'done') {
-    const removedIds = localProducts
-      .filter(product => !cloudIds.has(product.id) && !dirtyIds.has(product.id))
-      .map(product => product.id);
-    if (removedIds.length) {
-      await db.delete(products).where(inArray(products.id, removedIds));
-      deleted = removedIds.length;
+    // A pull that saw no products at all is a broken reply, not an empty shop.
+    // Deleting against it would wipe the till's catalog.
+    heldBack = cloudProducts.length === 0 && localProducts.length > 0;
+    if (!heldBack) {
+      const candidates = localProducts
+        .filter(product => !cloudIds.has(product.id) && !dirtyIds.has(product.id))
+        .map(product => product.id);
+      const withHistory = await productIdsWithHistory(candidates);
+      const removable = candidates.filter(id => !withHistory.has(id));
+      kept = candidates.length - removable.length;
+      if (removable.length) {
+        await db.delete(products).where(inArray(products.id, removable));
+        deleted = removable.length;
+      }
     }
   }
-  return { updated, deleted };
+  const result = { updated, deleted, kept, heldBack };
+  setSetting('sync.last.pull.v1', JSON.stringify({ at: new Date().toISOString(), ...result }));
+  return result;
+}
+
+function readJsonSetting(key: string): Record<string, any> | null {
+  const raw = getSetting(key);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed as Record<string, any> : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Keeps the reason a sync step failed on record so the till can show it instead of going quiet. */
+function reportSyncFailure(res: ApiResponse, error: any): ApiResponse {
+  const message = String(error?.message || error || 'The website could not be reached.');
+  setSetting('sync.last.error.v1', JSON.stringify({ at: new Date().toISOString(), message }));
+  return res.status(502).json({ error: message });
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -220,8 +286,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       if (!cloudAuthorization) {
         return res.status(409).json({ error: 'Sign in while online to connect this till to the website catalog.' });
       }
-      const result = await queueInitialProducts(cloudOrigin, cloudAuthorization);
-      return res.status(200).json(result);
+      try {
+        const result = await queueInitialProducts(cloudOrigin, cloudAuthorization);
+        setSetting('sync.last.error.v1', '');
+        return res.status(200).json(result);
+      } catch (error) {
+        return reportSyncFailure(res, error);
+      }
     }
 
     if (req.method === 'POST' && action === 'pull-products') {
@@ -230,12 +301,17 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       if (!cloudAuthorization) {
         return res.status(409).json({ error: 'Sign in while online to connect this till to the website catalog.' });
       }
-      const result = await pullCloudProducts(
-        cloudOrigin,
-        cloudAuthorization,
-        auth.adminRole !== 'Cashier',
-      );
-      return res.status(200).json(result);
+      try {
+        const result = await pullCloudProducts(
+          cloudOrigin,
+          cloudAuthorization,
+          auth.adminRole !== 'Cashier',
+        );
+        setSetting('sync.last.error.v1', '');
+        return res.status(200).json(result);
+      } catch (error) {
+        return reportSyncFailure(res, error);
+      }
     }
 
     // ── Status (accessible to all authenticated staff to drive UI indicator) ─
@@ -269,9 +345,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         pendingCount: Number(pendingRow?.count || 0),
         syncedCount: Number(syncedRow?.count || 0),
         failedCount: Number(failedRow?.count || 0),
-        lastError: latestFailure?.errorMessage || null,
+        lastError: latestFailure?.errorMessage || readJsonSetting('sync.last.error.v1')?.message || null,
         cloudConnected: Boolean(cloudAuthorization),
         lastSyncedAt: lastSync?.syncedAt ? lastSync.syncedAt.toISOString() : null,
+        lastPull: readJsonSetting('sync.last.pull.v1'),
         cloudOrigin,
       });
     }
@@ -333,13 +410,32 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           const bodyText = await cloudResponse.text();
           let parsed: Record<string, any> = {};
           try { parsed = JSON.parse(bodyText); } catch {}
+          // An SPA fallback answers 200 with index.html. Nothing reached the
+          // database, so the change must stay queued instead of being marked
+          // synced. An empty body is still an accepted reply (a delete says 204).
+          const repliedWithData = bodyText.trim() === ''
+            || /^\s*[[{]/.test(bodyText)
+            || /application\/json/i.test(cloudResponse.headers.get('content-type') || '');
           let alreadyExists = false;
           if (cloudResponse.status === 409 && item.action === 'PRODUCT_CREATE') {
             const productId = String(item.payload.id || '');
             const existing = await fetch(`${cloudOrigin}/api/products?id=${encodeURIComponent(productId)}`, {
               headers: { Authorization: cloudAuthorization },
             });
-            alreadyExists = existing.ok;
+            alreadyExists = existing.ok && /^\s*[[{]/.test(await existing.text());
+          }
+
+          if (cloudResponse.ok && !repliedWithData) {
+            const pageReply = 'The website answered with a page instead of data, so this change was not stored. Its API is not reachable yet.';
+            setSetting('sync.last.error.v1', JSON.stringify({ at: new Date().toISOString(), message: pageReply }));
+            await db.update(posSyncQueue)
+              .set({
+                retryCount: item.retryCount + 1,
+                errorMessage: pageReply,
+                status: item.retryCount + 1 >= 5 ? 'FAILED' : 'PENDING',
+              })
+              .where(eq(posSyncQueue.id, item.id));
+            break;
           }
 
           const duplicateOrder = item.action === 'POS_ORDER'
