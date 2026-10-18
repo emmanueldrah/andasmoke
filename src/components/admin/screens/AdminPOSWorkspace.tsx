@@ -11,7 +11,6 @@ import {
   Plus,
   Printer,
   ReceiptText,
-  RefreshCw,
   Search,
   ShoppingBag,
   Smartphone,
@@ -1217,16 +1216,9 @@ return (
 
           {/* Recent POS sales */}
           <section className="lux-card p-4 sm:p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="eyebrow">Sales</p>
-                <h2 className="brand-display mt-1 text-lg font-semibold text-[var(--text-primary)]">Recent POS sales</h2>
-              </div>
-              <button type="button" onClick={() => void fetchOrders()} disabled={loadingOrders} className="lux-btn lux-btn--outline lux-btn--sm">
-                <RefreshCw className={`h-3.5 w-3.5 ${loadingOrders ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-            </div>
+            {/* The shell's Refresh already pulls sales again, so the card does
+                not carry a second button that does the same thing. */}
+            <h2 className="brand-display text-lg font-semibold text-[var(--text-primary)]">Recent POS sales</h2>
             {posHistory.length ? (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[620px] text-left text-sm">

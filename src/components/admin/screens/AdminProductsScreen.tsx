@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Search,
   Plus,
@@ -46,7 +46,6 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [barcodeModalOpen, setBarcodeModalOpen] = useState(false);
   const [barcodeInitialProductId, setBarcodeInitialProductId] = useState<string | undefined>(undefined);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   const stats = useMemo(() => {
     const products = store.products || [];
@@ -234,7 +233,6 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
           <div className="relative flex-1">
             <ScanLine className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--accent)]" aria-hidden="true" />
             <input
-              ref={searchRef}
               type="search"
               placeholder="Scan a barcode, or search name, brand, category…"
               value={searchTerm}
@@ -243,15 +241,6 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
               className="lux-input pl-9"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => searchRef.current?.focus()}
-            className="lux-btn lux-btn--outline lux-btn--sm shrink-0"
-            title="Focus the scanner field"
-          >
-            <ScanLine className="h-4 w-4" />
-            Scan
-          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">

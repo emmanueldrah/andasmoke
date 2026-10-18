@@ -1519,6 +1519,82 @@ test('an admin screen never repeats the page name the shell already shows', () =
   assert.deepEqual(offenders, [], 'screens must not pass eyebrow or title to AdminPageHeader');
 });
 
+test('a screen says each action once', () => {
+  const fs = require('node:fs');
+
+  // Reported alongside the duplicated page name: the shell printed its own
+  // 'Add product' beside the one the products screen already carries, the
+  // category card used the same words for its heading and its submit button,
+  // the team screen stacked 'Add team member' over a form headed 'Add a team
+  // member', and the search field came with a 'Scan' button that only focused
+  // the field beside it. One phrase, one control, one place.
+  const shell = readSource('AdminPortal.tsx');
+  assert.doesNotMatch(shell, />\s*Add product\s*</,
+    'the shell must leave screen actions to the screen that owns them');
+
+  const catalog = readSource('screens/AdminPOSCatalogScreen.tsx');
+  assert.equal((catalog.match(/Add category/g) ?? []).length, 1,
+    'the category card should offer to add a category once');
+
+  const accounts = readSource('screens/AdminAccountsManagementScreen.tsx');
+  assert.match(accounts, /isCreatingNew \? undefined :/,
+    'the team header must step back while its create form is open');
+
+  const products = readSource('screens/AdminProductsScreen.tsx');
+  assert.doesNotMatch(products, />\s*Scan\s*</,
+    'the scan-first search field must not be paired with a second scan control');
+
+  // The shell's Refresh already reloads products and sales, so a card that
+  // carried its own Refresh was the same button twice on one screen.
+  for (const file of fs.readdirSync(join(root, 'src', 'components', 'admin', 'screens'))) {
+    if (!file.endsWith('.tsx')) continue;
+    assert.doesNotMatch(readSource(join('screens', file)), />\s*Refresh\s*</,
+      `${file} must not duplicate the shell's Refresh`);
+  }
+
+  // Every admin screen keeps its own actions, so a phrase used as a button
+  // label must not also appear as a heading in the same file. Headings are
+  // lifted out first, otherwise each heading matches its own text.
+  const screensDir = join(root, 'src', 'components', 'admin', 'screens');
+  const headingTag = /<(h2|h3)([^>]*)>([^<{]*)<\/\1>/g;
+  const repeats = [];
+  for (const file of fs.readdirSync(screensDir)) {
+    if (!file.endsWith('.tsx')) continue;
+    const source = fs.readFileSync(join(screensDir, file), 'utf8');
+    const headings = [...source.matchAll(headingTag)].map(match => match[3].trim());
+    const rest = source.replace(headingTag, '');
+    for (const heading of headings) {
+      if (heading.length < 4) continue;
+      const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (new RegExp(`>\\s*${escaped}\\s*<`).test(rest)) {
+        repeats.push(`${file}: ${heading}`);
+      }
+    }
+  }
+  assert.deepEqual(repeats, [], 'a heading must not double as a button label on the same screen');
+
+  // A kicker line that repeats a word the heading under it already carries is
+  // the same echo in a smaller coat: 'Profile' over 'My Profile', 'Sales' over
+  // 'Recent POS sales'. Keep the kicker for a word the heading does not say.
+  const echoes = [];
+  const echoTargets = [
+    'AdminPortal.tsx',
+    ...fs.readdirSync(screensDir).filter(file => file.endsWith('.tsx')).map(file => join('screens', file)),
+  ];
+  for (const relative of echoTargets) {
+    const source = readSource(relative);
+    for (const match of source.matchAll(
+      /<p className="eyebrow">([A-Za-z][^<{]*)<\/p>\s*<(?:h2|h3)[^>]*>([A-Za-z][^<{]*)</g,
+    )) {
+      const kicker = match[1].trim().toLowerCase();
+      if (new RegExp(`\\b${kicker}\\b`).test(match[2].toLowerCase())) {
+        echoes.push(`${relative}: "${match[1]}" over "${match[2].trim()}"`);
+      }
+    }
+  }
+  assert.deepEqual(echoes, [], 'an eyebrow must not repeat a word the heading below it says');
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Reads a screen so the tests cannot drift from what ships. */

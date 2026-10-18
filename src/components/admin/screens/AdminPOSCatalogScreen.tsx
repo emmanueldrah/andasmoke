@@ -103,7 +103,7 @@ export const AdminPOSCatalogScreen: React.FC = () => {
         </div>
         <div className="space-y-5">
           <form onSubmit={event => void createCategory(event)} className="lux-card h-fit space-y-4 p-5">
-            <div className="flex items-center justify-between gap-2"><h2 className="font-bold text-[var(--text-primary)]">Add category</h2><span className="lux-chip lux-chip--neutral"><Plus className="h-3 w-3" />New</span></div>
+            <h2 className="font-bold text-[var(--text-primary)]">New category</h2>
             <label className="block"><span className="lux-label">ID</span><input className={inputClass} placeholder="e.g. shisha-flavors" value={createForm.id} onChange={event => setCreateForm({ ...createForm, id: event.target.value })} /></label>
             <label className="block"><span className="lux-label">Name</span><input className={inputClass} placeholder="Category name" value={createForm.name} onChange={event => setCreateForm({ ...createForm, name: event.target.value })} /></label>
             <label className="block"><span className="lux-label">Slug</span><input className={inputClass} placeholder="category-slug" value={createForm.slug} onChange={event => setCreateForm({ ...createForm, slug: event.target.value })} /></label>

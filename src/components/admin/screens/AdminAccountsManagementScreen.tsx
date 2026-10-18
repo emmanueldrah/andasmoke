@@ -223,13 +223,17 @@ export const AdminAccountsManagementScreen: React.FC = () => {
       <AdminPageHeader
         description="Add team members, choose their access, and update your profile."
         action={
-          <button
-            onClick={() => setIsCreatingNew(true)}
-            className="lux-btn lux-btn--primary"
-          >
-            <Plus className="w-4 h-4" />
-            Add team member
-          </button>
+          // The create form opens with the same words as its own heading, so the
+          // button steps out of the way while the form is on screen.
+          isCreatingNew ? undefined : (
+            <button
+              onClick={() => setIsCreatingNew(true)}
+              className="lux-btn lux-btn--primary"
+            >
+              <Plus className="w-4 h-4" />
+              Add team member
+            </button>
+          )
         }
       />
 
@@ -500,8 +504,7 @@ export const AdminAccountsManagementScreen: React.FC = () => {
             )}
           </div>
           <div>
-            <p className="eyebrow">Profile</p>
-            <h2 className="brand-display mt-1 text-xl font-semibold text-[var(--text-primary)]">My Profile</h2>
+            <h2 className="brand-display text-xl font-semibold text-[var(--text-primary)]">My Profile</h2>
             <p className="mt-0.5 text-sm text-[var(--text-muted)]">
               {ROLE_LABEL[currentAdminProfile.role] ?? currentAdminProfile.role ?? 'Admin'} · {currentAdminProfile.email || 'No email set'}
             </p>
