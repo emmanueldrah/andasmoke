@@ -1440,6 +1440,36 @@ test('desktop sign-in returns a cloud token for catalog synchronization', async 
   }
 });
 
+test('no screen asks the hosted API for a nested route', () => {
+  const fs = require('node:fs');
+  const offenders = [];
+
+  // Vercel registers the hosted function as /api/<one segment>. A second
+  // segment never reaches it: the platform answers 404 before any code runs,
+  // so the request looks like a broken login or a lost product rather than a
+  // routing mistake. Ids therefore travel as ?id=, which both data layers read.
+  const nested = /api\.(get|post|put|patch|delete)\(\s*["'`]\/[^"'`?]*\//g;
+
+  const scan = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules') scan(full);
+        continue;
+      }
+      if (!/\.(ts|tsx)$/.test(entry.name)) continue;
+      const source = fs.readFileSync(full, 'utf8');
+      for (const match of source.matchAll(nested)) {
+        const line = source.slice(0, match.index).split('\n').length;
+        offenders.push(`${full.replace(root, '')}:${line} ${match[0].slice(0, 72)}`);
+      }
+    }
+  };
+  scan(join(root, 'src'));
+
+  assert.deepEqual(offenders, [], 'API endpoints must be one path segment plus a query string');
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Reads a screen so the tests cannot drift from what ships. */

@@ -94,7 +94,7 @@ async function queueInitialProducts(cloudOrigin: string, cloudAuthorization: str
     url.searchParams.set('includeUnpublished', 'true');
     url.searchParams.set('limit', '500');
     url.searchParams.set('offset', String(offset));
-    const response = await fetch(url, { headers: { Authorization: cloudAuthorization } });
+    const response = await fetch(url, { headers: { Authorization: cloudAuthorization }, signal: AbortSignal.timeout(20_000) });
     const body = await readCloudJson(response, 'Could not read the website product catalog.');
     if (!Array.isArray(body.products)) {
       throw new Error('Could not read the website product catalog. It replied without a product list.');
@@ -194,7 +194,7 @@ async function pullCloudProducts(cloudOrigin: string, cloudAuthorization: string
     url.searchParams.set('limit', '500');
     url.searchParams.set('offset', String(offset));
     if (canSeeUnpublished) url.searchParams.set('includeUnpublished', 'true');
-    const response = await fetch(url, { headers: { Authorization: cloudAuthorization } });
+    const response = await fetch(url, { headers: { Authorization: cloudAuthorization }, signal: AbortSignal.timeout(20_000) });
     const body = await readCloudJson(response, 'Could not refresh the website catalog.');
     if (!Array.isArray(body.products)) {
       throw new Error('Could not refresh the website catalog. It replied without a product list.');
@@ -405,6 +405,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
               Authorization: cloudAuthorization,
             },
             ...(method === 'DELETE' ? {} : { body: JSON.stringify(body) }),
+            signal: AbortSignal.timeout(30_000),
           });
 
           const bodyText = await cloudResponse.text();
@@ -421,6 +422,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             const productId = String(item.payload.id || '');
             const existing = await fetch(`${cloudOrigin}/api/products?id=${encodeURIComponent(productId)}`, {
               headers: { Authorization: cloudAuthorization },
+              signal: AbortSignal.timeout(20_000),
             });
             alreadyExists = existing.ok && /^\s*[[{]/.test(await existing.text());
           }
@@ -467,8 +469,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
               .where(eq(posSyncQueue.id, item.id));
           }
         } catch (fetchErr: any) {
-          // Network disconnect / offline
-          if (fetchErr instanceof TypeError || /network|fetch/i.test(fetchErr?.message || '')) {
+          // Network disconnect, offline till, or a connection that never answered
+          if (fetchErr instanceof TypeError
+            || fetchErr?.name === 'TimeoutError'
+            || fetchErr?.name === 'AbortError'
+            || /network|fetch|abort|timeout/i.test(fetchErr?.message || '')) {
             isOffline = true;
             break;
           }

@@ -871,7 +871,12 @@ localStorage.setItem('anda_auth_token', result.token);
     const { profileImage: _p, ...backendUpdates } = updates;
     if (targetBackendId && Object.keys(backendUpdates).length > 0) {
       try {
-        await api.patch(`/admin-accounts/${targetBackendId}`, backendUpdates);
+        // The id travels as a query parameter, never as an extra path segment.
+        // On Vercel only /api/<one-segment> reaches the hosted function, so a
+        // request shaped like /api/admin-accounts/abc is answered by the platform
+        // with a 404 before the API ever runs. Both the till and the hosted
+        // handler read the id from the query string.
+        await api.patch(`/admin-accounts?id=${encodeURIComponent(targetBackendId)}`, backendUpdates);
       } catch (e: any) {
         setError(e.message || 'Operation failed');
         throw e;
@@ -882,7 +887,7 @@ localStorage.setItem('anda_auth_token', result.token);
   const deleteAdminAccount = async (id: string) => {
     setAdminAccounts(prev => prev.filter(account => account.id !== id));
     try {
-      await api.delete(`/admin-accounts/${id}`);
+      await api.delete(`/admin-accounts?id=${encodeURIComponent(id)}`);
     } catch (e: any) { setError(e.message || 'Operation failed'); }
   };
 
@@ -901,7 +906,7 @@ localStorage.setItem('anda_auth_token', result.token);
     }
 
     if (!targetId) throw new Error('Active admin account was not found');
-    await api.patch(`/admin-accounts/${targetId}`, { currentPin, pin: newPin });
+    await api.patch(`/admin-accounts?id=${encodeURIComponent(targetId)}`, { currentPin, pin: newPin });
   };
 
   return (
