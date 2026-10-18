@@ -1,7 +1,7 @@
 {
   "name": "anda-smoke-hub-pos",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.4",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -55,7 +55,7 @@
     "appId": "gh.anda.smokehub.pos",
     "productName": "Anda C Smoke Hub POS",
     "directories": {
-      "output": "release-theme-1.0.2"
+      "output": "release-theme-1.0.4"
     },
     "publish": [
       {

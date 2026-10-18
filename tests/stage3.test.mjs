@@ -1288,6 +1288,56 @@ test('initial desktop catalog backfill queues existing products exactly once', a
   }
 });
 
+test('cloud products pull to desktop without overwriting queued local edits', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-product-pull-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const { ownerToken } = await seedTill(api);
+  const localProduct = await makeProduct(api, ownerToken);
+  const originalFetch = globalThis.fetch;
+  const cloudImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p0sAAAAASUVORK5CYII=';
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    products: [
+      {
+        id: 'cloud-only', name: 'Website-only bowl', brand: 'Online', department: 'beauty',
+        category: 'skincare', categoryLabel: 'Flavors', price: 25, unit: 'bowl', image: cloudImage, images: [],
+        stockCount: 4, inStock: true, isPublished: true, updatedAt: '2026-10-18T12:00:00.000Z',
+      },
+      {
+        id: localProduct.id, name: 'Stale cloud name', brand: 'Online', department: 'beauty',
+        category: 'skincare', categoryLabel: 'Flavors', price: 10, unit: 'bowl', image: '', images: [],
+        stockCount: 1, inStock: true, isPublished: true, updatedAt: '2026-10-18T12:00:00.000Z',
+      },
+    ],
+  }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+
+  try {
+    const pulled = await callApi(api.posSync, {
+      method: 'POST',
+      query: { action: 'pull-products' },
+      token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token',
+      body: {},
+    });
+    assert.equal(pulled.status, 200);
+    assert.equal(pulled.body.updated, 1);
+
+    const sqlite = api.getSqliteHandle();
+    const imported = sqlite.prepare('SELECT name, stock_count, image FROM products WHERE id = ?').get('cloud-only');
+    assert.equal(imported.name, 'Website-only bowl');
+    assert.equal(imported.stock_count, 4);
+    assert.match(imported.image, /^\/media\/products\//);
+
+    const locallyEdited = sqlite.prepare('SELECT name, stock_count FROM products WHERE id = ?').get(localProduct.id);
+    assert.equal(locallyEdited.name, 'Mango Kush');
+    assert.equal(locallyEdited.stock_count, 100);
+  } finally {
+    globalThis.fetch = originalFetch;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Reads a screen so the tests cannot drift from what ships. */

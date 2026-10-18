@@ -20,6 +20,7 @@ export const MAX_PIN_ATTEMPTS = 5;
 /** How long a locked account stays locked. */
 export const PIN_LOCKOUT_MINUTES = 5;
 const PIN_LOCKOUT_MS = PIN_LOCKOUT_MINUTES * 60 * 1000;
+const configuredCloudOrigin = () => process.env.ANDA_CLOUD_API_ORIGIN?.trim().replace(/\/+$/, '') || null;
 
 /** Reports how many staff accounts exist, so the UI can show first-run setup. */
 async function handleSetupStatus(_req: ApiRequest, res: ApiResponse) {
@@ -127,8 +128,8 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
 
   // If staff member does not exist in local SQLite, try cloud verification
   // and cache their credentials locally so they can log in offline afterwards.
-  if (!currentAdmin && process.env.NODE_ENV !== 'test') {
-    const cloudOrigin = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
+  const cloudOrigin = configuredCloudOrigin();
+  if (!currentAdmin && cloudOrigin && process.env.NODE_ENV !== 'test') {
     try {
       const cloudRes = await fetch(`${cloudOrigin}/api/auth?action=admin&client=desktop`, {
         method: 'POST',
@@ -195,8 +196,7 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
     return res.status(401).json({ error: 'Incorrect email or PIN.' });
   }
 
-  if (!cloudToken && process.env.NODE_ENV !== 'test') {
-    const cloudOrigin = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
+  if (!cloudToken && cloudOrigin && process.env.NODE_ENV !== 'test') {
     try {
       const cloudRes = await fetch(`${cloudOrigin}/api/auth?action=admin&client=desktop`, {
         method: 'POST',

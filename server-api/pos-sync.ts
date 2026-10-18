@@ -1,12 +1,13 @@
 import type { ApiRequest, ApiResponse } from './_http.js';
 import { randomUUID } from 'node:crypto';
-import { desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, getSetting, setSetting } from '../src/db/index.js';
 import { posSyncQueue, products } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 
-const { readStoredProductImage } = require('../electron/media.cjs') as {
+const { readStoredProductImage, saveProductImage } = require('../electron/media.cjs') as {
   readStoredProductImage: (value: unknown) => unknown;
+  saveProductImage: (value: unknown) => string;
 };
 
 function cloudProductPayload(payload: Record<string, unknown>): Record<string, unknown> {
@@ -89,6 +90,124 @@ async function queueInitialProducts(cloudOrigin: string, cloudAuthorization: str
   return { queued, alreadyDone: false };
 }
 
+function localProductFromCloud(product: Record<string, any>) {
+  const pricePesewas = product.pricePesewas == null
+    ? Math.round(Number(product.price || 0) * 100)
+    : Number(product.pricePesewas);
+  const date = (value: unknown) => {
+    const parsed = value instanceof Date ? value : new Date(String(value || ''));
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+  };
+  const localImage = (value: unknown): string | undefined => {
+    if (typeof value !== 'string') return undefined;
+    return value.startsWith('data:image/') ? saveProductImage(value) : value;
+  };
+  const image = localImage(product.image) || '';
+  const images = Array.isArray(product.images)
+    ? product.images.map(localImage).filter((value): value is string => Boolean(value))
+    : [];
+  return {
+    id: String(product.id),
+    name: String(product.name || ''),
+    brand: String(product.brand || ''),
+    department: product.department,
+    category: product.category,
+    categoryLabel: String(product.categoryLabel || product.category || ''),
+    price: pricePesewas / 100,
+    pricePesewas,
+    ...(product.costPricePesewas !== undefined ? { costPricePesewas: product.costPricePesewas == null ? null : Number(product.costPricePesewas) } : {}),
+    reorderLevel: Number(product.reorderLevel || 0),
+    wholesalePrice: product.wholesalePrice == null ? null : Number(product.wholesalePrice),
+    deliveryPrice: product.deliveryPrice == null ? null : Number(product.deliveryPrice),
+    originalPrice: product.originalPrice == null ? null : Number(product.originalPrice),
+    discountBadge: product.discountBadge ?? null,
+    unit: String(product.unit || 'each'),
+    barcode: product.barcode ?? null,
+    serialNumber: product.serialNumber ?? null,
+    image,
+    images,
+    description: String(product.description || ''),
+    highlights: Array.isArray(product.highlights) ? product.highlights : [],
+    badge: product.badge ?? null,
+    inStock: Boolean(product.inStock),
+    isPublished: Boolean(product.isPublished),
+    stockCount: Math.max(0, Number(product.stockCount || 0)),
+    options: Array.isArray(product.options) ? product.options : [],
+    rating: Number(product.rating || 5),
+    reviewCount: Number(product.reviewCount || 0),
+    origin: product.origin ?? null,
+    routineStep: product.routineStep ?? null,
+    skinType: Array.isArray(product.skinType) ? product.skinType : [],
+    skinConcern: Array.isArray(product.skinConcern) ? product.skinConcern : [],
+    packSize: product.packSize ?? null,
+    storageInfo: product.storageInfo ?? null,
+    shelfLife: product.shelfLife ?? null,
+    variants: Array.isArray(product.variants) ? product.variants.map(variant => {
+      const variantImage = localImage(variant?.image);
+      return { ...variant, ...(variantImage ? { image: variantImage } : {}) };
+    }) : [],
+    details: product.details ?? null,
+    createdAt: date(product.createdAt),
+    updatedAt: date(product.updatedAt),
+  };
+}
+
+async function pullCloudProducts(cloudOrigin: string, cloudAuthorization: string, canSeeUnpublished: boolean) {
+  const cloudProducts: Record<string, any>[] = [];
+  let offset = 0;
+  while (true) {
+    const url = new URL('/api/products', cloudOrigin);
+    url.searchParams.set('limit', '500');
+    url.searchParams.set('offset', String(offset));
+    if (canSeeUnpublished) url.searchParams.set('includeUnpublished', 'true');
+    const response = await fetch(url, { headers: { Authorization: cloudAuthorization } });
+    const body = await responseJson(response);
+    if (!response.ok) throw new Error(body.error || 'Could not refresh the website catalog.');
+    const page = Array.isArray(body.products) ? body.products : [];
+    cloudProducts.push(...page);
+    if (page.length < 500) break;
+    offset += page.length;
+  }
+
+  const dirtyQueue = await db.select({ payload: posSyncQueue.payload })
+    .from(posSyncQueue)
+    .where(and(
+      inArray(posSyncQueue.action, ['PRODUCT_CREATE', 'PRODUCT_UPDATE', 'PRODUCT_DELETE']),
+      inArray(posSyncQueue.status, ['PENDING', 'FAILED']),
+    ));
+  const dirtyIds = new Set(dirtyQueue.map(item => String(item.payload.id || '')));
+  const localProducts = await db.select().from(products);
+  const localById = new Map(localProducts.map(product => [product.id, product]));
+  const cloudIds = new Set<string>();
+  let updated = 0;
+
+  for (const remote of cloudProducts) {
+    const id = String(remote.id || '');
+    if (!id) continue;
+    cloudIds.add(id);
+    if (dirtyIds.has(id)) continue;
+    const local = localById.get(id);
+    const next = localProductFromCloud(remote);
+    if (local && local.updatedAt.getTime() >= next.updatedAt.getTime()) continue;
+    await db.insert(products)
+      .values(next as typeof products.$inferInsert)
+      .onConflictDoUpdate({ target: products.id, set: next });
+    updated++;
+  }
+
+  let deleted = 0;
+  if (canSeeUnpublished && getSetting('sync.products.backfill.v1') === 'done') {
+    const removedIds = localProducts
+      .filter(product => !cloudIds.has(product.id) && !dirtyIds.has(product.id))
+      .map(product => product.id);
+    if (removedIds.length) {
+      await db.delete(products).where(inArray(products.id, removedIds));
+      deleted = removedIds.length;
+    }
+  }
+  return { updated, deleted };
+}
+
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   try {
     const action = req.query.action || 'status';
@@ -102,6 +221,20 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         return res.status(409).json({ error: 'Sign in while online to connect this till to the website catalog.' });
       }
       const result = await queueInitialProducts(cloudOrigin, cloudAuthorization);
+      return res.status(200).json(result);
+    }
+
+    if (req.method === 'POST' && action === 'pull-products') {
+      const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager', 'Inventory Dispatcher', 'Cashier']);
+      if (!auth) return;
+      if (!cloudAuthorization) {
+        return res.status(409).json({ error: 'Sign in while online to connect this till to the website catalog.' });
+      }
+      const result = await pullCloudProducts(
+        cloudOrigin,
+        cloudAuthorization,
+        auth.adminRole !== 'Cashier',
+      );
       return res.status(200).json(result);
     }
 

@@ -218,6 +218,7 @@ export const AdminPortal: React.FC = () => {
   useEffect(() => {
     let active = true;
     let backfillQueued = false;
+    let lastCloudPull = 0;
     const fetchSync = async () => {
       if (!backfillQueued && !isCashier && localStorage.getItem('anda_cloud_auth_token')) {
         try {
@@ -225,6 +226,17 @@ export const AdminPortal: React.FC = () => {
           backfillQueued = true;
         } catch {
           // Keep trying on later polls if the network or cloud is unavailable.
+        }
+      }
+      if (localStorage.getItem('anda_cloud_auth_token') && Date.now() - lastCloudPull >= 60_000) {
+        try {
+          const pulled = await api.post<{ updated: number; deleted: number }>('/pos-sync?action=pull-products', {});
+          lastCloudPull = Date.now();
+          if (active && (pulled.updated > 0 || pulled.deleted > 0)) {
+            await store.fetchProducts({ includeUnpublished: true });
+          }
+        } catch {
+          // Keep local catalog available if the hosted service is unavailable.
         }
       }
       try {
@@ -237,7 +249,7 @@ export const AdminPortal: React.FC = () => {
     void fetchSync();
     const syncTimer = window.setInterval(fetchSync, 12_000);
     return () => { active = false; window.clearInterval(syncTimer); };
-  }, [isCashier, store.adminSession.isLoggedIn]);
+  }, [isCashier, store.adminSession.isLoggedIn, store.fetchProducts]);
 
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
 
