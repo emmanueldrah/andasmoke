@@ -123,13 +123,14 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
 
   let currentAdmin = admin;
   let validPin = currentAdmin ? await bcrypt.compare(parsed.data.pin, currentAdmin.pinHash) : false;
+  let cloudToken: string | undefined;
 
   // If staff member does not exist in local SQLite, try cloud verification
   // and cache their credentials locally so they can log in offline afterwards.
   if (!currentAdmin && process.env.NODE_ENV !== 'test') {
     const cloudOrigin = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
     try {
-      const cloudRes = await fetch(`${cloudOrigin}/api/auth?action=admin`, {
+      const cloudRes = await fetch(`${cloudOrigin}/api/auth?action=admin&client=desktop`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, pin: parsed.data.pin }),
@@ -137,6 +138,7 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
       });
       if (cloudRes.ok) {
         const cloudData = (await cloudRes.json()) as any;
+        cloudToken = typeof cloudData?.token === 'string' ? cloudData.token : undefined;
         if (cloudData?.admin) {
           const pinHash = await bcrypt.hash(parsed.data.pin, 12);
           const [saved] = await db.insert(adminSessions).values({
@@ -193,6 +195,24 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
     return res.status(401).json({ error: 'Incorrect email or PIN.' });
   }
 
+  if (!cloudToken && process.env.NODE_ENV !== 'test') {
+    const cloudOrigin = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
+    try {
+      const cloudRes = await fetch(`${cloudOrigin}/api/auth?action=admin&client=desktop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, pin: parsed.data.pin }),
+        signal: AbortSignal.timeout(4000),
+      });
+      if (cloudRes.ok) {
+        const cloudData = await cloudRes.json() as { token?: unknown };
+        if (typeof cloudData.token === 'string') cloudToken = cloudData.token;
+      }
+    } catch {
+      // Keep local sign-in available when the hosted service is offline.
+    }
+  }
+
   // A correct PIN clears the failure count and any expired lock.
   await db.update(adminSessions)
     .set({ lastLoginAt: now, failedPinAttempts: 0, lockedUntil: null })
@@ -217,6 +237,7 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
 
   return res.status(200).json({
     token,
+    ...(cloudToken ? { cloudToken } : {}),
     idleTimeoutMs,
     admin: {
       id: currentAdmin.id,

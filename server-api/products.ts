@@ -1,6 +1,7 @@
 import type { ApiRequest, ApiResponse } from './_http.js';
+import { randomUUID } from 'node:crypto';
 import { db, getBarcodeSequence, setBarcodeSequence } from '../src/db/index.js';
-import { products } from '../src/db/schema.js';
+import { posSyncQueue, products } from '../src/db/schema.js';
 import { eq, and, or, like, desc, asc, sql, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAdmin } from './_auth.js';
@@ -393,6 +394,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         inStock: available,
         isPublished: available ? productData.isPublished : false,
       } as any).returning();
+      await db.insert(posSyncQueue).values({
+        action: 'PRODUCT_CREATE',
+        payload: newProduct as unknown as Record<string, unknown>,
+        idempotencyKey: `PRODUCT_UPSERT:${newProduct.id}:${randomUUID()}`,
+      });
       return res.status(201).json(newProduct);
     }
 
@@ -477,6 +483,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         .set(updateData as any)
         .where(eq(products.id, id))
         .returning();
+      if (updated) {
+        await db.insert(posSyncQueue).values({
+          action: 'PRODUCT_UPDATE',
+          payload: updated as unknown as Record<string, unknown>,
+          idempotencyKey: `PRODUCT_UPSERT:${updated.id}:${randomUUID()}`,
+        });
+      }
 
       // Price and stock are money, so each change is recorded on its own: a
       // later question ("who changed this, and when?") then has an answer, and
@@ -528,6 +541,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
       const [deleted] = await db.delete(products).where(eq(products.id, id)).returning({ id: products.id, name: products.name });
       if (!deleted) return res.status(404).json({ error: 'Product not found' });
+      await db.insert(posSyncQueue).values({
+        action: 'PRODUCT_DELETE',
+        payload: { id: deleted.id },
+        idempotencyKey: `PRODUCT_DELETE:${deleted.id}:${randomUUID()}`,
+      });
 
       await recordAudit(auth, {
         action: AUDIT_ACTIONS.STOCK_ADJUSTED,

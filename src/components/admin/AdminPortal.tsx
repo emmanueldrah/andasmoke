@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Boxes,
@@ -184,42 +184,60 @@ export const AdminPortal: React.FC = () => {
     try { return localStorage.getItem(RAIL_KEY) === '1'; } catch { return false; }
   });
   const [online, setOnline] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<{ pendingCount: number; syncedCount: number } | null>(null);
+  const [syncStatus, setSyncStatus] = useState<{
+    pendingCount: number;
+    syncedCount: number;
+    failedCount: number;
+    lastError?: string | null;
+    cloudConnected: boolean;
+  } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const syncInProgress = useRef(false);
 
-  const flushSync = async () => {
-    if (isSyncing) return;
+  const flushSync = async (retryFailed = false) => {
+    if (syncInProgress.current) return;
+    syncInProgress.current = true;
     setIsSyncing(true);
     try {
-      const res = await api.post<{ flushed: number; pending: number }>('/pos-sync?action=flush', {});
-      setSyncStatus(prev => prev ? { ...prev, pendingCount: res.pending } : { pendingCount: res.pending, syncedCount: 0 });
+      const res = await api.post<{ flushed: number; pending: number; failed: number }>(
+        `/pos-sync?action=flush${retryFailed ? '&retryFailed=true' : ''}`,
+        {},
+      );
+      setSyncStatus(prev => prev ? { ...prev, pendingCount: res.pending, failedCount: res.failed } : null);
       if (res.flushed > 0) {
-        showAlert(`Synced ${res.flushed} sale${res.flushed === 1 ? '' : 's'} to cloud`, 'success');
+        showAlert(`Synced ${res.flushed} change${res.flushed === 1 ? '' : 's'} to cloud`, 'success');
       }
     } catch {
       // Offline / server unreachable
     } finally {
+      syncInProgress.current = false;
       setIsSyncing(false);
     }
   };
 
   useEffect(() => {
     let active = true;
-    const fetchSync = () => {
-      void api.get<{ pendingCount: number; syncedCount: number }>('/pos-sync?action=status')
-        .then(res => {
-          if (!active) return;
-          setSyncStatus(res);
-          if (res.pendingCount > 0 && navigator.onLine) {
-            void flushSync();
-          }
-        })
-        .catch(() => {});
+    let backfillQueued = false;
+    const fetchSync = async () => {
+      if (!backfillQueued && !isCashier && localStorage.getItem('anda_cloud_auth_token')) {
+        try {
+          await api.post('/pos-sync?action=bootstrap-products', {});
+          backfillQueued = true;
+        } catch {
+          // Keep trying on later polls if the network or cloud is unavailable.
+        }
+      }
+      try {
+        const res = await api.get<NonNullable<typeof syncStatus>>('/pos-sync?action=status');
+        if (!active) return;
+        setSyncStatus(res);
+        if (res.pendingCount > 0 && navigator.onLine) void flushSync();
+      } catch {}
     };
-    fetchSync();
+    void fetchSync();
     const syncTimer = window.setInterval(fetchSync, 12_000);
     return () => { active = false; window.clearInterval(syncTimer); };
-  }, []);
+  }, [isCashier, store.adminSession.isLoggedIn]);
 
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
 
@@ -531,24 +549,43 @@ export const AdminPortal: React.FC = () => {
                   </button>
                 )}
 
-                {syncStatus && syncStatus.pendingCount > 0 ? (
+                {syncStatus && syncStatus.failedCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => void flushSync(true)}
+                    disabled={isSyncing}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--danger)] bg-[var(--danger-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--danger)] transition cursor-pointer"
+                    title={syncStatus.lastError || 'Some desktop changes could not sync. Click to retry.'}
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>{syncStatus.failedCount} sync failed</span>
+                  </button>
+                ) : syncStatus && syncStatus.pendingCount > 0 ? (
                   <button
                     type="button"
                     onClick={() => void flushSync()}
                     disabled={isSyncing}
                     className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--accent)] transition hover:bg-[var(--accent-soft)] cursor-pointer"
-                    title="Click to sync pending sales to the cloud"
+                    title="Click to sync pending product and sales changes to the cloud"
                   >
                     <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                    <span>{syncStatus.pendingCount} pending sync</span>
+                    <span>{syncStatus.pendingCount} changes pending</span>
                   </button>
-                ) : (
+                ) : syncStatus?.cloudConnected ? (
                   <span
                     className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                    title="All offline sales are backed up and synced to the cloud"
+                    title="Desktop products and sales are synced to the cloud"
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Cloud Synced</span>
+                  </span>
+                ) : (
+                  <span
+                    className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-soft)] px-3 py-1 text-[11px] font-medium text-[var(--text-muted)] border border-[var(--border-color)]"
+                    title="Sign in while online to connect desktop changes to the website"
+                  >
+                    <WifiOff className="h-3 w-3" />
+                    <span>Cloud not linked</span>
                   </span>
                 )}
 

@@ -36,8 +36,16 @@ function fakeResponse() {
   return res;
 }
 
-async function callApi(handler, { method = 'GET', query = {}, body, token } = {}) {
-  const req = { method, query, body, headers: token ? { authorization: `Bearer ${token}` } : {} };
+async function callApi(handler, { method = 'GET', query = {}, body, token, cloudToken } = {}) {
+  const req = {
+    method,
+    query,
+    body,
+    headers: {
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...(cloudToken ? { 'x-cloud-authorization': cloudToken } : {}),
+    },
+  };
   const res = fakeResponse();
   await handler(req, res);
   return { status: res.statusCode, body: res.payload, text: res.bodyText };
@@ -1167,6 +1175,117 @@ test('a session expires after the idle timeout and on sign-out', async () => {
 
   api.closeDataLayer();
   rmSync(dir, { recursive: true, force: true });
+});
+
+test('desktop product creates sync to the cloud with the paired cloud token', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-product-sync-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const { ownerToken } = await seedTill(api);
+  const product = await makeProduct(api, ownerToken);
+  const originalFetch = globalThis.fetch;
+  const cloudRequests = [];
+
+  globalThis.fetch = async (url, options) => {
+    cloudRequests.push({ url: String(url), ...options, body: options.body ? JSON.parse(options.body) : undefined });
+    const status = options.method === 'POST' ? 201 : 200;
+    return new Response(JSON.stringify({ id: product.id }), { status, headers: { 'Content-Type': 'application/json' } });
+  };
+
+  try {
+    const flushed = await callApi(api.posSync, {
+      method: 'POST',
+      query: { action: 'flush' },
+      token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token',
+      body: {},
+    });
+    assert.equal(flushed.status, 200);
+    assert.equal(flushed.body.flushed, 1);
+    assert.equal(flushed.body.pending, 0);
+    assert.equal(cloudRequests[0].url, 'https://andasmoke.vercel.app/api/products');
+    assert.equal(cloudRequests[0].method, 'POST');
+    assert.equal(cloudRequests[0].headers.Authorization, 'Bearer cloud-staff-token');
+    assert.equal(cloudRequests[0].body.id, product.id);
+
+    const updated = await callApi(api.products, {
+      method: 'PATCH', query: { id: product.id }, token: ownerToken, body: { stockCount: 12 },
+    });
+    assert.equal(updated.status, 200);
+    const updateFlush = await callApi(api.posSync, {
+      method: 'POST', query: { action: 'flush' }, token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token', body: {},
+    });
+    assert.equal(updateFlush.body.flushed, 1);
+    assert.equal(cloudRequests[1].method, 'PATCH');
+    assert.equal(cloudRequests[1].body.stockCount, 12);
+
+    const deleted = await callApi(api.products, {
+      method: 'DELETE', query: { id: product.id }, token: ownerToken,
+    });
+    assert.equal(deleted.status, 200);
+    const deleteFlush = await callApi(api.posSync, {
+      method: 'POST', query: { action: 'flush' }, token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token', body: {},
+    });
+    assert.equal(deleteFlush.body.flushed, 1);
+    assert.equal(cloudRequests[2].method, 'DELETE');
+
+    const status = await callApi(api.posSync, {
+      token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token',
+    });
+    assert.equal(status.body.syncedCount, 3);
+    assert.equal(status.body.cloudConnected, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('initial desktop catalog backfill queues existing products exactly once', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-product-backfill-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const { ownerToken } = await seedTill(api);
+  const product = await makeProduct(api, ownerToken);
+  api.getSqliteHandle().prepare('DELETE FROM pos_sync_queue').run();
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ products: [] }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  try {
+    const first = await callApi(api.posSync, {
+      method: 'POST',
+      query: { action: 'bootstrap-products' },
+      token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token',
+      body: {},
+    });
+    assert.equal(first.status, 200);
+    assert.equal(first.body.queued, 1);
+
+    const second = await callApi(api.posSync, {
+      method: 'POST',
+      query: { action: 'bootstrap-products' },
+      token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token',
+      body: {},
+    });
+    assert.equal(second.body.queued, 0);
+    assert.equal(second.body.alreadyDone, true);
+
+    const status = await callApi(api.posSync, { token: ownerToken, cloudToken: 'Bearer cloud-staff-token' });
+    assert.equal(status.body.pendingCount, 1);
+    assert.equal(product.id, 'p1');
+  } finally {
+    globalThis.fetch = originalFetch;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 // ─────────────────────────────────────────────────────────────────────────

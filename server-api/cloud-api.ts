@@ -13,6 +13,7 @@ import { z } from 'zod';
 const MAX_PIN_ATTEMPTS = 5;
 const PIN_LOCKOUT_MS = 5 * 60_000;
 const DEFAULT_IDLE_TIMEOUT_MS = 8 * 60 * 60_000;
+const DESKTOP_SYNC_TOKEN_MS = 24 * 60 * 60_000;
 const MIN_IDLE_TIMEOUT_MS = 5 * 60_000;
 const MAX_IDLE_TIMEOUT_MS = 7 * 24 * 60 * 60_000;
 const ROLES = ['Super Admin', 'Store Manager', 'Inventory Dispatcher', 'Cashier'] as const;
@@ -146,7 +147,9 @@ async function authHandler(req: ApiRequest, res: ApiResponse): Promise<unknown> 
       );
       return admin;
     });
-    const idleTimeoutMs = await getIdleTimeoutMs();
+    const idleTimeoutMs = getQuery(req.query, 'client') === 'desktop'
+      ? DESKTOP_SYNC_TOKEN_MS
+      : await getIdleTimeoutMs();
     return res.status(201).json({
       token: signCloudSession({ id: account.id, email: account.email, adminName: account.admin_name, adminRole: account.admin_role }, idleTimeoutMs),
       idleTimeoutMs,
@@ -178,7 +181,9 @@ async function authHandler(req: ApiRequest, res: ApiResponse): Promise<unknown> 
       return res.status(locked ? 429 : 401).json({ error: locked ? 'Too many wrong PINs. This account is locked for 5 minutes.' : 'Incorrect email or PIN.', ...(locked ? { lockedUntil: lockedUntil?.toISOString(), secondsLeft: PIN_LOCKOUT_MS / 1000 } : {}) });
     }
     await pool.query('UPDATE admin_sessions SET last_login_at = now(), failed_pin_attempts = 0, locked_until = NULL WHERE id = $1', [admin.id]);
-    const idleTimeoutMs = await getIdleTimeoutMs();
+    const idleTimeoutMs = getQuery(req.query, 'client') === 'desktop'
+      ? DESKTOP_SYNC_TOKEN_MS
+      : await getIdleTimeoutMs();
     const token = signCloudSession({ id: admin.id, email: admin.email, adminName: admin.admin_name, adminRole: admin.admin_role }, idleTimeoutMs);
     await recordCloudAudit({ sub: admin.id, email: admin.email, adminName: admin.admin_name, adminRole: admin.admin_role, role: 'admin' }, 'STAFF_LOGIN', 'admin_session', admin.id, { adminId: admin.id, adminRole: admin.admin_role, email: admin.email });
     return res.status(200).json({ token, idleTimeoutMs, admin: { id: admin.id, adminName: admin.admin_name, adminRole: admin.admin_role, email: admin.email, avatar: admin.avatar || '' } });

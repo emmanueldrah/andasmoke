@@ -704,7 +704,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setLoadingAdmin(true);
 
     try {
-      const result = await api.post<{ token: string; admin: { id: string; adminName: string; adminRole: string; email: string; avatar?: string } }>('/auth?action=admin', {
+      const result = await api.post<{ token: string; cloudToken?: string; admin: { id: string; adminName: string; adminRole: string; email: string; avatar?: string } }>('/auth?action=admin', {
         email: cleanEmail,
         pin: cleanPin,
         name,
@@ -729,6 +729,13 @@ const sessionPayload: AdminSession = {
       };
 
 localStorage.setItem('anda_auth_token', result.token);
+      if (result.cloudToken) {
+        localStorage.setItem('anda_cloud_auth_token', result.cloudToken);
+        localStorage.setItem('anda_cloud_auth_email', cleanEmail);
+      } else if (localStorage.getItem('anda_cloud_auth_email') !== cleanEmail) {
+        localStorage.removeItem('anda_cloud_auth_token');
+        localStorage.removeItem('anda_cloud_auth_email');
+      }
       localStorage.setItem('anda_admin_session', JSON.stringify(sessionPayload));
       setAdminSession(sessionPayload);
 
@@ -748,6 +755,8 @@ localStorage.setItem('anda_auth_token', result.token);
     } catch {
       localStorage.removeItem('anda_auth_token');
       localStorage.removeItem('anda_admin_session');
+      localStorage.removeItem('anda_cloud_auth_token');
+      localStorage.removeItem('anda_cloud_auth_email');
       setAdminSession(prev => ({ ...prev, isLoggedIn: false }));
       setLoadingAdmin(false);
       return false;
@@ -757,6 +766,8 @@ localStorage.setItem('anda_auth_token', result.token);
   const logoutAdmin = async () => {
     localStorage.removeItem('anda_auth_token');
     localStorage.removeItem('anda_admin_session');
+    localStorage.removeItem('anda_cloud_auth_token');
+    localStorage.removeItem('anda_cloud_auth_email');
     setAdminSession({
       isLoggedIn: false,
       adminName: '',

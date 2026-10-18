@@ -25,6 +25,10 @@ async function request<T>(
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+  if (/^\/pos-sync(?:\?|$)/.test(endpoint)) {
+    const cloudToken = localStorage.getItem('anda_cloud_auth_token');
+    if (cloudToken) headers['X-Cloud-Authorization'] = `Bearer ${cloudToken}`;
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30_000); // 30 second timeout

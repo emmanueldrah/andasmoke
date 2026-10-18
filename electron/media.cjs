@@ -72,11 +72,28 @@ function resolveStoredMediaPath(value) {
   return fs.existsSync(target) ? target : null;
 }
 
+/** Converts a till-local image URL to a compact data URL for cloud catalog sync. */
+function readStoredProductImage(value) {
+  const storedPath = resolveStoredMediaPath(value);
+  if (!storedPath) return value;
+
+  const extension = path.extname(storedPath).slice(1).toLowerCase();
+  const mime = Object.entries(EXTENSION_BY_MIME).find(([, supportedExtension]) => supportedExtension === extension)?.[0];
+  if (!mime) throw new Error('This product photo format cannot be synced to the website.');
+
+  const image = fs.readFileSync(storedPath);
+  if (image.length > 2_500_000) {
+    throw new Error('This product photo is too large to sync. Choose an image smaller than 2.5 MB.');
+  }
+  return `data:${mime};base64,${image.toString('base64')}`;
+}
+
 module.exports = {
   MEDIA_PREFIX,
   MAX_IMAGE_BYTES,
   EXTENSION_BY_MIME,
   getMediaDir,
   saveProductImage,
+  readStoredProductImage,
   resolveStoredMediaPath,
 };
