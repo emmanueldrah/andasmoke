@@ -78,8 +78,6 @@ export const AdminPOSCatalogScreen: React.FC = () => {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        eyebrow="Catalog"
-        title="Categories"
         description="Organize products for the register and stockroom."
         action={<span className="lux-chip lux-chip--neutral">{activeCount} active</span>}
       />

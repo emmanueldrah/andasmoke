@@ -636,12 +636,9 @@ export const AdminPortal: React.FC = () => {
                   </button>
                 ))}
 
-                {currentTab === 'products' && (
-                  <button onClick={handleAddProduct} className="lux-btn lux-btn--primary lux-btn--sm hidden sm:inline-flex">
-                    <Plus className="h-3.5 w-3.5" />
-                    Add product
-                  </button>
-                )}
+                {/* A screen owns its own actions. The shell keeps the page name,
+                    the sync state and Refresh, so 'Add product' is not printed in
+                    two places on the same screen. */}
 
                 <button
                   onClick={() => void refreshAdminData()}

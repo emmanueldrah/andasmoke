@@ -221,8 +221,6 @@ export const AdminAccountsManagementScreen: React.FC = () => {
 
       {/* Header */}
       <AdminPageHeader
-        eyebrow="Manage"
-        title="Team"
         description="Add team members, choose their access, and update your profile."
         action={
           <button

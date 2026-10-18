@@ -49,8 +49,6 @@ export function AdminInventoryScreen({ onAddProduct }: { onAddProduct?: () => vo
 return (
     <div className="space-y-5">
       <AdminPageHeader
-        eyebrow="Stockroom"
-        title="Inventory"
         description="Receive deliveries and correct counts without opening a product."
         action={onAddProduct ? (
           <button className={buttonClass} onClick={onAddProduct}><Plus className="h-4 w-4" />Add product</button>
@@ -140,7 +138,7 @@ export function AdminPromotionsScreen() {
 
   return (
     <div className="space-y-5">
-      <AdminPageHeader eyebrow="Manage" title="Discounts" description="Create discount codes for in-store sales." />
+      <AdminPageHeader description="Create discount codes for in-store sales." />
       <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
         <form onSubmit={event => void add(event)} className="lux-card space-y-4 p-5">
           <h2 className="text-base font-bold text-[var(--text-primary)]">New discount code</h2>

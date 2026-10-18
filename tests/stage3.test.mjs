@@ -1493,6 +1493,32 @@ test('the hosted product insert casts exactly the jsonb columns', () => {
   assert.match(source, /jsonbColumns\.has\(column\)/, 'placeholders must decide the cast from the column name');
 });
 
+test('an admin screen never repeats the page name the shell already shows', () => {
+  const fs = require('node:fs');
+  const screensDir = join(root, 'src', 'components', 'admin', 'screens');
+  const primitives = fs.readFileSync(
+    join(root, 'src', 'components', 'admin', 'components', 'AdminPrimitives.tsx'), 'utf8',
+  );
+
+  // The sticky shell bar carries the section eyebrow and the page title, so the
+  // screen intro only describes what the page does. Re-adding these props would
+  // print the same two lines twice, which is what the shop reported.
+  const introProps = primitives.match(/interface AdminPageHeaderProps \{([\s\S]*?)\n\}/);
+  assert.ok(introProps, 'AdminPageHeader must declare its props in one interface');
+  assert.doesNotMatch(introProps[1], /\b(eyebrow|title)\??\s*:/,
+    'AdminPageHeader must not take an eyebrow or title');
+
+  const offenders = [];
+  for (const file of fs.readdirSync(screensDir)) {
+    if (!file.endsWith('.tsx')) continue;
+    const source = fs.readFileSync(join(screensDir, file), 'utf8');
+    for (const match of source.matchAll(/<AdminPageHeader[^>]*?(eyebrow|title)=/gs)) {
+      offenders.push(`${file}: ${match[1]}`);
+    }
+  }
+  assert.deepEqual(offenders, [], 'screens must not pass eyebrow or title to AdminPageHeader');
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Reads a screen so the tests cannot drift from what ships. */

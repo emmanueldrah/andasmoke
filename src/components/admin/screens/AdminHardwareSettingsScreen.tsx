@@ -68,8 +68,6 @@ export function AdminHardwareSettingsScreen(): React.ReactElement {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        eyebrow="Manage"
-        title="Scanner & labels"
         description="Tune the barcode scanner and choose the label size used for shelf labels."
       />
 

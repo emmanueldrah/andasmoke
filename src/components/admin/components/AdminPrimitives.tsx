@@ -2,20 +2,21 @@ import React from 'react';
 import { CheckCircle2, Inbox, type LucideIcon } from 'lucide-react';
 
 interface AdminPageHeaderProps {
-  eyebrow: string;
-  title: string;
   description: string;
   action?: React.ReactNode;
 }
 
-export function AdminPageHeader({ eyebrow, title, description, action }: AdminPageHeaderProps) {
+/**
+ * The intro line of an admin screen.
+ *
+ * The sticky shell bar already names the section and the page, so repeating an
+ * eyebrow and a heading here printed the same two lines twice on every screen.
+ * What only a screen can say is what it does: the description and its actions.
+ */
+export function AdminPageHeader({ description, action }: AdminPageHeaderProps) {
   return (
     <header className="flex flex-col gap-4 border-b border-[var(--border-color)] pb-5 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        <p className="eyebrow">{eyebrow}</p>
-        <h1 className="brand-display mt-2 text-3xl font-semibold text-[var(--text-primary)]">{title}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">{description}</p>
-      </div>
+      <p className="max-w-2xl text-sm leading-6 text-[var(--text-muted)]">{description}</p>
       {action ? <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div> : null}
     </header>
   );

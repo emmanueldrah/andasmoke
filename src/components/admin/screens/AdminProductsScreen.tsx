@@ -177,8 +177,6 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
   return (
     <div className="space-y-5">
       <AdminPageHeader
-        eyebrow="Stockroom"
-        title="Products"
         description="Everything the register can sell. Restock inline, or open a product to change its price and details."
         action={
           <div className="flex flex-wrap items-center gap-2">
