@@ -354,6 +354,18 @@ async function productsHandler(req: ApiRequest, res: ApiResponse, subpath = ''):
     const pricePesewas = requireMinor(data.price, 'price');
     const costPricePesewas = data.costPrice == null ? null : requireMinor(data.costPrice, 'cost price');
     const productId = data.id || `prod-${randomUUID()}`;
+    // Column names and values are declared side by side, and the jsonb cast is
+    // decided from the column itself. Deriving it from an index offset is how
+    // every product create started failing: the cast landed on name, brand,
+    // department, category, category_label, price and price_pesewas, so
+    // Postgres answered 'column "price" is of type double precision but
+    // expression is of type jsonb' before a row was written.
+    const insertColumns = ['id','name','brand','department','category','category_label','price','price_pesewas',
+      'cost_price_pesewas','reorder_level','wholesale_price','unit','barcode','serial_number','image','images',
+      'description','highlights','badge','in_stock','is_published','stock_count','options','variants',
+      'delivery_price','original_price','discount_badge','origin','routine_step','skin_type','skin_concern',
+      'pack_size','storage_info','shelf_life','details'];
+    const jsonbColumns = new Set(['images','highlights','options','variants','skin_type','skin_concern','details']);
     const values = [productId, data.name, data.brand, data.department, data.category, data.categoryLabel, pricePesewas / 100, pricePesewas, costPricePesewas,
       data.reorderLevel, data.wholesalePrice == null ? null : Number(data.wholesalePrice), data.unit, data.barcode || null, data.serialNumber || null,
       data.image, JSON.stringify(data.images), data.description || '', JSON.stringify(data.highlights || []), data.badge || null,
@@ -362,10 +374,13 @@ async function productsHandler(req: ApiRequest, res: ApiResponse, subpath = ''):
       data.discountBadge ?? null, data.origin ?? null, data.routineStep ?? null, JSON.stringify(data.skinType || []),
       JSON.stringify(data.skinConcern || []), data.packSize ?? null, data.storageInfo ?? null, data.shelfLife ?? null,
       JSON.stringify(data.details ?? null)];
+    if (values.length !== insertColumns.length) {
+      return res.status(500).json({ error: `Product insert is misaligned: ${insertColumns.length} columns but ${values.length} values.` });
+    }
     try {
       const { rows } = await pool.query(
-        `INSERT INTO products (id,name,brand,department,category,category_label,price,price_pesewas,cost_price_pesewas,reorder_level,wholesale_price,unit,barcode,serial_number,image,images,description,highlights,badge,in_stock,is_published,stock_count,options,variants,delivery_price,original_price,discount_badge,origin,routine_step,skin_type,skin_concern,pack_size,storage_info,shelf_life,details)
-         VALUES (${values.map((_, index) => `$${index + 1}${['images','highlights','options','variants','skin_type','skin_concern','details'].includes(['images','highlights','options','variants','skin_type','skin_concern','details'][index - 1] || '') ? '::jsonb' : ''}`).join(',')}) RETURNING *`,
+        `INSERT INTO products (${insertColumns.join(',')})
+         VALUES (${insertColumns.map((column, index) => `$${index + 1}${jsonbColumns.has(column) ? '::jsonb' : ''}`).join(',')}) RETURNING *`,
         values,
       );
       return res.status(201).json(normalizeProduct(rows[0], auth.adminRole !== 'Cashier'));

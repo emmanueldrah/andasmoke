@@ -1470,6 +1470,29 @@ test('no screen asks the hosted API for a nested route', () => {
   assert.deepEqual(offenders, [], 'API endpoints must be one path segment plus a query string');
 });
 
+test('the hosted product insert casts exactly the jsonb columns', () => {
+  const fs = require('node:fs');
+  const source = fs.readFileSync(join(root, 'server-api', 'cloud-api.ts'), 'utf8');
+
+  const columns = source.match(/const insertColumns = \[([\s\S]*?)\];/);
+  assert.ok(columns, 'the products insert must name its columns in one list');
+  const columnNames = columns[1].split(',').map(item => item.trim().replace(/^'|'$/g, '')).filter(Boolean);
+
+  const jsonb = source.match(/const jsonbColumns = new Set\(\[([\s\S]*?)\]\)/);
+  assert.ok(jsonb, 'the products insert must name its jsonb columns in one set');
+  const jsonbNames = jsonb[1].split(',').map(item => item.trim().replace(/^'|'$/g, '')).filter(Boolean);
+
+  // A cast aimed at the wrong position is what broke every product create:
+  // Postgres rejected 'column "price" is of type double precision but
+  // expression is of type jsonb' before writing a row.
+  for (const name of jsonbNames) {
+    assert.ok(columnNames.includes(name), `${name} is cast as jsonb but is not an inserted column`);
+  }
+  assert.equal(columnNames.length, 35, 'the hosted products table has 35 insertable columns');
+  assert.doesNotMatch(source, /\[index - 1\]/, 'casts must come from the column name, never an index offset');
+  assert.match(source, /jsonbColumns\.has\(column\)/, 'placeholders must decide the cast from the column name');
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Reads a screen so the tests cannot drift from what ships. */
