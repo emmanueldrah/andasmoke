@@ -1338,6 +1338,42 @@ test('cloud products pull to desktop without overwriting queued local edits', as
   }
 });
 
+test('desktop sign-in returns a cloud token for catalog synchronization', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-login-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const previousOrigin = process.env.ANDA_CLOUD_API_ORIGIN;
+  process.env.ANDA_CLOUD_API_ORIGIN = 'https://cloud.example.test';
+  const api = freshBundle();
+  await seedTill(api);
+  const originalFetch = globalThis.fetch;
+  let cloudRequest;
+  globalThis.fetch = async (url, options) => {
+    cloudRequest = { url: String(url), body: JSON.parse(options.body) };
+    return new Response(JSON.stringify({ token: 'cloud-session-token' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  };
+
+  try {
+    const login = await callApi(api.auth, {
+      method: 'POST',
+      query: { action: 'admin' },
+      body: { email: 'ama@smokehub.com', pin: '2468' },
+    });
+    assert.equal(login.status, 200);
+    assert.equal(login.body.cloudToken, 'cloud-session-token');
+    assert.equal(cloudRequest.url, 'https://cloud.example.test/api/auth?action=admin&client=desktop');
+    assert.equal(cloudRequest.body.email, 'ama@smokehub.com');
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousOrigin === undefined) delete process.env.ANDA_CLOUD_API_ORIGIN;
+    else process.env.ANDA_CLOUD_API_ORIGIN = previousOrigin;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Reads a screen so the tests cannot drift from what ships. */

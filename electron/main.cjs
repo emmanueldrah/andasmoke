@@ -3,7 +3,8 @@ const path = require('node:path');
 
 app.setName('anda-smoke-hub-pos');
 process.env.ANDA_DATA_DIR = process.env.ANDA_DATA_DIR || app.getPath('userData');
-const CLOUD_API_ORIGIN = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
+process.env.ANDA_CLOUD_API_ORIGIN = (process.env.ANDA_CLOUD_API_ORIGIN || 'https://andasmoke.vercel.app').replace(/\/+$/, '');
+const CLOUD_API_ORIGIN = process.env.ANDA_CLOUD_API_ORIGIN;
 
 const { startLocalServer } = require('./local-server.cjs');
 const { handlers } = require('./api-routes.cjs');
