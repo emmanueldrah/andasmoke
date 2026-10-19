@@ -19,6 +19,7 @@
     "pos:desktop": "npm run build && electron electron/main.cjs",
     "pos:desktop:dev": "electron electron/main.cjs --dev-url=http://127.0.0.1:3000",
     "pos:desktop:package": "node scripts/check-windows-signing.mjs && npm run build && electron-builder --win nsis",
+    "pos:desktop:publish": "node scripts/publish-desktop.mjs",
     "spike": "node tests/spike-desktop.mjs"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.38.3",
+    "electron-updater": "^6.6.2",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.53.0",
     "react": "^19.0.1",
@@ -47,7 +49,6 @@
     "drizzle-kit": "^0.30.1",
     "electron": "^44.4.3",
     "electron-builder": "^26.15.3",
-    "electron-updater": "^6.6.2",
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
@@ -62,9 +63,8 @@
     },
     "publish": [
       {
-        "provider": "github",
-        "owner": "emmanueldrah",
-        "repo": "andasmoke"
+        "provider": "generic",
+        "url": "https://andasmoke.vercel.app/updates/win"
       }
     ],
     "electronDist": "node_modules/electron/dist",

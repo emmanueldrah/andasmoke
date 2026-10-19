@@ -9,7 +9,7 @@ on:
       - api/**
       - electron/**
       - public/**
-      - scripts/build-api.mjs
+      - scripts/**
       - server-api/**
       - src/**
       - index.html
@@ -48,10 +48,23 @@ jobs:
           $patch = ([int]$env:GITHUB_RUN_NUMBER * 100) + [int]$env:GITHUB_RUN_ATTEMPT
           npm version "1.1.$patch" --no-git-tag-version
 
-      - name: Build app
-        run: npm run build
-
-      - name: Publish Windows update
-        run: npx electron-builder --win nsis --publish always
+      - name: Package and publish the Windows update
+        shell: pwsh
+        run: node scripts/publish-desktop.mjs
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANDAPOS_UPDATE_URL: https://andasmoke.vercel.app/updates/win
+          ANDAPOS_RELEASES_REPO: ${{ vars.ANDAPOS_RELEASES_REPO }}
+          ANDAPOS_GITHUB_TOKEN: ${{ secrets.ANDAPOS_GITHUB_TOKEN }}
+
+      - name: Commit the update manifest so Vercel serves it
+        shell: pwsh
+        run: |
+          git config user.name "Anda Updates"
+          git config user.email "updates@andasmoke.local"
+          git add public/updates/win/latest.yml
+          if (git diff --cached --quiet) {
+            Write-Host "Manifest unchanged; nothing to commit."
+            exit 0
+          }
+          git commit -m "chore: desktop update manifest [skip ci]"
+          git push
