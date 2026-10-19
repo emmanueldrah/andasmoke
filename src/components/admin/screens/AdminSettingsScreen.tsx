@@ -2,14 +2,14 @@ import React from 'react';
 import { MonitorCog, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../../../context/ThemeContext';
 import { AdminPageHeader } from '../components/AdminPrimitives';
-import { AdminHardwareSettingsScreen } from './AdminHardwareSettingsScreen';
+import { AdminMyProfilePanel } from '../components/AdminMyProfilePanel';
 
 export function AdminSettingsScreen(): React.ReactElement {
   const { theme, setTheme } = useTheme();
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <AdminPageHeader description="Set the display style and tune the equipment used at this till." />
+      <AdminPageHeader description="Choose the display style for this device." />
 
       <section className="lux-card p-5 md:p-6">
         <div className="flex items-start gap-3">
@@ -43,7 +43,7 @@ export function AdminSettingsScreen(): React.ReactElement {
         </div>
       </section>
 
-      <AdminHardwareSettingsScreen />
+      <AdminMyProfilePanel />
     </div>
   );
 }

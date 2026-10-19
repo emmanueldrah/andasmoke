@@ -26,7 +26,6 @@ import { AdminLoginView } from './AdminLoginView';
 import { AdminProductsScreen } from './screens/AdminProductsScreen';
 import { AdminAccountsManagementScreen } from './screens/AdminAccountsManagementScreen';
 import { POSProductModal } from './POSProductModal';
-import { AdminMyProfilePanel } from './components/AdminMyProfilePanel';
 import {
   AdminInventoryScreen,
   AdminPromotionsScreen,
@@ -197,7 +196,6 @@ export const AdminPortal: React.FC = () => {
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
-  const [profilePanelOpen, setProfilePanelOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(() => {
     try { return localStorage.getItem(RAIL_KEY) === '1'; } catch { return false; }
@@ -410,11 +408,9 @@ export const AdminPortal: React.FC = () => {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setProfilePanelOpen(true)}
-          title="My account, profile & password"
-          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-[var(--accent-soft)] ${collapsed ? 'justify-center px-0' : ''}`}
+        <div
+          title="Signed-in account"
+          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left ${collapsed ? 'justify-center px-0' : ''}`}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--border-color)] bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-bold">
             {store.adminSession.avatar ? (
@@ -429,7 +425,7 @@ export const AdminPortal: React.FC = () => {
               <p className="truncate text-[10px] text-[var(--text-subtle)] leading-tight">{store.adminSession.adminRole}</p>
             </div>
           )}
-        </button>
+        </div>
 
         {confirmLogout ? (
           <div className={`flex items-center gap-2 rounded-xl bg-[var(--danger-soft)] p-2 ${collapsed ? 'w-full' : ''}`}>
@@ -595,10 +591,6 @@ export const AdminPortal: React.FC = () => {
           productToEdit={productToEdit}
         />
       )}
-      <AdminMyProfilePanel
-        isOpen={profilePanelOpen}
-        onClose={() => setProfilePanelOpen(false)}
-      />
     </div>
   );
 };
