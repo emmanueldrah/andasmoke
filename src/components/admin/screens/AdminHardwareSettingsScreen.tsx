@@ -1,18 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Barcode, Check, Printer, RotateCcw, Settings2 } from 'lucide-react';
+import { Barcode, Check, RotateCcw, Settings2 } from 'lucide-react';
 import { useStore } from '../../../context/StoreContext';
 import { useAlert } from '../../../context/AlertContext';
 import { api } from '../../../lib/api';
 import {
   DEFAULT_HARDWARE_SETTINGS,
-  normalizeHardwareSettings,
   type HardwareSettings,
 } from '../../../lib/hardware';
-import { nextInternalBarcode, planLabel, renderLabelSvg } from '../../../lib/code128';
+import { nextInternalBarcode } from '../../../lib/code128';
 import type { Product } from '../../../types';
 
 /**
- * Hardware settings: scanner timing and label size.
+ * Hardware settings: scanner timing.
  *
  * The scanner thresholds are here because they are the one setting that depends
  * on the till's actual equipment. A cheap scanner on a busy till can be slower
@@ -72,7 +71,7 @@ export function AdminHardwareSettingsScreen(): React.ReactElement {
         </span>
         <div>
           <h2 className="text-base font-bold text-[var(--text-primary)]">Hardware</h2>
-          <p className="mt-1 text-sm leading-5 text-[var(--text-muted)]">Tune scanner behavior and configure shelf-label dimensions.</p>
+          <p className="mt-1 text-sm leading-5 text-[var(--text-muted)]">Tune scanner behavior for this till.</p>
         </div>
       </header>
 
@@ -82,7 +81,7 @@ export function AdminHardwareSettingsScreen(): React.ReactElement {
         </p>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div>
         {/* ── Scanner timing ─────────────────────────────────────────────── */}
         <section className="lux-card space-y-4 p-4 md:p-5">
           <div className="flex items-center gap-2">
@@ -142,73 +141,10 @@ export function AdminHardwareSettingsScreen(): React.ReactElement {
           )}
         </section>
 
-        {/* ── Label size ─────────────────────────────────────────────────── */}
-        <section className="lux-card space-y-4 p-4 md:p-5">
-          <div className="flex items-center gap-2">
-            <Printer className="h-4 w-4 text-[var(--accent)]" />
-            <h2 className="text-base font-bold text-[var(--text-primary)]">Label size</h2>
-          </div>
-          <p className="text-xs text-[var(--text-muted)]">
-            Enter the size of the label stock you load. Labels print at true physical size so the bars
-            stay sharp enough for a handheld to read.
-          </p>
-
-          <div className="grid grid-cols-2 gap-3">
-            {numberField(
-              'Width (mm)',
-              draft.label.widthMm,
-              value => setDraft(current => ({ ...current, label: { ...current.label, widthMm: value } })),
-              undefined,
-              20,
-            )}
-            {numberField(
-              'Height (mm)',
-              draft.label.heightMm,
-              value => setDraft(current => ({ ...current, label: { ...current.label, heightMm: value } })),
-              undefined,
-              10,
-            )}
-          </div>
-
-          <LabelPreview label={draft.label} />
-
-          {isManager && (
-            <button onClick={() => void save()} disabled={saving} className="lux-btn lux-btn--primary lux-btn--sm">
-              <Check className="h-4 w-4" />
-              {saving ? 'Saving…' : 'Save label size'}
-            </button>
-          )}
-        </section>
       </div>
 
       {/* ── Test the scanner ─────────────────────────────────────────────── */}
       <ScannerTestBox thresholds={store.hardwareSettings.scanner} />
-    </div>
-  );
-}
-
-/** Shows what the chosen label size will produce, at true proportions. */
-function LabelPreview({ label }: { label: HardwareSettings['label'] }): React.ReactElement {
-  const cleaned = normalizeHardwareSettings({ label }).label;
-  const layout = planLabel('ACS-000123', cleaned);
-  return (
-    <div className="rounded-lg border border-dashed border-[var(--border-color)] p-3">
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-        Preview · {cleaned.widthMm} × {cleaned.heightMm} mm
-      </p>
-      <div
-        className="flex items-center justify-center overflow-hidden rounded bg-white p-2"
-        style={{ height: Math.min(200, cleaned.heightMm * 3) }}
-        // The SVG is sized in millimetres, so this is a true-size preview.
-        dangerouslySetInnerHTML={{ __html: renderLabelSvg('ACS-000123', cleaned) }}
-      />
-      <p className="mt-2 text-[11px] text-[var(--text-subtle)]">
-        Bar width {layout.moduleWidthMm.toFixed(3)} mm · bar height {layout.barHeightMm.toFixed(1)} mm ·{' '}
-        quiet zone {layout.quietZoneMm.toFixed(1)} mm
-        {layout.overflow && (
-          <span className="ml-1 font-bold text-[var(--danger)]">— too small for this code, use a wider label</span>
-        )}
-      </p>
     </div>
   );
 }
