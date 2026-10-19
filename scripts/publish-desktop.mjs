@@ -33,26 +33,33 @@ async function github(pathname, { method = 'GET', body, contentType } = {}) {
     },
     body,
   });
-  if (response.status === 404) return { status: 404, data: null };
+  // Only a release lookup may legitimately miss; everything else must surface.
+  if (response.status === 404 && method === 'GET') return { status: 404, data: null };
   if (!response.ok) throw new Error(`GitHub ${method} ${pathname} failed (${response.status}): ${await response.text()}`);
   return { status: response.status, data: response.status === 204 ? null : await response.json() };
 }
 
 /**
- * Puts one file on the release as an asset, replacing any asset of the same
- * name so re-running for the same version is safe.
+ * Puts one file on the release through its upload_url (GitHub rejects the
+ * api.github.com asset path for these uploads), failing loudly on any non-2xx.
  */
-async function uploadAsset(releaseId, name, filePath) {
-  const { data: existing } = await github(`/repos/${releasesRepo}/releases/${releaseId}/assets?per_page=100`);
-  for (const asset of existing ?? []) {
-    if (asset.name === name) await github(`/repos/${releasesRepo}/releases/assets/${asset.id}`, { method: 'DELETE' });
-  }
+async function uploadAsset(uploadUrl, name, filePath) {
   const bytes = readFileSync(filePath);
-  await github(
-    `/repos/${releasesRepo}/releases/${releaseId}/assets?name=${encodeURIComponent(name)}`,
-    { method: 'POST', body: bytes, contentType: 'application/octet-stream' },
-  );
-  console.log(`  uploaded ${name} (${bytes.length} bytes)`);
+  const response = await fetch(`${uploadUrl}?name=${encodeURIComponent(name)}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'anda-smoke-hub-publish',
+      'Content-Type': 'application/octet-stream',
+    },
+    body: bytes,
+  });
+  if (!response.ok) {
+    throw new Error(`Uploading ${name} failed (${response.status}): ${await response.text()}`);
+  }
+  const asset = await response.json();
+  console.log(`  uploaded ${name} (${bytes.length} bytes, asset ${asset.id})`);
 }
 
 async function publishToGitHub(files) {
@@ -71,7 +78,16 @@ async function publishToGitHub(files) {
       contentType: 'application/json',
     })).data;
   }
-  for (const file of files) await uploadAsset(release.id, file.assetName, file.path);
+  const uploadUrl = (release.upload_url ||
+    `https://uploads.github.com/repos/${releasesRepo}/releases/${release.id}/assets`).replace(/\{.*\}$/, '');
+
+  const { data: existing } = await github(`/repos/${releasesRepo}/releases/${release.id}/assets?per_page=100`);
+  for (const asset of existing ?? []) {
+    if (files.some(file => file.assetName === asset.name)) {
+      await github(`/repos/${releasesRepo}/releases/assets/${asset.id}`, { method: 'DELETE' });
+    }
+  }
+  for (const file of files) await uploadAsset(uploadUrl, file.assetName, file.path);
   return `https://github.com/${releasesRepo}/releases/download/${tag}`;
 }
 
