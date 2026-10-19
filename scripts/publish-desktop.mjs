@@ -81,11 +81,24 @@ function findPackageOutput() {
   return dir;
 }
 
+/**
+ * Electron 44 no longer runs a postinstall, so a clean `npm ci` leaves
+ * node_modules/electron/dist missing and electron-builder refuses to package.
+ * Run Electron's own installer when that happens (a no-op when it is present).
+ */
+function ensureElectronRuntime() {
+  const electronDir = join(root, 'node_modules', 'electron');
+  if (existsSync(join(electronDir, 'dist'))) return;
+  console.log('\nElectron runtime missing; downloading it before packaging…');
+  run('node', [join(electronDir, 'install.js')]);
+}
+
 if (!skipBuild) {
   run('node', ['scripts/check-windows-signing.mjs']);
   run('npm', ['run', 'build']);
 }
-run('npx', ['electron-builder', '--win', 'nsis']);
+ensureElectronRuntime();
+run('npx', ['electron-builder', '--win', 'nsis', '--publish', 'never']);
 
 const outDir = findPackageOutput();
 const manifestSource = readFileSync(join(outDir, 'latest.yml'), 'utf8');
