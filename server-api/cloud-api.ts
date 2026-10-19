@@ -927,6 +927,11 @@ async function adminAccountsHandler(req: ApiRequest, res: ApiResponse, pathId = 
   const id = pathId || getQuery(req.query,'id');
   const pool = getCloudPool();
   if (req.method === 'GET') {
+    if (getQuery(req.query,'self')) {
+      const { rows } = await pool.query('SELECT id,admin_name AS "fullName",email,phone,avatar,admin_role AS role FROM admin_sessions WHERE id=$1 LIMIT 1',[auth.sub]);
+      if (!rows[0]) return res.status(404).json({ error:'Admin account not found' });
+      return res.status(200).json(rows[0]);
+    }
     if (auth.adminRole !== 'Super Admin') return res.status(403).json({ error:'Only Super Admins can view team accounts' });
     const { rows } = await pool.query('SELECT id,admin_name AS "fullName",email,phone,avatar,admin_role AS role,is_active AS "isActive",last_login_at AS "lastLoginAt",created_at AS "createdAt" FROM admin_sessions ORDER BY created_at');
     return res.status(200).json(rows);
