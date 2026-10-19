@@ -120,6 +120,35 @@ app.whenReady().then(async () => {
         autoUpdater.quitAndInstall();
       });
 
+      ipcMain.handle('pos:check-for-updates', () => new Promise((resolve, reject) => {
+        let settled = false;
+        const cleanup = () => {
+          clearTimeout(timeout);
+          autoUpdater.removeListener('update-available', onAvailable);
+          autoUpdater.removeListener('update-not-available', onNotAvailable);
+          autoUpdater.removeListener('error', onError);
+        };
+        const finish = (result) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          resolve(result);
+        };
+        const onAvailable = (info) => finish({ supported: true, available: true, version: info?.version || null });
+        const onNotAvailable = () => finish({ supported: true, available: false, version: null });
+        const onError = (error) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          reject(error);
+        };
+        const timeout = setTimeout(() => onError(new Error('Update check timed out')), 45_000);
+        autoUpdater.once('update-available', onAvailable);
+        autoUpdater.once('update-not-available', onNotAvailable);
+        autoUpdater.once('error', onError);
+        autoUpdater.checkForUpdates().catch(onError);
+      }));
+
       // Check for updates 15s after startup
       setTimeout(() => {
         autoUpdater.checkForUpdatesAndNotify().catch(() => {});

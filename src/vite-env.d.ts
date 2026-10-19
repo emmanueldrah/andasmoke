@@ -29,5 +29,6 @@ interface Window {
     onUpdateAvailable: (callback: (info: { version?: string }) => void) => () => void;
     onUpdateDownloaded: (callback: (info: { version?: string }) => void) => () => void;
     restartAndInstallUpdate: () => Promise<void>;
+    checkForUpdates: () => Promise<{ supported: boolean; available: boolean; version: string | null }>;
   };
 }

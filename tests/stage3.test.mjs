@@ -1338,25 +1338,27 @@ test('cloud products pull to desktop without overwriting queued local edits', as
   }
 });
 
-test('a website profile edit reaches the till without touching the PIN', async () => {
+test('website profile edits including avatar and email reach the till without touching the PIN', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'anda-profile-pull-'));
   process.env.ANDA_DATA_DIR = dir;
   const api = freshBundle();
   const { ownerToken } = await seedTill(api);
   const sqlite = api.getSqliteHandle();
-  const pinBefore = sqlite.prepare('SELECT pin_hash FROM admin_sessions WHERE email = ?').get('ama@smokehub.com').pin_hash;
+  const owner = sqlite.prepare('SELECT id, pin_hash FROM admin_sessions WHERE email = ?').get('ama@smokehub.com');
+  const pinBefore = owner.pin_hash;
   const originalFetch = globalThis.fetch;
   let calledUrl = '';
+  let cloudProfile = {
+    id: 'cloud-owner',
+    fullName: 'Ama Mensah',
+    email: 'ama.mensah@smokehub.com',
+    phone: '0200000000',
+    avatar: 'data:image/png;base64,abc',
+    role: 'Super Admin',
+  };
   globalThis.fetch = async url => {
     calledUrl = String(url);
-    return new Response(JSON.stringify({
-      id: 'cloud-owner',
-      fullName: 'Ama Mensah',
-      email: 'ama@smokehub.com',
-      phone: '0200000000',
-      avatar: 'data:image/png;base64,abc',
-      role: 'Super Admin',
-    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify(cloudProfile), { status: 200, headers: { 'Content-Type': 'application/json' } });
   };
 
   try {
@@ -1373,10 +1375,25 @@ test('a website profile edit reaches the till without touching the PIN', async (
     assert.equal(pulled.body.profile.avatar, 'data:image/png;base64,abc');
     assert.match(calledUrl, /\/api\/admin-accounts\?self=1/);
 
-    const row = sqlite.prepare('SELECT admin_name, phone, pin_hash FROM admin_sessions WHERE email = ?').get('ama@smokehub.com');
+    const row = sqlite.prepare('SELECT admin_name, email, phone, pin_hash FROM admin_sessions WHERE id = ?').get(owner.id);
     assert.equal(row.admin_name, 'Ama Mensah');
+    assert.equal(row.email, 'ama.mensah@smokehub.com');
     assert.equal(row.phone, '0200000000');
     assert.equal(row.pin_hash, pinBefore, 'the till PIN is never replaced by the website profile');
+
+    const unchanged = await callApi(api.posSync, {
+      method: 'POST', query: { action: 'pull-profile' }, token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token', body: {},
+    });
+    assert.equal(unchanged.body.changed, false);
+
+    cloudProfile = { ...cloudProfile, avatar: 'data:image/png;base64,updated' };
+    const avatarOnly = await callApi(api.posSync, {
+      method: 'POST', query: { action: 'pull-profile' }, token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token', body: {},
+    });
+    assert.equal(avatarOnly.body.changed, true);
+    assert.equal(avatarOnly.body.profile.avatar, 'data:image/png;base64,updated');
   } finally {
     globalThis.fetch = originalFetch;
     api.closeDataLayer();

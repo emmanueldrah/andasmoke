@@ -301,26 +301,37 @@ async function pullOwnProfile(
   const role = typeof cloud.role === 'string' && (SYNCED_ADMIN_ROLES as readonly string[]).includes(cloud.role)
     ? cloud.role as typeof SYNCED_ADMIN_ROLES[number]
     : current.adminRole;
+  const cloudEmail = typeof cloud.email === 'string' && cloud.email.trim()
+    ? cloud.email.trim().toLowerCase()
+    : current.email;
+  const avatar = typeof cloud.avatar === 'string' ? cloud.avatar : null;
   const next = {
     adminName: typeof cloud.fullName === 'string' && cloud.fullName.trim() ? cloud.fullName.trim() : current.adminName,
+    email: cloudEmail,
     phone: typeof cloud.phone === 'string' ? cloud.phone.trim() : current.phone,
     adminRole: role,
   };
+  const previousCloudProfile = readJsonSetting('sync.profile.snapshot.v1');
   const changed = next.adminName !== current.adminName
+    || next.email !== current.email
     || next.phone !== current.phone
-    || next.adminRole !== current.adminRole;
-  if (changed) await db.update(adminSessions).set(next).where(eq(adminSessions.id, current.id));
+    || next.adminRole !== current.adminRole
+    || avatar !== (typeof previousCloudProfile?.avatar === 'string' ? previousCloudProfile.avatar : null);
+  if (next.email !== current.email || next.adminName !== current.adminName || next.phone !== current.phone || next.adminRole !== current.adminRole) {
+    await db.update(adminSessions).set(next).where(eq(adminSessions.id, current.id));
+  }
 
   setSetting('sync.last.profile.v1', JSON.stringify({ at: new Date().toISOString(), changed, email: current.email }));
+  setSetting('sync.profile.snapshot.v1', JSON.stringify({ fullName: next.adminName, email: next.email, phone: next.phone, role: next.adminRole, avatar }));
   return {
     changed,
     profile: {
       id: current.id,
       fullName: next.adminName,
-      email: current.email,
+      email: next.email,
       phone: next.phone,
       role: next.adminRole,
-      avatar: typeof cloud.avatar === 'string' ? cloud.avatar : null,
+      avatar,
     },
   };
 }

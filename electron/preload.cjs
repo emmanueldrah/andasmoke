@@ -18,4 +18,5 @@ contextBridge.exposeInMainWorld('andaPos', {
     return () => ipcRenderer.removeListener('pos:update-downloaded', handler);
   },
   restartAndInstallUpdate: () => ipcRenderer.invoke('pos:restart-and-install'),
+  checkForUpdates: () => ipcRenderer.invoke('pos:check-for-updates'),
 });

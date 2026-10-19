@@ -19,6 +19,8 @@ import {
   Wifi,
   WifiOff,
   BarChart3,
+  Settings,
+  Info,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useAlert } from '../../context/AlertContext';
@@ -35,6 +37,8 @@ import {
 import { AdminPOSCatalogScreen } from './screens/AdminPOSCatalogScreen';
 import { AdminPOSWorkspace } from './screens/AdminPOSWorkspace';
 import { AdminReportsScreen } from './screens/AdminReportsScreen';
+import { AdminSettingsScreen } from './screens/AdminSettingsScreen';
+import { AdminAboutScreen } from './screens/AdminAboutScreen';
 import { BrandMark } from '../common/BrandMark';
 import { checkLocalServer } from '../../lib/health';
 import { api } from '../../lib/api';
@@ -47,13 +51,15 @@ type AdminTab =
   | 'promos'
   | 'categories'
   | 'accounts'
-  | 'reports';
+  | 'reports'
+  | 'settings'
+  | 'about';
 
 interface NavItem {
   id: AdminTab;
   label: string;
   icon: React.ElementType;
-  group: 'counter' | 'stock' | 'manage';
+  group: 'counter' | 'stock' | 'manage' | 'system';
 }
 
 const navItems: NavItem[] = [
@@ -64,19 +70,22 @@ const navItems: NavItem[] = [
   { id: 'promos', label: 'Discounts', icon: Tag, group: 'manage' },
   { id: 'accounts', label: 'Team', icon: UserCheck, group: 'manage' },
   { id: 'reports', label: 'Reports', icon: BarChart3, group: 'manage' },
+  { id: 'settings', label: 'Settings', icon: Settings, group: 'system' },
+  { id: 'about', label: 'About app', icon: Info, group: 'system' },
 ];
 
 const navGroups: { key: NavItem['group']; label: string }[] = [
   { key: 'counter', label: 'Register' },
   { key: 'stock', label: 'Stockroom' },
   { key: 'manage', label: 'Manage' },
+  { key: 'system', label: 'System' },
 ];
 
 const roleAccess: Record<AdminSession['adminRole'], AdminTab[]> = {
-  'Super Admin': ['pos', 'inventory', 'products', 'categories', 'promos', 'accounts', 'reports'],
-  'Store Manager': ['pos', 'inventory', 'products', 'categories', 'promos', 'reports'],
-  'Inventory Dispatcher': ['pos', 'inventory', 'products', 'categories'],
-  'Cashier': ['pos', 'reports'],
+  'Super Admin': ['pos', 'inventory', 'products', 'categories', 'promos', 'accounts', 'reports', 'settings', 'about'],
+  'Store Manager': ['pos', 'inventory', 'products', 'categories', 'promos', 'reports', 'settings', 'about'],
+  'Inventory Dispatcher': ['pos', 'inventory', 'products', 'categories', 'settings', 'about'],
+  'Cashier': ['pos', 'reports', 'settings', 'about'],
 };
 
 const tabLabels: Record<AdminTab, string> = {
@@ -87,6 +96,8 @@ const tabLabels: Record<AdminTab, string> = {
   promos: 'Discounts',
   accounts: 'Team',
   reports: 'Reports',
+  settings: 'Settings',
+  about: 'About app',
 };
 
 const tabEyebrows: Record<AdminTab, string> = {
@@ -97,6 +108,8 @@ const tabEyebrows: Record<AdminTab, string> = {
   promos: 'Manage',
   accounts: 'Manage',
   reports: 'Manage',
+  settings: 'System',
+  about: 'System',
 };
 
 // Navigation state belongs in readable paths, not implementation query strings.
@@ -108,6 +121,8 @@ const tabPaths: Record<AdminTab, string> = {
   promos: '/discounts',
   accounts: '/team',
   reports: '/reports',
+  settings: '/settings',
+  about: '/about',
 };
 
 const pathTabs: Record<string, AdminTab> = Object.fromEntries(
@@ -535,9 +550,9 @@ export const AdminPortal: React.FC = () => {
               </button>
 
               <div className="min-w-0 flex-1">
-                <p className="eyebrow">{isCashier ? 'Cashier portal' : tabEyebrows[currentTab]}</p>
+                <p className="eyebrow">{isCashier && currentTab === 'pos' ? 'Cashier portal' : tabEyebrows[currentTab]}</p>
                 <h1 className="brand-display -mt-0.5 truncate text-xl font-semibold leading-tight text-[var(--text-primary)]">
-                  {isCashier ? 'Register' : tabLabels[currentTab]}
+                  {isCashier && currentTab === 'pos' ? 'Register' : tabLabels[currentTab]}
                 </h1>
               </div>
 
@@ -579,6 +594,8 @@ export const AdminPortal: React.FC = () => {
                 {currentTab === 'categories' && <AdminPOSCatalogScreen />}
                 {currentTab === 'accounts' && <AdminAccountsManagementScreen />}
                 {currentTab === 'reports' && <AdminReportsScreen />}
+                {currentTab === 'settings' && <AdminSettingsScreen />}
+                {currentTab === 'about' && <AdminAboutScreen />}
               </AdminTabErrorBoundary>
             </div>
           </main>

@@ -813,12 +813,17 @@ localStorage.setItem('anda_auth_token', result.token);
       const profile = result?.profile;
       if (!result?.changed || !profile) return false;
 
-      const email = (profile.email || adminSession?.email || '').toLowerCase().trim();
+      const previousEmail = (adminSession?.email || '').toLowerCase().trim();
+      const email = (profile.email || previousEmail).toLowerCase().trim();
       const avatar = profile.avatar !== undefined ? (profile.avatar || undefined) : undefined;
-      if (email && avatar !== undefined) {
+      if ((email || previousEmail) && avatar !== undefined) {
         try {
           const avatars = JSON.parse(localStorage.getItem('anda_admin_avatars') || '{}');
-          avatars[email] = avatar;
+          if (email) {
+            if (avatar) avatars[email] = avatar;
+            else delete avatars[email];
+          }
+          if (previousEmail && previousEmail !== email) delete avatars[previousEmail];
           localStorage.setItem('anda_admin_avatars', JSON.stringify(avatars));
         } catch {}
       }
@@ -843,13 +848,19 @@ localStorage.setItem('anda_auth_token', result.token);
 
       setAdminAccounts(prev => {
         const next = prev.map(account =>
-          account.email && account.email.toLowerCase().trim() === email
+          (account.email && account.email.toLowerCase().trim() === previousEmail)
+            || (adminSession?.adminId && account.id === adminSession.adminId)
             ? {
                 ...account,
                 fullName: profile.fullName ?? account.fullName,
                 email: profile.email ?? account.email,
                 phone: profile.phone ?? account.phone,
                 avatar: avatar !== undefined ? avatar : account.avatar,
+                role: profile.role === 'Super Admin' ? 'super_admin'
+                  : profile.role === 'Store Manager' ? 'manager'
+                  : profile.role === 'Inventory Dispatcher' ? 'admin'
+                  : profile.role === 'Cashier' ? 'cashier'
+                  : account.role,
               }
             : account,
         );
