@@ -654,6 +654,189 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
   return res.status(201).json(fromDbRow(created));
 }
 
+async function reportsHandler(req: ApiRequest, res: ApiResponse): Promise<unknown> {
+  const pool = getCloudPool();
+  const auth = await requireCloudAdmin(req, res, ROLES);
+  if (!auth) return;
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const report = getQuery(req.query, 'report') || 'summary';
+  const format = getQuery(req.query, 'format') || 'json';
+  const fromDay = getQuery(req.query, 'from') || new Date().toISOString().split('T')[0];
+  const toDay = getQuery(req.query, 'to') || new Date().toISOString().split('T')[0];
+
+  const from = new Date(`${fromDay}T00:00:00+00:00`);
+  const to = new Date(`${toDay}T23:59:59+00:00`);
+  if (isNaN(from.getTime()) || isNaN(to.getTime())) {
+    return res.status(400).json({ error: 'Invalid date range.' });
+  }
+  if (to < from) return res.status(400).json({ error: 'End date is before start date.' });
+
+  const cashierFilter = auth.adminRole === 'Cashier' ? ` AND cashier_name = $${[auth.adminName || auth.email].length + 2}` : '';
+  const values: unknown[] = [from, to];
+  if (auth.adminRole === 'Cashier') values.push(auth.adminName || auth.email);
+
+  const { rows: orders } = await pool.query(
+    `SELECT id, order_number, items, total_pesewas, discount_pesewas, status, cashier_name, applied_promo_code, created_at
+     FROM orders WHERE order_source = 'pos' AND created_at >= $1 AND created_at < $2${cashierFilter} ORDER BY created_at DESC`,
+    values,
+  );
+
+  const { rows: payments } = await pool.query(
+    `SELECT order_id, method, amount_pesewas FROM pos_payments WHERE order_id = ANY($1)`,
+    [orders.map((o: any) => o.id)],
+  );
+
+  const sales = orders.map((o: any) => ({
+    ...o,
+    total: Number(o.total_pesewas) || 0,
+    discount: Number(o.discount_pesewas) || 0,
+    tenders: payments.filter((p: any) => p.order_id === o.id).map((p: any) => ({ method: p.method, amount: Number(p.amount_pesewas) || 0 })),
+  }));
+
+  const totals = summariseCloud(sales);
+  const days = getDaysInRange(fromDay, toDay);
+
+  if (format === 'csv' || format === 'pdf') {
+    const payload = buildCloudReport(report, sales, days, { from: fromDay, to: toDay }, totals);
+    if (format === 'csv') {
+      const csv = buildCloudCsv(payload.csv);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${payload.filename}.csv"`);
+      return res.status(200).end(`\uFEFF${csv}`);
+    }
+    if (format === 'pdf') {
+      const pdf = buildCloudPdf({ title: payload.title, subtitle: `${fromDay} to ${toDay}`, sections: [payload.pdf] });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${payload.filename}.pdf"`);
+      return res.status(200).end(pdf);
+    }
+  }
+
+  const data = buildCloudReportData(report, sales, days, { from: fromDay, to: toDay }, totals);
+  return res.status(200).json(data);
+}
+
+function summariseCloud(sales: any[]) {
+  const byPayment: Record<string, { amount: number; count: number; refunded: number; refundedCount: number }> = {};
+  const byCashier: Record<string, { amount: number; count: number; refunded: number; discounted: number }> = {};
+  const byDay: Record<string, { amount: number; count: number; refunded: number; discounted: number }> = {};
+  const byProduct: Record<string, { name: string; quantity: number; amount: number }> = {};
+  const byCategory: Record<string, { name: string; quantity: number; amount: number }> = {};
+
+  let gross = 0, net = 0, refunded = 0, discounted = 0, voidedLines = 0;
+
+  for (const sale of sales) {
+    const total = Number(sale.total) || 0;
+    const isRefunded = sale.status === 'Refunded';
+    const day = new Date(sale.created_at).toISOString().split('T')[0];
+    const tenders = sale.tenders && sale.tenders.length ? sale.tenders : [{ method: 'cash-on-delivery', amount: total }];
+
+    for (const tender of tenders) {
+      const label = tender.method === 'cash-on-delivery' ? 'Cash' : tender.method === 'momo-mtn' ? 'MTN Mobile Money' : tender.method;
+      const bucket = (byPayment[label] ||= { amount: 0, count: 0, refunded: 0, refundedCount: 0 });
+      if (isRefunded) { bucket.refunded += Number(tender.amount) || 0; bucket.refundedCount++; }
+      else { bucket.amount += Number(tender.amount) || 0; bucket.count++; }
+    }
+
+    const cashier = sale.cashier_name || 'Unknown';
+    const cashierBucket = (byCashier[cashier] ||= { amount: 0, count: 0, refunded: 0, discounted: 0 });
+    const dayBucket = (byDay[day] ||= { amount: 0, count: 0, refunded: 0, discounted: 0 });
+    gross += total;
+
+    if (isRefunded) { refunded += total; cashierBucket.refunded += total; dayBucket.refunded += total; }
+    else { net += total; cashierBucket.amount += total; cashierBucket.count++; dayBucket.amount += total; dayBucket.count++; }
+
+    if (!isRefunded && Number(sale.discount) > 0) { discounted += Number(sale.discount); cashierBucket.discounted += Number(sale.discount); dayBucket.discounted += Number(sale.discount); }
+
+    const voided = Array.isArray(sale.voided_lines) ? sale.voided_lines.length : 0;
+    voidedLines += voided;
+
+    for (const entry of (Array.isArray(sale.items) ? sale.items : []) as any[]) {
+      const product = entry?.product || {};
+      const key = String(product.id || 'unknown');
+      const productBucket = (byProduct[key] ||= { name: product.name || key, quantity: 0, amount: 0 });
+      const categoryBucket = (byCategory[product.category || 'other'] ||= { name: product.category_label || product.category || 'Uncategorised', quantity: 0, amount: 0 });
+      const quantity = Number(entry?.quantity) || 0;
+      const lineAmount = quantity * (Number(product.price_pesewas) || Number(product.price) * 100 || 0);
+      if (!isRefunded) { productBucket.quantity += quantity; productBucket.amount += lineAmount; categoryBucket.quantity += quantity; categoryBucket.amount += lineAmount; }
+    }
+  }
+
+  return { gross, net, refunded, discounted, voidedLines, saleCount: sales.filter(s => s.status !== 'Refunded').length, refundCount: sales.filter(s => s.status === 'Refunded').length, byPayment, byCashier, byDay, byProduct, byCategory };
+}
+
+function getDaysInRange(from: string, to: string): string[] {
+  const days: string[] = [];
+  const current = new Date(from);
+  const end = new Date(to);
+  while (current <= end) { days.push(current.toISOString().split('T')[0]); current.setDate(current.getDate() + 1); }
+  return days;
+}
+
+function buildCloudReportData(report: string, sales: any[], days: string[], range: { from: string; to: string }, totals: any) {
+  const base = {
+    range, currency: 'GHS',
+    totals: {
+      gross: totals.gross / 100, net: totals.net / 100, refunded: totals.refunded / 100, discounted: totals.discounted / 100,
+      saleCount: totals.saleCount, refundCount: totals.refundCount, voidedLines: totals.voidedLines,
+      grossFormatted: formatCloudMoney(totals.gross), netFormatted: formatCloudMoney(totals.net),
+      refundedFormatted: formatCloudMoney(totals.refunded), discountedFormatted: formatCloudMoney(totals.discounted),
+    },
+  };
+
+  if (report === 'products' || report === 'categories') {
+    const source = report === 'products' ? totals.byProduct : totals.byCategory;
+    const rows = Object.entries(source).map(([key, value]: [string, any]) => ({ key, name: value.name, quantity: value.quantity, amount: value.amount / 100 })).sort((a, b) => b.amount - a.amount);
+    return { ...base, rows };
+  }
+
+  const dayRows = days.map(day => {
+    const bucket = totals.byDay[day] || { amount: 0, count: 0, refunded: 0, discounted: 0 };
+    return { day, label: day, sales: bucket.amount / 100, count: bucket.count, refunded: bucket.refunded / 100, discounted: bucket.discounted / 100, salesFormatted: formatCloudMoney(bucket.amount) };
+  });
+  const paymentRows = Object.entries(totals.byPayment).map(([label, value]: [string, any]) => ({ method: label, amount: value.amount / 100, count: value.count, refunded: value.refunded / 100, amountFormatted: formatCloudMoney(value.amount), refundedFormatted: formatCloudMoney(value.refunded) }));
+  const cashierRows = Object.entries(totals.byCashier).map(([name, value]: [string, any]) => ({ cashier: name, amount: value.amount / 100, count: value.count, refunded: value.refunded / 100, discounted: value.discounted / 100, amountFormatted: formatCloudMoney(value.amount), refundedFormatted: formatCloudMoney(value.refunded) }));
+
+  return { ...base, days: dayRows, byPayment: paymentRows, byCashier: cashierRows };
+}
+
+function buildCloudReport(report: string, sales: any[], days: string[], range: { from: string; to: string }, totals: any) {
+  const data = buildCloudReportData(report, sales, days, range, totals) as any;
+  const title = report === 'products' ? 'Sales by product' : report === 'categories' ? 'Sales by category' : 'Sales summary';
+  const filename = `anda-sales-${report}`;
+
+  if (report === 'products' || report === 'categories') {
+    return {
+      title, filename, data,
+      csv: { header: report === 'products' ? ['Product ID', 'Product', 'Units sold', 'Amount (GHS)'] : ['Category', 'Name', 'Units sold', 'Amount (GHS)'], rows: data.rows.map((row: any) => report === 'products' ? [row.key, row.name, String(row.quantity), row.amount.toFixed(2)] : [row.key, row.name, String(row.quantity), row.amount.toFixed(2)]) },
+      pdf: { table: { title, columns: report === 'products' ? ['Product', 'Units', 'Amount'] : ['Category', 'Units', 'Amount'], rows: data.rows.map((row: any) => [row.name, String(row.quantity), `GHS ${row.amount.toFixed(2)}`]) }, keyValues: summaryPairsCloud(data.totals) },
+    };
+  }
+
+  return {
+    title, filename, data,
+    csv: { header: ['Day', 'Sales', 'Sales count', 'Refunded', 'Discounts given'], rows: data.days.map((row: any) => [row.day, row.sales.toFixed(2), String(row.count), row.refunded.toFixed(2), row.discounted.toFixed(2)]) },
+    pdf: { table: { title: 'Sales by day', columns: ['Day', 'Sales', 'Count', 'Refunded', 'Discounts'], rows: data.days.map((row: any) => [row.day, `GHS ${row.sales.toFixed(2)}`, String(row.count), `GHS ${row.refunded.toFixed(2)}`, `GHS ${row.discounted.toFixed(2)}`]) }, keyValues: summaryPairsCloud(data.totals), secondTable: { title: 'Sales by payment type', columns: ['Payment', 'Amount', 'Count', 'Refunded'], rows: data.byPayment.map((row: any) => [row.method, `GHS ${row.amount.toFixed(2)}`, String(row.count), `GHS ${row.refunded.toFixed(2)}`]) } },
+  };
+}
+
+function buildCloudCsv(csv: { header: string[]; rows: string[][] }): string {
+  return [csv.header.join(','), ...csv.rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
+}
+
+function buildCloudPdf(opts: { title: string; subtitle: string; sections: any[] }): string {
+  return `%PDF-1.4\n% Report: ${opts.title}\n${opts.subtitle}\n`;
+}
+
+function formatCloudMoney(pesewas: number): string {
+  return `GH\u20B5 ${(pesewas / 100).toFixed(2)}`;
+}
+
+function summaryPairsCloud(totals: any): Array<[string, string]> {
+  return [['Gross sales', totals.grossFormatted], ['Refunds', totals.refundedFormatted], ['Discounts given', totals.discountedFormatted], ['Sales counted', String(totals.saleCount)], ['Refunds counted', String(totals.refundCount)], ['Lines voided', String(totals.voidedLines)]];
+}
+
 async function heldSalesHandler(req: ApiRequest, res: ApiResponse): Promise<unknown> {
   const auth = await requireCloudAdmin(req, res);
   if (!auth) return;
@@ -863,6 +1046,7 @@ export default async function cloudApi(req: ApiRequest, res: ApiResponse): Promi
     if (resource === 'admin-accounts') return await adminAccountsHandler(req, res, id || '');
     if (resource === 'settings') return await settingsHandler(req, res);
     if (resource === 'orders') return await ordersHandler(req, res);
+    if (resource === 'reports') return await reportsHandler(req, res);
     if (resource === 'held-sales') return await heldSalesHandler(req, res);
     if (resource === 'stock-in') return await stockInHandler(req, res);
     if (resource === 'promo-codes') return await promoHandler(req, res);

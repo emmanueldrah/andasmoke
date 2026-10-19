@@ -1595,16 +1595,16 @@ test('a screen says each action once', () => {
   assert.deepEqual(echoes, [], 'an eyebrow must not repeat a word the heading below it says');
 });
 
-test('the reports tab only appears on the desktop app', () => {
+test('the reports tab is available on both desktop and web', () => {
   const source = readSource('AdminPortal.tsx');
 
-  // Reports queries the local SQLite database, so it cannot work on the hosted
-  // portal. The tab must be hidden when not running as a desktop app, and any
-  // direct navigation to /reports on the website must redirect away.
-  assert.match(source, /item\.id === 'reports' && !isDesktopApp/,
-    'the reports tab must be filtered out on the hosted portal');
-  assert.match(source, /currentTab === 'reports' && !isDesktopApp/,
-    'direct navigation to /reports on the website must redirect');
+  // Reports now queries the cloud database, so it works on both the desktop app
+  // and the hosted portal. The tab must be visible to authorized roles regardless
+  // of platform.
+  assert.doesNotMatch(source, /item\.id === 'reports' && !isDesktopApp/,
+    'the reports tab must not be filtered out on the hosted portal');
+  assert.doesNotMatch(source, /currentTab === 'reports' && !isDesktopApp/,
+    'direct navigation to /reports on the website must not redirect');
 });
 
 // ─────────────────────────────────────────────────────────────────────────

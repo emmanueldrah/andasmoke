@@ -179,18 +179,8 @@ export const AdminPortal: React.FC = () => {
   const accessibleTabs = roleAccess[store.adminSession.adminRole] || roleAccess['Cashier'];
   const defaultTab: AdminTab = accessibleTabs.includes('pos') ? 'pos' : accessibleTabs[0] || 'inventory';
   const requestedTab = tabFromPath || legacyRequestedTab;
-  let currentTab: AdminTab = accessibleTabs.includes(requestedTab as AdminTab) ? requestedTab as AdminTab : defaultTab;
-  // Reports only works on the desktop app; redirect to the default tab on the website.
-  if (currentTab === 'reports' && !isDesktopApp) {
-    currentTab = defaultTab;
-    navigate({ pathname: tabPaths[currentTab], search: location.search }, { replace: true });
-  }
-  const visibleNavItems = navItems.filter(item => {
-    if (!accessibleTabs.includes(item.id)) return false;
-    // Reports queries the local SQLite database, so it only works on the desktop app.
-    if (item.id === 'reports' && !isDesktopApp) return false;
-    return true;
-  });
+  const currentTab: AdminTab = accessibleTabs.includes(requestedTab as AdminTab) ? requestedTab as AdminTab : defaultTab;
+  const visibleNavItems = navItems.filter(item => accessibleTabs.includes(item.id));
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);

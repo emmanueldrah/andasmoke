@@ -9,8 +9,8 @@ const version = pkg.version;
 const tag = `v${version}`;
 
 const feedBase = (process.env.ANDAPOS_UPDATE_URL || 'https://andasmoke.vercel.app/updates/win').replace(/\/+$/, '');
-const releasesRepo = (process.env.ANDAPOS_RELEASES_REPO || 'emmanueldrah/andasmoke-pos-releases').trim();
-const token = (process.env.ANDAPOS_GITHUB_TOKEN || '').trim();
+const releasesRepo = (process.env.ANDAPOS_RELEASES_REPO || 'emmanueldrah/andasmoke').trim();
+const token = (process.env.ANDAPOS_GITHUB_TOKEN || process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '').trim();
 const binaryBase = (process.env.ANDAPOS_BINARY_BASE_URL || '').replace(/\/+$/, '');
 const skipBuild = process.env.ANDAPOS_SKIP_BUILD === '1';
 
@@ -58,8 +58,8 @@ async function uploadAsset(releaseId, name, filePath) {
 async function publishToGitHub(files) {
   if (!token) {
     throw new Error(
-      'ANDAPOS_GITHUB_TOKEN is not set. Create a fine-grained token with write access to ' +
-      `${releasesRepo} and export it before running this script.`,
+      'No GitHub token found. Set GITHUB_TOKEN (provided automatically in CI) or ' +
+      `ANDAPOS_GITHUB_TOKEN to a token with write access to ${releasesRepo}.`,
     );
   }
   let release = (await github(`/repos/${releasesRepo}/releases/tags/${tag}`)).data;
