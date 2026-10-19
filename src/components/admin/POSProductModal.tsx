@@ -388,7 +388,9 @@ useEffect(() => {
 
         <footer className="glass-panel flex items-center justify-between gap-3 border-x-0 border-b-0 px-4 py-3 sm:px-5">
           <button type="button" onClick={onClose} disabled={isSaving} className="lux-btn lux-btn--outline">Cancel</button>
-          <button type="submit" form="pos-product-form" disabled={isSaving} className="lux-btn lux-btn--primary"><Save className="h-4 w-4" />{isSaving ? 'Saving...' : productToEdit ? 'Save product' : 'Add product'}</button>
+          {/* The dialog heading already says 'Add product', so the button only
+              says what pressing it does. */}
+          <button type="submit" form="pos-product-form" disabled={isSaving} className="lux-btn lux-btn--primary"><Save className="h-4 w-4" />{isSaving ? 'Saving...' : 'Save product'}</button>
         </footer>
       </section>
     </div>

@@ -826,9 +826,6 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
               <div className="rounded-2xl border border-[var(--sheet-line)] bg-[var(--sheet-panel)] p-3">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--sheet-ink-4)]">Preview</p>
-                  <button type="button" onClick={handlePrint} className="inline-flex items-center gap-2 rounded-lg bg-[var(--sheet-solid)] px-3 py-1.5 text-[11px] font-bold text-[var(--sheet-solid-ink)] transition hover:bg-[var(--sheet-solid-hover)]">
-                    <Printer className="h-3.5 w-3.5" /> Print now
-                  </button>
                 </div>
 
                 <div className="flex justify-center overflow-auto rounded-[24px] bg-[var(--sheet-paper-bed)] p-4">
@@ -870,14 +867,10 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
 
         <div className="flex items-center justify-between gap-4 border-t border-[var(--sheet-line)] bg-[var(--sheet-panel)] px-5 py-4">
           <p className="text-xs text-[var(--sheet-ink-4)]">{flatLabels.length} labels • {template.name}</p>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={onClose} className="rounded-xl border border-[var(--sheet-line)] bg-[var(--sheet-button)] px-4 py-2 text-xs font-bold text-[var(--sheet-ink-2)] transition hover:bg-[var(--sheet-hover)]">
-              Close
-            </button>
-            <button type="button" onClick={handlePrint} disabled={flatLabels.length === 0} className="rounded-xl bg-[var(--accent)] px-4 py-2 text-xs font-bold text-[var(--accent-ink)] transition hover:bg-[var(--accent-strong)] disabled:opacity-60">
-              Print now
-            </button>
-          </div>
+          {/* The header already owns the Print action, so the footer only closes. */}
+          <button type="button" onClick={onClose} className="rounded-xl border border-[var(--sheet-line)] bg-[var(--sheet-button)] px-4 py-2 text-xs font-bold text-[var(--sheet-ink-2)] transition hover:bg-[var(--sheet-hover)]">
+            Close
+          </button>
         </div>
       </div>
 

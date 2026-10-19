@@ -102,22 +102,25 @@ export const AdminPOSCatalogScreen: React.FC = () => {
           ))}
         </div>
         <div className="space-y-5">
-          <form onSubmit={event => void createCategory(event)} className="lux-card h-fit space-y-4 p-5">
-            <h2 className="font-bold text-[var(--text-primary)]">New category</h2>
-            <label className="block"><span className="lux-label">ID</span><input className={inputClass} placeholder="e.g. shisha-flavors" value={createForm.id} onChange={event => setCreateForm({ ...createForm, id: event.target.value })} /></label>
-            <label className="block"><span className="lux-label">Name</span><input className={inputClass} placeholder="Category name" value={createForm.name} onChange={event => setCreateForm({ ...createForm, name: event.target.value })} /></label>
-            <label className="block"><span className="lux-label">Slug</span><input className={inputClass} placeholder="category-slug" value={createForm.slug} onChange={event => setCreateForm({ ...createForm, slug: event.target.value })} /></label>
-            <label className="block"><span className="lux-label">Department</span><select className={inputClass} value={createForm.department} onChange={event => setCreateForm({ ...createForm, department: event.target.value as DepartmentType })}><option value="beauty">Shisha &amp; hookah</option><option value="groceries">Lounge supplies</option></select></label>
-            <button className="lux-btn lux-btn--primary w-full"><Plus className="h-4 w-4" />Add category</button>
-          </form>
-          <form onSubmit={event => void save(event)} className="lux-card h-fit space-y-4 p-5">
-            <h2 className="font-bold text-[var(--text-primary)]">{editing ? `Edit ${editing.name}` : 'Select a category'}</h2>
-            {editing ? <>
+          {/* One panel, one purpose: it offers the new-category fields until a
+              row's Edit is picked, then it becomes that category's editor. */}
+          {editing ? (
+            <form onSubmit={event => void save(event)} className="lux-card h-fit space-y-4 p-5">
+              <h2 className="font-bold text-[var(--text-primary)]">Edit {editing.name}</h2>
               <label className="block"><span className="lux-label">Name</span><input className={inputClass} value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} /></label>
               <label className="block"><span className="lux-label">Department</span><select className={inputClass} value={form.department} onChange={event => setForm({ ...form, department: event.target.value as DepartmentType })}><option value="beauty">Shisha &amp; hookah</option><option value="groceries">Lounge supplies</option></select></label>
               <div className="flex gap-2"><button className="lux-btn lux-btn--primary flex-1"><Save className="h-4 w-4" />Save changes</button><button type="button" className="lux-btn lux-btn--outline" onClick={() => setEditing(null)}>Cancel</button></div>
-            </> : <p className="text-sm text-[var(--text-muted)]">Choose Edit on a category to update it.</p>}
-          </form>
+            </form>
+          ) : (
+            <form onSubmit={event => void createCategory(event)} className="lux-card h-fit space-y-4 p-5">
+              <h2 className="font-bold text-[var(--text-primary)]">New category</h2>
+              <label className="block"><span className="lux-label">ID</span><input className={inputClass} placeholder="e.g. shisha-flavors" value={createForm.id} onChange={event => setCreateForm({ ...createForm, id: event.target.value })} /></label>
+              <label className="block"><span className="lux-label">Name</span><input className={inputClass} placeholder="Category name" value={createForm.name} onChange={event => setCreateForm({ ...createForm, name: event.target.value })} /></label>
+              <label className="block"><span className="lux-label">Slug</span><input className={inputClass} placeholder="category-slug" value={createForm.slug} onChange={event => setCreateForm({ ...createForm, slug: event.target.value })} /></label>
+              <label className="block"><span className="lux-label">Department</span><select className={inputClass} value={createForm.department} onChange={event => setCreateForm({ ...createForm, department: event.target.value as DepartmentType })}><option value="beauty">Shisha &amp; hookah</option><option value="groceries">Lounge supplies</option></select></label>
+              <button className="lux-btn lux-btn--primary w-full"><Plus className="h-4 w-4" />Add category</button>
+            </form>
+          )}
         </div>
       </div>
     </div>

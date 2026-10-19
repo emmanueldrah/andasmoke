@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Search,
   Plus,
-  Edit3,
   Trash2,
   Download,
   Package,
@@ -312,6 +310,7 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
                   onClick={() => onEditProduct?.(product)}
                   className="min-w-0 flex-1 text-left"
                   title="Edit product"
+                  aria-label={`Edit ${product.name}`}
                 >
                   <span className="flex flex-wrap items-center gap-1.5">
                     <span className="break-words text-sm font-bold text-[var(--text-primary)]">{product.name}</span>
@@ -395,15 +394,8 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
                   >
                     <Tag className="h-4 w-4" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => onEditProduct?.(product)}
-                    title="Edit product"
-                    aria-label={`Edit ${product.name}`}
-                    className="grid h-8 w-8 place-items-center rounded-lg text-[var(--text-subtle)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </button>
+                  {/* The product's name is a button that opens this same editor,
+                      so the row does not carry a second edit control. */}
                   {confirming ? (
                     <>
                       <button
@@ -451,16 +443,11 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
           title={stats.total === 0 ? 'Your catalog is empty' : 'No products match these filters'}
           description={
             stats.total === 0
-              ? 'Add your first product, then print a barcode label for the shelf.'
+              ? 'Use Add product above to list your first item, then print a barcode label for the shelf.'
               : 'Clear the search, or pick a different stock group to see the rest of the catalog.'
           }
           action={
-            stats.total === 0 ? (
-              <button onClick={onAddProduct} className="lux-btn lux-btn--primary">
-                <Plus className="h-4 w-4" />
-                Add product
-              </button>
-            ) : (
+            stats.total === 0 ? undefined : (
               <button
                 onClick={() => { setSearchTerm(''); setStockFilter('all'); setDepartmentFilter('all'); }}
                 className="lux-btn lux-btn--outline"

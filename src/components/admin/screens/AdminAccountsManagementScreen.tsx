@@ -116,6 +116,9 @@ export const AdminAccountsManagementScreen: React.FC = () => {
   }, [safeAccounts, searchTerm]);
 
   const startEdit = (account: AdminAccount) => {
+    // The row editor and the invite form carry the same fields, so only one of
+    // them is ever on screen.
+    setIsCreatingNew(false);
     setEditingId(account.id);
     setEditForm({
       fullName: account.fullName || '',
@@ -227,7 +230,7 @@ export const AdminAccountsManagementScreen: React.FC = () => {
           // button steps out of the way while the form is on screen.
           isCreatingNew ? undefined : (
             <button
-              onClick={() => setIsCreatingNew(true)}
+              onClick={() => { setEditingId(null); setIsCreatingNew(true); }}
               className="lux-btn lux-btn--primary"
             >
               <Plus className="w-4 h-4" />

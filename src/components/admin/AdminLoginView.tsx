@@ -448,7 +448,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                 /* ── STANDARD SIGN-IN ────────────────────────────────────── */
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="mb-2">
-                    <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Sign in</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Welcome back</h2>
                     {selectedMember && !manualEmailMode && (
                       <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                         Signing in as <strong className="text-[var(--text-primary)]">{selectedMember.name}</strong>
@@ -456,8 +456,9 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                     )}
                   </div>
 
-                  {/* Email — shows inline when no staff tiles, or when manual mode */}
-                  {(!showStaffTiles || manualEmailMode) && (
+                  {/* Email — the single email field, shown whenever we are not
+                      signing in as one named person off the roster. */}
+                  {(!showStaffTiles || !selectedMember || manualEmailMode) && (
                     <div className="fade-in">
                       <label htmlFor="login-email" className="lux-label">Email address</label>
                       <div className="relative">
@@ -496,27 +497,6 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                         className="rounded-lg px-2.5 py-1 text-[11px] font-bold text-[var(--accent-strong)] hover:bg-[var(--accent-soft)] transition">
                         Change
                       </button>
-                    </div>
-                  )}
-
-                  {/* When no staff tiles and no member selected */}
-                  {showStaffTiles && !selectedMember && (
-                    <div className="fade-in">
-                      <label htmlFor="login-email" className="lux-label">Email address</label>
-                      <div className="relative">
-                        <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-subtle)]" />
-                        <input
-                          id="login-email"
-                          ref={emailInputRef}
-                          type="email"
-                          required
-                          autoComplete="username"
-                          value={email}
-                          onChange={e => { setEmail(e.target.value); setSelectedMember(null); setError(null); }}
-                          placeholder="you@andasmokehub.com"
-                          className={`${inputBase} pl-10`}
-                        />
-                      </div>
                     </div>
                   )}
 
