@@ -59,7 +59,8 @@ async function uploadAsset(uploadUrl, name, filePath) {
     throw new Error(`Uploading ${name} failed (${response.status}): ${await response.text()}`);
   }
   const asset = await response.json();
-  console.log(`  uploaded ${name} (${bytes.length} bytes, asset ${asset.id})`);
+  console.log(`  uploaded ${name} -> ${asset.name} (asset ${asset.id})`);
+  return asset;
 }
 
 async function publishToGitHub(files) {
@@ -83,12 +84,18 @@ async function publishToGitHub(files) {
 
   const { data: existing } = await github(`/repos/${releasesRepo}/releases/${release.id}/assets?per_page=100`);
   for (const asset of existing ?? []) {
-    if (files.some(file => file.assetName === asset.name)) {
+    // GitHub turns spaces into dots, so compare both spellings.
+    if (files.some(file => file.assetName === asset.name || file.assetName.replace(/\s+/g, '.') === asset.name)) {
       await github(`/repos/${releasesRepo}/releases/assets/${asset.id}`, { method: 'DELETE' });
     }
   }
-  for (const file of files) await uploadAsset(uploadUrl, file.assetName, file.path);
-  return `https://github.com/${releasesRepo}/releases/download/${tag}`;
+  // GitHub may rename an asset on upload, so keep the URL it actually serves.
+  const downloadUrls = new Map();
+  for (const file of files) {
+    const asset = await uploadAsset(uploadUrl, file.assetName, file.path);
+    downloadUrls.set(file.assetName, asset.browser_download_url);
+  }
+  return downloadUrls;
 }
 
 function findPackageOutput() {
@@ -134,18 +141,25 @@ const files = [{ assetName, path: join(outDir, exeFile) }];
 if (blockmapFile) files.push({ assetName: `${assetName}.blockmap`, path: join(outDir, blockmapFile) });
 
 let downloadBase;
+let downloadUrls = null;
 if (binaryBase) {
   downloadBase = binaryBase;
   console.log(`\nUpload ${exeFile} and ${blockmapFile ?? '(no blockmap)'} to ${binaryBase} yourself.`);
 } else {
-  downloadBase = await publishToGitHub(files);
+  downloadUrls = await publishToGitHub(files);
 }
 
 /**
  * The app fetches this from the feed base. The big binary lives on another host,
- * so each file URL in the manifest is repointed at an absolute URL there.
+ * so each file URL in the manifest is repointed at the absolute URL it is served
+ * from — using the name GitHub actually stored, which may differ from ours.
  */
-const manifest = manifestSource.replaceAll(assetName, `${downloadBase}/${assetName}`);
+let manifest = manifestSource;
+if (downloadUrls) {
+  for (const [name, url] of downloadUrls) manifest = manifest.split(name).join(url);
+} else {
+  manifest = manifest.replaceAll(assetName, `${downloadBase}/${assetName}`);
+}
 mkdirSync(manifestDir, { recursive: true });
 writeFileSync(manifestPath, manifest, 'utf8');
 
