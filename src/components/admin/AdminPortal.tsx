@@ -18,6 +18,7 @@ import {
   X,
   Wifi,
   WifiOff,
+  BarChart3,
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useAlert } from '../../context/AlertContext';
@@ -33,6 +34,7 @@ import {
 } from './screens/AdminPOSManagementScreens';
 import { AdminPOSCatalogScreen } from './screens/AdminPOSCatalogScreen';
 import { AdminPOSWorkspace } from './screens/AdminPOSWorkspace';
+import { AdminReportsScreen } from './screens/AdminReportsScreen';
 import { BrandMark } from '../common/BrandMark';
 import { checkLocalServer } from '../../lib/health';
 import { api } from '../../lib/api';
@@ -44,7 +46,8 @@ type AdminTab =
   | 'inventory'
   | 'promos'
   | 'categories'
-  | 'accounts';
+  | 'accounts'
+  | 'reports';
 
 interface NavItem {
   id: AdminTab;
@@ -60,6 +63,7 @@ const navItems: NavItem[] = [
   { id: 'categories', label: 'Categories', icon: Layers, group: 'stock' },
   { id: 'promos', label: 'Discounts', icon: Tag, group: 'manage' },
   { id: 'accounts', label: 'Team', icon: UserCheck, group: 'manage' },
+  { id: 'reports', label: 'Reports', icon: BarChart3, group: 'manage' },
 ];
 
 const navGroups: { key: NavItem['group']; label: string }[] = [
@@ -69,10 +73,10 @@ const navGroups: { key: NavItem['group']; label: string }[] = [
 ];
 
 const roleAccess: Record<AdminSession['adminRole'], AdminTab[]> = {
-  'Super Admin': ['pos', 'inventory', 'products', 'categories', 'promos', 'accounts'],
-  'Store Manager': ['pos', 'inventory', 'products', 'categories', 'promos'],
+  'Super Admin': ['pos', 'inventory', 'products', 'categories', 'promos', 'accounts', 'reports'],
+  'Store Manager': ['pos', 'inventory', 'products', 'categories', 'promos', 'reports'],
   'Inventory Dispatcher': ['pos', 'inventory', 'products', 'categories'],
-  'Cashier': ['pos'],
+  'Cashier': ['pos', 'reports'],
 };
 
 const tabLabels: Record<AdminTab, string> = {
@@ -82,6 +86,7 @@ const tabLabels: Record<AdminTab, string> = {
   categories: 'Categories',
   promos: 'Discounts',
   accounts: 'Team',
+  reports: 'Reports',
 };
 
 const tabEyebrows: Record<AdminTab, string> = {
@@ -91,6 +96,7 @@ const tabEyebrows: Record<AdminTab, string> = {
   categories: 'Stockroom',
   promos: 'Manage',
   accounts: 'Manage',
+  reports: 'Manage',
 };
 
 // Navigation state belongs in readable paths, not implementation query strings.
@@ -101,6 +107,7 @@ const tabPaths: Record<AdminTab, string> = {
   categories: '/categories',
   promos: '/discounts',
   accounts: '/team',
+  reports: '/reports',
 };
 
 const pathTabs: Record<string, AdminTab> = Object.fromEntries(
@@ -671,6 +678,7 @@ export const AdminPortal: React.FC = () => {
                 {currentTab === 'promos' && <AdminPromotionsScreen />}
                 {currentTab === 'categories' && <AdminPOSCatalogScreen />}
                 {currentTab === 'accounts' && <AdminAccountsManagementScreen />}
+                {currentTab === 'reports' && <AdminReportsScreen />}
               </AdminTabErrorBoundary>
             </div>
           </main>
