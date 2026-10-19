@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Download, ExternalLink, Info, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Check, Download, ExternalLink, Globe, Info, Mail, Phone, RefreshCw, ShieldCheck } from 'lucide-react';
 import appMetadata from '../../../../package.json';
 import { BrandMark } from '../../common/BrandMark';
+import { AdminPageHeader } from '../components/AdminPrimitives';
 
 type UpdateStatus = 'idle' | 'checking' | 'downloading' | 'ready' | 'current' | 'unsupported' | 'error';
 
@@ -59,18 +60,20 @@ export function AdminAboutScreen(): React.ReactElement {
   };
 
   return (
-    <div className="max-w-5xl space-y-6">
-      <section className="flex flex-col gap-5 border-b border-[var(--border-color)] pb-6 sm:flex-row sm:items-center">
-        <BrandMark name={appMetadata.author} className="h-16 w-16 shrink-0 rounded-xl text-base" />
+    <div className="mx-auto max-w-5xl space-y-6">
+      <AdminPageHeader description="Application information, developer contact details, and software updates." />
+
+      <section className="flex flex-col gap-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-5 sm:flex-row sm:items-center md:p-6">
+        <BrandMark name="Anda C Smoke Hub POS" className="h-14 w-14 shrink-0 rounded-xl text-sm" />
         <div className="min-w-0">
-          <p className="eyebrow">Point of sale</p>
-          <h2 className="brand-display text-2xl font-semibold text-[var(--text-primary)]">Anda C Smoke Hub POS</h2>
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--text-subtle)]">Point of sale</p>
+          <h2 className="brand-display mt-1 text-xl font-semibold text-[var(--text-primary)]">Anda C Smoke Hub POS</h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">{appMetadata.description}</p>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="lux-card space-y-4 p-5">
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="lux-card space-y-4 p-4 md:p-5">
           <div className="flex items-center gap-2">
             <Info className="h-4 w-4 text-[var(--accent)]" />
             <h3 className="text-sm font-bold text-[var(--text-primary)]">Application</h3>
@@ -91,28 +94,35 @@ export function AdminAboutScreen(): React.ReactElement {
           </dl>
         </div>
 
-        <div className="lux-card space-y-4 p-5">
+        <div className="lux-card space-y-4 p-4 md:p-5">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-[var(--accent)]" />
             <h3 className="text-sm font-bold text-[var(--text-primary)]">Developer</h3>
           </div>
           <div>
-            <p className="text-base font-bold text-[var(--text-primary)]">{appMetadata.author}</p>
-            <p className="mt-1 text-sm leading-6 text-[var(--text-muted)]">Developed for Anda C Smoke Hub to support day-to-day store operations.</p>
+            <p className="text-base font-bold text-[var(--text-primary)]">Success Above Dreams (SAD)</p>
           </div>
-          <a
-            href="https://andasmoke.vercel.app"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] hover:underline"
-          >
-            Anda C Smoke Hub
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+          <dl className="space-y-3 border-t border-[var(--border-color)] pt-4 text-sm">
+            <div className="flex items-center gap-2 text-[var(--text-muted)]">
+              <Mail className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+              <a href="mailto:emmanueldrah10@gmail.com" className="break-all hover:text-[var(--accent)]">emmanueldrah10@gmail.com</a>
+            </div>
+            <div className="flex items-center gap-2 text-[var(--text-muted)]">
+              <Phone className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+              <a href="tel:0543671806" className="hover:text-[var(--accent)]">0543671806</a>
+            </div>
+            <div className="flex items-center gap-2 text-[var(--text-muted)]">
+              <Globe className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+              <a href="https://emmanueldrah.vercel.app" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 break-all hover:text-[var(--accent)]">
+                emmanueldrah.vercel.app
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+              </a>
+            </div>
+          </dl>
         </div>
       </section>
 
-      <section className="lux-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <section className="lux-card flex flex-col gap-4 p-4 md:p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
             {status === 'ready' ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}

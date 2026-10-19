@@ -10,7 +10,6 @@ import {
 } from '../../../lib/hardware';
 import { nextInternalBarcode, planLabel, renderLabelSvg } from '../../../lib/code128';
 import type { Product } from '../../../types';
-import { AdminPageHeader } from '../components/AdminPrimitives';
 
 /**
  * Hardware settings: scanner timing and label size.
@@ -66,10 +65,16 @@ export function AdminHardwareSettingsScreen(): React.ReactElement {
   );
 
   return (
-    <div className="space-y-6">
-      <AdminPageHeader
-        description="Tune the barcode scanner and choose the label size used for shelf labels."
-      />
+    <div className="space-y-4">
+      <header className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
+          <Settings2 className="h-5 w-5" />
+        </span>
+        <div>
+          <h2 className="text-base font-bold text-[var(--text-primary)]">Hardware</h2>
+          <p className="mt-1 text-sm leading-5 text-[var(--text-muted)]">Tune scanner behavior and configure shelf-label dimensions.</p>
+        </div>
+      </header>
 
       {!isManager && (
         <p className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3 text-xs text-[var(--text-muted)]">
@@ -77,9 +82,9 @@ export function AdminHardwareSettingsScreen(): React.ReactElement {
         </p>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* ── Scanner timing ─────────────────────────────────────────────── */}
-        <section className="lux-card space-y-4 p-5">
+        <section className="lux-card space-y-4 p-4 md:p-5">
           <div className="flex items-center gap-2">
             <Barcode className="h-4 w-4 text-[var(--accent)]" />
             <h2 className="text-base font-bold text-[var(--text-primary)]">Scanner timing</h2>
@@ -138,7 +143,7 @@ export function AdminHardwareSettingsScreen(): React.ReactElement {
         </section>
 
         {/* ── Label size ─────────────────────────────────────────────────── */}
-        <section className="lux-card space-y-4 p-5">
+        <section className="lux-card space-y-4 p-4 md:p-5">
           <div className="flex items-center gap-2">
             <Printer className="h-4 w-4 text-[var(--accent)]" />
             <h2 className="text-base font-bold text-[var(--text-primary)]">Label size</h2>

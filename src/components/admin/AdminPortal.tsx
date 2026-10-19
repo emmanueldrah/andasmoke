@@ -8,8 +8,6 @@ import {
   UserCheck,
   Layers,
   Plus,
-  Sun,
-  Moon,
   AlertTriangle,
   RefreshCw,
   ScanLine,
@@ -24,7 +22,6 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { useAlert } from '../../context/AlertContext';
-import { useTheme } from '../../context/ThemeContext';
 import { AdminLoginView } from './AdminLoginView';
 import { AdminProductsScreen } from './screens/AdminProductsScreen';
 import { AdminAccountsManagementScreen } from './screens/AdminAccountsManagementScreen';
@@ -185,7 +182,6 @@ export const AdminPortal: React.FC = () => {
   const { showAlert } = useAlert();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isDarkMode, toggleTheme } = useTheme();
 
   const tabFromPath = pathTabs[location.pathname];
   const legacyRequestedTab = new URLSearchParams(location.search).get('tab');
@@ -413,16 +409,6 @@ export const AdminPortal: React.FC = () => {
             <span className="truncate text-xs font-bold">{online ? 'Online' : 'Offline'}</span>
           )}
         </div>
-
-        <button
-          type="button"
-          onClick={toggleTheme}
-          title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text-primary)] ${collapsed ? 'justify-center px-0' : ''}`}
-        >
-          {isDarkMode ? <Sun className="h-4 w-4 shrink-0" /> : <Moon className="h-4 w-4 shrink-0" />}
-          {!collapsed && <span>{isDarkMode ? 'Light mode' : 'Dark mode'}</span>}
-        </button>
 
         <button
           type="button"
