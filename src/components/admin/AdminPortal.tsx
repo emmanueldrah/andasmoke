@@ -192,51 +192,19 @@ export const AdminPortal: React.FC = () => {
     try { return localStorage.getItem(RAIL_KEY) === '1'; } catch { return false; }
   });
   const [online, setOnline] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<{
-    pendingCount: number;
-    syncedCount: number;
-    failedCount: number;
-    lastError?: string | null;
-    cloudConnected: boolean;
-    lastSyncedAt?: string | null;
-    lastPull?: { at: string; updated: number; deleted: number; kept?: number; heldBack?: boolean } | null;
-    cloudOrigin?: string | null;
-  } | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncNotice, setSyncNotice] = useState('');
   const syncInProgress = useRef(false);
 
-  const refreshSyncStatus = async () => {
-    try {
-      setSyncStatus(await api.get<NonNullable<typeof syncStatus>>('/pos-sync?action=status'));
-    } catch {
-      // The local till service is not answering yet.
-    }
-  };
-
-  const flushSync = async (retryFailed = false, manual = false) => {
+  /* Syncing is invisible by design: changes are pushed and the website catalogue
+     is pulled quietly in the background, so no sync state is ever rendered. */
+  const flushSync = async (retryFailed = false) => {
     if (syncInProgress.current) return;
     syncInProgress.current = true;
-    setIsSyncing(true);
     try {
-      const res = await api.post<{ flushed: number; pending: number; failed: number }>(
-        `/pos-sync?action=flush${retryFailed ? '&retryFailed=true' : ''}`,
-        {},
-      );
-      setSyncStatus(prev => prev ? { ...prev, pendingCount: res.pending, failedCount: res.failed } : null);
-      if (res.flushed > 0) {
-        setSyncNotice('');
-        showAlert(`Synced ${res.flushed} change${res.flushed === 1 ? '' : 's'} to cloud`, 'success');
-      }
-    } catch (error: any) {
-      // A failure here means the website refused the change, so say why instead
-      // of leaving the till looking idle.
-      const message = String(error?.message || 'Could not reach the website.');
-      setSyncNotice(message);
-      if (manual) showAlert(message, 'error');
+      await api.post(`/pos-sync?action=flush${retryFailed ? '&retryFailed=true' : ''}`, {});
+    } catch {
+      // A refused change stays queued; the next tick retries without a word.
     } finally {
       syncInProgress.current = false;
-      setIsSyncing(false);
     }
   };
 
@@ -258,20 +226,22 @@ export const AdminPortal: React.FC = () => {
         try {
           const pulled = await api.post<{ updated: number; deleted: number }>('/pos-sync?action=pull-products', {});
           lastCloudPull = Date.now();
-          setSyncNotice('');
           if (active && (pulled.updated > 0 || pulled.deleted > 0)) {
             await store.fetchProducts({ includeUnpublished: true });
           }
-        } catch (error: any) {
-          // Wait a full cycle before troubling the website again, but say what failed.
+        } catch {
+          // Wait a full cycle before troubling the website again.
           lastCloudPull = Date.now();
-          setSyncNotice(String(error?.message || 'Could not refresh the website catalog.'));
         }
       }
       try {
-        const res = await api.get<NonNullable<typeof syncStatus>>('/pos-sync?action=status');
+        const res = await api.get<{
+          pendingCount: number;
+          syncedCount: number;
+          failedCount: number;
+          cloudConnected: boolean;
+        }>('/pos-sync?action=status');
         if (!active) return;
-        setSyncStatus(res);
         if (res.pendingCount > 0 && navigator.onLine) void flushSync();
       } catch {}
     };
@@ -279,17 +249,6 @@ export const AdminPortal: React.FC = () => {
     const syncTimer = window.setInterval(fetchSync, 12_000);
     return () => { active = false; window.clearInterval(syncTimer); };
   }, [isDesktopApp, isCashier, store.adminSession.isLoggedIn, store.fetchProducts]);
-
-  const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
-
-  useEffect(() => {
-    const andaPos = (window as any).andaPos;
-    if (andaPos?.onUpdateDownloaded) {
-      return andaPos.onUpdateDownloaded((info: any) => {
-        setUpdateAvailable(info?.version || 'new');
-      });
-    }
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -427,7 +386,7 @@ export const AdminPortal: React.FC = () => {
           className={`flex items-center gap-2 rounded-xl px-3 py-2 ${collapsed ? 'justify-center px-0 w-full' : ''} ${
             online ? 'bg-[var(--jade-soft)] text-[var(--jade)]' : 'bg-[var(--danger-soft)] text-[var(--danger)]'
           }`}
-          title={online ? 'Connected to the cloud POS service' : 'Cloud unavailable: sales cannot be recorded'}
+          title={online ? 'Connected' : 'No connection: sales cannot be recorded right now'}
         >
           {online ? <Wifi className="h-4 w-4 shrink-0" /> : <WifiOff className="h-4 w-4 shrink-0" />}
           {!collapsed && (
@@ -578,74 +537,10 @@ export const AdminPortal: React.FC = () => {
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
-                {updateAvailable && (
-                  <button
-                    type="button"
-                    onClick={() => (window as any).andaPos?.restartAndInstallUpdate?.()}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/15 px-3 py-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 border border-blue-500/30 hover:bg-blue-500/25 transition cursor-pointer"
-                    title="Click to restart the till and apply update"
-                  >
-                    <RefreshCw className="h-3 w-3 animate-spin" />
-                    <span>Update ready (v{updateAvailable}) - Restart</span>
-                  </button>
-                )}
-
-                {isDesktopApp && (syncStatus && syncStatus.failedCount > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => void flushSync(true)}
-                    disabled={isSyncing}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--danger)] bg-[var(--danger-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--danger)] transition cursor-pointer"
-                    title={`${syncNotice || syncStatus.lastError || 'Some desktop changes could not reach the website.'} Click to retry.`}
-                  >
-                    <AlertTriangle className="h-3 w-3" />
-                    <span>{syncStatus.failedCount} sync failed</span>
-                  </button>
-                ) : syncNotice && syncStatus?.cloudConnected ? (
-                  <button
-                    type="button"
-                    onClick={() => void flushSync(true)}
-                    disabled={isSyncing}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--danger)] bg-[var(--danger-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--danger)] transition cursor-pointer"
-                    title={syncNotice}
-                  >
-                    <AlertTriangle className="h-3 w-3" />
-                    <span>Sync needs attention</span>
-                  </button>
-                ) : syncStatus && syncStatus.pendingCount > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => void flushSync(false, true)}
-                    disabled={isSyncing}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-semibold text-[var(--accent)] transition hover:bg-[var(--accent-soft)] cursor-pointer"
-                    title="Click to sync pending product and sales changes to the website"
-                  >
-                    <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                    <span>{syncStatus.pendingCount} changes pending</span>
-                  </button>
-                ) : syncStatus?.cloudConnected ? (
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                    title={`This till shares its products and sales with ${(syncStatus.cloudOrigin || '').replace(/^https?:\/\//, '')}. Last upload ${syncStatus.lastSyncedAt ? new Date(syncStatus.lastSyncedAt).toLocaleString() : 'not needed yet'}${syncStatus.lastPull ? `, last website catalog pull ${new Date(syncStatus.lastPull.at).toLocaleString()}` : ''}.`}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Website synced</span>
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => void refreshSyncStatus()}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[var(--bg-soft)] px-3 py-1 text-[11px] font-medium text-[var(--text-muted)] border border-[var(--border-color)] cursor-pointer"
-                    title="This till is not linked to the live website yet. Sign in here with the same email and PIN you use on the website, while the till is online, and products and sales then move both ways on their own. Click to check again."
-                  >
-                    <WifiOff className="h-3 w-3" />
-                    <span>Website not linked</span>
-                  </button>
-                ))}
-
-                {/* A screen owns its own actions. The shell keeps the page name,
-                    the sync state and Refresh, so 'Add product' is not printed in
-                    two places on the same screen. */}
+                {/* A screen owns its own actions. The shell keeps only the page
+                    name and Refresh; syncing happens silently in the background
+                    and updates surface through the corner banner, so neither is
+                    printed here. */}
 
                 <button
                   onClick={() => void refreshAdminData()}

@@ -249,22 +249,25 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-hidden bg-[rgba(2,25,38,0.42)] flex justify-end font-sans"
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-[rgba(2,25,38,0.24)] font-sans backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div
-        className="form-sheet form-sheet--side w-full max-w-xl h-full flex flex-col border-0 border-l animate-in slide-in-from-right duration-200 overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-page-title"
+        className="form-sheet profile-management-page flex h-full w-full flex-col overflow-hidden animate-in fade-in duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[var(--sheet-line)] flex items-center justify-between bg-[var(--sheet-head)] shrink-0">
+        <div className="profile-management-page__header flex shrink-0 items-center justify-between border-b border-[var(--sheet-line)] px-5 py-4 md:px-8">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
               <User className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[var(--sheet-ink)] flex items-center gap-2">
-                My Profile & Account
+              <h2 id="profile-page-title" className="text-lg font-bold text-[var(--sheet-ink)] flex items-center gap-2">
+                Profile Management
               </h2>
               <p className="text-xs text-[var(--sheet-ink-4)]">
                 Manage your credentials, avatar, and security
@@ -275,7 +278,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
             type="button"
             onClick={onClose}
             className="p-2 rounded-xl text-[var(--sheet-ink-4)] hover:text-[var(--sheet-ink)] hover:bg-[var(--sheet-hover)] transition-colors"
-            aria-label="Close profile panel"
+            aria-label="Close profile page"
           >
             <X className="h-5 w-5" />
           </button>
@@ -284,7 +287,7 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
         {/* Inline Alert Banner */}
         {alert && (
           <div
-            className={`mx-6 mt-4 p-3.5 rounded-xl border flex items-center gap-3 text-xs font-semibold animate-in fade-in duration-150 shrink-0 ${
+            className={`mx-5 mt-4 p-3.5 rounded-xl border flex items-center gap-3 text-xs font-semibold animate-in fade-in duration-150 shrink-0 md:mx-8 ${
               alert.type === 'success'
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60'
                 : 'bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/60'
@@ -307,7 +310,9 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
         )}
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 divide-y divide-[var(--sheet-divide)]">
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto grid w-full max-w-6xl gap-8 px-5 py-6 md:px-8 md:py-8 xl:grid-cols-2">
+            <div className="space-y-8">
           {/* Section 1: Avatar & Quick Info */}
           <div className="pt-1">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-4 flex items-center gap-2">
@@ -460,7 +465,9 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
               )}
             </button>
           </form>
+            </div>
 
+            <div className="space-y-8">
           {/* Section 3: Password / PIN Change Form */}
           <form onSubmit={handleChangePassword} className="pt-6 space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-1 flex items-center gap-2">
@@ -578,6 +585,8 @@ export const AdminMyProfilePanel: React.FC<AdminMyProfilePanelProps> = ({ isOpen
               >
                 <LogOut className="h-3.5 w-3.5" /> Sign Out
               </button>
+            </div>
+          </div>
             </div>
           </div>
         </div>

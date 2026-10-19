@@ -1032,11 +1032,11 @@ return (
         <span
           className={`lux-chip ${!online || storeError ? 'lux-chip--warning' : 'lux-chip--success'}`}
           title={online
-            ? `Cloud POS is connected${tillHealth.latencyMs != null ? ` (${tillHealth.latencyMs} ms)` : ''}. Sales sync online.`
-            : 'Cloud POS is unavailable. An internet connection is required to record sales.'}
+            ? `Connected${tillHealth.latencyMs != null ? ` (${tillHealth.latencyMs} ms)` : ''}.`
+            : 'No connection. Sales cannot be recorded until the register is back online.'}
         >
           {online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-          {!online ? 'Cloud unavailable' : storeError ? 'Inventory unavailable' : loading ? 'Loading inventory' : products.length === 0 ? 'Inventory empty' : 'Ready to sell'}
+          {!online ? 'Not connected' : storeError ? 'Inventory unavailable' : loading ? 'Loading inventory' : products.length === 0 ? 'Inventory empty' : 'Ready to sell'}
         </span>
 
         <span className="hidden items-center gap-1.5 text-xs text-[var(--text-muted)] sm:flex">

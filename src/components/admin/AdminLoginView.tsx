@@ -55,7 +55,6 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState(false);
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const [cachedTeam, setCachedTeam] = useState<CachedTeamMember[]>([]);
@@ -75,15 +74,6 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, []);
-
-  // Online / offline
-  useEffect(() => {
-    const on = () => setIsOnline(true);
-    const off = () => setIsOnline(false);
-    window.addEventListener('online', on);
-    window.addEventListener('offline', off);
-    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
 
   // Load cached team for quick-select tiles
@@ -235,7 +225,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
           </div>
         </div>
 
-        {/* Right: Clock + Sync + Theme */}
+        {/* Right: Clock + Theme */}
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Live clock */}
           <div className="hidden items-center gap-2 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)]/80 px-3.5 py-1.5 text-xs font-semibold text-[var(--text-muted)] shadow-sm backdrop-blur-md sm:flex">
@@ -243,16 +233,6 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
             <span className="font-mono text-[11px]">{currentTime || '—'}</span>
             <span className="text-[var(--border-color)]">·</span>
             <span className="text-[10px] text-[var(--text-subtle)]">{currentDate}</span>
-          </div>
-
-          {/* Connectivity */}
-          <div className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold shadow-sm ${
-            isOnline
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-              : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-          }`}>
-            <span className={`h-2 w-2 rounded-full ${isOnline ? 'animate-pulse bg-emerald-500' : 'bg-amber-500'}`} />
-            <span className="hidden md:inline">{isOnline ? 'Cloud Sync' : 'Offline'}</span>
           </div>
 
           {/* Theme toggle */}

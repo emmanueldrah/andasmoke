@@ -7,6 +7,11 @@ const { contextBridge, ipcRenderer } = require('electron');
  */
 contextBridge.exposeInMainWorld('andaPos', {
   print: () => ipcRenderer.invoke('pos:print'),
+  onUpdateAvailable: (callback) => {
+    const handler = (_event, info) => callback(info);
+    ipcRenderer.on('pos:update-available', handler);
+    return () => ipcRenderer.removeListener('pos:update-available', handler);
+  },
   onUpdateDownloaded: (callback) => {
     const handler = (_event, info) => callback(info);
     ipcRenderer.on('pos:update-downloaded', handler);

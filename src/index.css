@@ -318,6 +318,84 @@
 @layer components {
   /* ── Design system: Ember & Onyx ─────────────────────────────────────────── */
 
+  .form-sheet {
+    --sheet-head: #f7fafc;
+    --sheet-line: rgba(23, 51, 68, 0.14);
+    --sheet-line-strong: rgba(23, 51, 68, 0.24);
+    --sheet-ink: #173344;
+    --sheet-ink-2: #294858;
+    --sheet-ink-3: #496575;
+    --sheet-ink-4: #607987;
+    --sheet-ink-5: #718895;
+    --sheet-hover: #edf4f7;
+    --sheet-panel: #f2f7f9;
+    --sheet-chip: #e8f0f3;
+    --sheet-button: #ffffff;
+    --sheet-field: #ffffff;
+    --sheet-solid: #d97706;
+    --sheet-solid-hover: #b45309;
+    --sheet-solid-ink: #ffffff;
+    --sheet-divide: rgba(23, 51, 68, 0.12);
+    --sheet-sticky: #f7fafc;
+    color: var(--sheet-ink);
+    background: #ffffff;
+    border-color: var(--sheet-line);
+    box-shadow: 0 24px 64px rgba(3, 20, 31, 0.28);
+  }
+
+  html.dark .form-sheet {
+    --sheet-head: #0b2b3c;
+    --sheet-line: rgba(151, 192, 207, 0.16);
+    --sheet-line-strong: rgba(151, 192, 207, 0.28);
+    --sheet-ink: #f4ebdf;
+    --sheet-ink-2: #e4d5c2;
+    --sheet-ink-3: #d3c1a9;
+    --sheet-ink-4: #b39a7d;
+    --sheet-ink-5: #9b846b;
+    --sheet-hover: #12384b;
+    --sheet-panel: #0d3041;
+    --sheet-chip: #12384b;
+    --sheet-button: #103448;
+    --sheet-field: #071f2c;
+    --sheet-solid: #e98400;
+    --sheet-solid-hover: #c86f00;
+    --sheet-solid-ink: #ffffff;
+    --sheet-divide: rgba(151, 192, 207, 0.12);
+    --sheet-sticky: #0b2b3c;
+    background: #082333;
+    color: var(--sheet-ink);
+    border-color: var(--sheet-line);
+  }
+
+  .profile-management-page {
+    --sheet-head: rgba(255, 255, 255, 0.28);
+    --sheet-panel: rgba(239, 247, 250, 0.42);
+    --sheet-chip: rgba(225, 239, 244, 0.46);
+    --sheet-button: rgba(255, 255, 255, 0.5);
+    --sheet-field: rgba(255, 255, 255, 0.62);
+    background: rgba(232, 244, 249, 0.78);
+    border-color: rgba(255, 255, 255, 0.46);
+    box-shadow: none;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+  }
+
+  .profile-management-page__header {
+    background: var(--sheet-head);
+    backdrop-filter: blur(16px) saturate(145%);
+    -webkit-backdrop-filter: blur(16px) saturate(145%);
+  }
+
+  html.dark .profile-management-page {
+    --sheet-head: rgba(8, 36, 52, 0.44);
+    --sheet-panel: rgba(12, 49, 67, 0.46);
+    --sheet-chip: rgba(18, 56, 75, 0.58);
+    --sheet-button: rgba(16, 52, 72, 0.56);
+    --sheet-field: rgba(7, 31, 44, 0.66);
+    background: rgba(5, 24, 36, 0.78);
+    border-color: rgba(123, 177, 196, 0.22);
+  }
+
   /* ── Layer 1: glass ────────────────────────────────────────────────────────
      Every background surface is a frosted pane. Controls resting on top
      (Layer 2) are extruded clay, so the two never compete. */

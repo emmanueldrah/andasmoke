@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { UpdateBanner } from './components/common/UpdateBanner';
 import { useStore } from './context/StoreContext';
 import { PageSkeleton } from './components/common/LoadingStates';
 
@@ -34,6 +35,7 @@ function AppLayout() {
           <AdminPortal />
         </Suspense>
       </ErrorBoundary>
+      <UpdateBanner />
     </>
   );
 }

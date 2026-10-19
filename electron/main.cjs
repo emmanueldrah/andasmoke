@@ -102,6 +102,11 @@ app.whenReady().then(async () => {
       autoUpdater.autoDownload = true;
       autoUpdater.autoInstallOnAppQuit = true;
 
+      autoUpdater.on('update-available', (info) => {
+        console.log('[updater] Update available:', info?.version);
+        win.webContents.send('pos:update-available', { version: info?.version });
+      });
+
       autoUpdater.on('update-downloaded', (info) => {
         console.log('[updater] Update downloaded:', info?.version);
         win.webContents.send('pos:update-downloaded', { version: info?.version });
