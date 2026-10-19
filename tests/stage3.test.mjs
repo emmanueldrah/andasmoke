@@ -1595,6 +1595,18 @@ test('a screen says each action once', () => {
   assert.deepEqual(echoes, [], 'an eyebrow must not repeat a word the heading below it says');
 });
 
+test('the reports tab only appears on the desktop app', () => {
+  const source = readSource('AdminPortal.tsx');
+
+  // Reports queries the local SQLite database, so it cannot work on the hosted
+  // portal. The tab must be hidden when not running as a desktop app, and any
+  // direct navigation to /reports on the website must redirect away.
+  assert.match(source, /item\.id === 'reports' && !isDesktopApp/,
+    'the reports tab must be filtered out on the hosted portal');
+  assert.match(source, /currentTab === 'reports' && !isDesktopApp/,
+    'direct navigation to /reports on the website must redirect');
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Reads a screen so the tests cannot drift from what ships. */
