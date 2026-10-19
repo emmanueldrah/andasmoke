@@ -213,6 +213,7 @@ export const AdminPortal: React.FC = () => {
     let active = true;
     let backfillQueued = false;
     let lastCloudPull = 0;
+    let lastProfilePull = 0;
     const fetchSync = async () => {
       if (!backfillQueued && !isCashier && localStorage.getItem('anda_cloud_auth_token')) {
         try {
@@ -234,6 +235,10 @@ export const AdminPortal: React.FC = () => {
           lastCloudPull = Date.now();
         }
       }
+      if (localStorage.getItem('anda_cloud_auth_token') && Date.now() - lastProfilePull >= 60_000) {
+        lastProfilePull = Date.now();
+        if (active) await store.syncProfileFromCloud();
+      }
       try {
         const res = await api.get<{
           pendingCount: number;
@@ -248,7 +253,7 @@ export const AdminPortal: React.FC = () => {
     void fetchSync();
     const syncTimer = window.setInterval(fetchSync, 12_000);
     return () => { active = false; window.clearInterval(syncTimer); };
-  }, [isDesktopApp, isCashier, store.adminSession.isLoggedIn, store.fetchProducts]);
+  }, [isDesktopApp, isCashier, store.adminSession.isLoggedIn, store.fetchProducts, store.syncProfileFromCloud]);
 
   useEffect(() => {
     let active = true;

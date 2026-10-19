@@ -75,6 +75,7 @@ interface StoreContextType {
   loginAdmin: (pin: string, email: string, role?: AdminSession['adminRole'], name?: string) => Promise<boolean>;
   logoutAdmin: () => Promise<void>;
   fetchAdminAccounts: () => Promise<void>;
+  syncProfileFromCloud: () => Promise<boolean>;
   addAdminAccount: (account: Omit<AdminAccount, 'id'> & { pin?: string }) => Promise<AdminAccount>;
   updateAdminAccount: (id: string, updates: Partial<AdminAccount>) => Promise<void>;
   deleteAdminAccount: (id: string) => Promise<void>;
@@ -792,6 +793,78 @@ localStorage.setItem('anda_auth_token', result.token);
     }
   }, []);
 
+  /**
+   * Pulls this user's own profile from the website so a change made there
+   * (name, phone, role or photo) reaches the till without re-logging in.
+   */
+  const syncProfileFromCloud = useCallback(async (): Promise<boolean> => {
+    try {
+      const result = await api.post<{
+        changed?: boolean;
+        profile?: {
+          id?: string;
+          fullName?: string;
+          email?: string;
+          phone?: string;
+          role?: string;
+          avatar?: string | null;
+        } | null;
+      }>('/pos-sync?action=pull-profile', {});
+      const profile = result?.profile;
+      if (!result?.changed || !profile) return false;
+
+      const email = (profile.email || adminSession?.email || '').toLowerCase().trim();
+      const avatar = profile.avatar !== undefined ? (profile.avatar || undefined) : undefined;
+      if (email && avatar !== undefined) {
+        try {
+          const avatars = JSON.parse(localStorage.getItem('anda_admin_avatars') || '{}');
+          avatars[email] = avatar;
+          localStorage.setItem('anda_admin_avatars', JSON.stringify(avatars));
+        } catch {}
+      }
+
+      setAdminSession(prev => {
+        const nextSession: AdminSession = {
+          ...prev,
+          adminName: profile.fullName ?? prev.adminName,
+          email: profile.email ?? prev.email,
+          phone: profile.phone ?? prev.phone,
+          avatar: avatar !== undefined ? avatar : prev.avatar,
+          adminRole: profile.role === 'Super Admin' || profile.role === 'Store Manager'
+            || profile.role === 'Inventory Dispatcher' || profile.role === 'Cashier'
+            ? profile.role
+            : prev.adminRole,
+        };
+        try {
+          localStorage.setItem('anda_admin_session', JSON.stringify(nextSession));
+        } catch {}
+        return nextSession;
+      });
+
+      setAdminAccounts(prev => {
+        const next = prev.map(account =>
+          account.email && account.email.toLowerCase().trim() === email
+            ? {
+                ...account,
+                fullName: profile.fullName ?? account.fullName,
+                email: profile.email ?? account.email,
+                phone: profile.phone ?? account.phone,
+                avatar: avatar !== undefined ? avatar : account.avatar,
+              }
+            : account,
+        );
+        try {
+          localStorage.setItem('anda_admin_accounts', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+
+      return true;
+    } catch {
+      return false;
+    }
+  }, [adminSession?.email]);
+
   const addAdminAccount = async (account: Omit<AdminAccount, 'id'> & { pin?: string }): Promise<AdminAccount> => {
     try {
       const created = await api.post<AdminAccount>('/admin-accounts', account);
@@ -953,6 +1026,7 @@ localStorage.setItem('anda_auth_token', result.token);
         loginAdmin,
         logoutAdmin,
         fetchAdminAccounts,
+        syncProfileFromCloud,
         addAdminAccount,
         updateAdminAccount,
         deleteAdminAccount,

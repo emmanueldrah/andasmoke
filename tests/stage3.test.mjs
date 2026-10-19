@@ -1338,6 +1338,52 @@ test('cloud products pull to desktop without overwriting queued local edits', as
   }
 });
 
+test('a website profile edit reaches the till without touching the PIN', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-profile-pull-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const { ownerToken } = await seedTill(api);
+  const sqlite = api.getSqliteHandle();
+  const pinBefore = sqlite.prepare('SELECT pin_hash FROM admin_sessions WHERE email = ?').get('ama@smokehub.com').pin_hash;
+  const originalFetch = globalThis.fetch;
+  let calledUrl = '';
+  globalThis.fetch = async url => {
+    calledUrl = String(url);
+    return new Response(JSON.stringify({
+      id: 'cloud-owner',
+      fullName: 'Ama Mensah',
+      email: 'ama@smokehub.com',
+      phone: '0200000000',
+      avatar: 'data:image/png;base64,abc',
+      role: 'Super Admin',
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+
+  try {
+    const pulled = await callApi(api.posSync, {
+      method: 'POST',
+      query: { action: 'pull-profile' },
+      token: ownerToken,
+      cloudToken: 'Bearer cloud-staff-token',
+      body: {},
+    });
+    assert.equal(pulled.status, 200);
+    assert.equal(pulled.body.changed, true);
+    assert.equal(pulled.body.profile.fullName, 'Ama Mensah');
+    assert.equal(pulled.body.profile.avatar, 'data:image/png;base64,abc');
+    assert.match(calledUrl, /\/api\/admin-accounts\?self=1/);
+
+    const row = sqlite.prepare('SELECT admin_name, phone, pin_hash FROM admin_sessions WHERE email = ?').get('ama@smokehub.com');
+    assert.equal(row.admin_name, 'Ama Mensah');
+    assert.equal(row.phone, '0200000000');
+    assert.equal(row.pin_hash, pinBefore, 'the till PIN is never replaced by the website profile');
+  } finally {
+    globalThis.fetch = originalFetch;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('a broken or empty website reply keeps the till catalog intact', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-reply-'));
   process.env.ANDA_DATA_DIR = dir;

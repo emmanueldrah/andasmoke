@@ -2,7 +2,7 @@ import type { ApiRequest, ApiResponse } from './_http.js';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, getSetting, setSetting } from '../src/db/index.js';
-import { posSyncQueue, products, inventoryMovements, orders } from '../src/db/schema.js';
+import { posSyncQueue, products, inventoryMovements, orders, adminSessions } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 
 const { readStoredProductImage, saveProductImage } = require('../electron/media.cjs') as {
@@ -274,6 +274,57 @@ function reportSyncFailure(res: ApiResponse, error: any): ApiResponse {
   return res.status(502).json({ error: message });
 }
 
+const SYNCED_ADMIN_ROLES = ['Super Admin', 'Store Manager', 'Inventory Dispatcher', 'Cashier'] as const;
+
+/**
+ * A profile edited on the website has to reach the till, which keeps its own
+ * copy of the staff account. Only the display fields travel — the PIN is never
+ * touched, so a till that has never been online still signs in with its own PIN.
+ */
+async function pullOwnProfile(
+  cloudOrigin: string,
+  cloudAuthorization: string,
+  email: string,
+): Promise<{ changed: boolean; profile: Record<string, unknown> | null }> {
+  const url = new URL('/api/admin-accounts', cloudOrigin);
+  url.searchParams.set('self', '1');
+  const response = await fetch(url, {
+    headers: { Authorization: cloudAuthorization, Accept: 'application/json' },
+    signal: AbortSignal.timeout(8000),
+  });
+  const cloud = await readCloudJson(response, 'Could not refresh your profile from the website.');
+  const [current] = email
+    ? await db.select().from(adminSessions).where(eq(adminSessions.email, email.toLowerCase().trim())).limit(1)
+    : [];
+  if (!current) return { changed: false, profile: null };
+
+  const role = typeof cloud.role === 'string' && (SYNCED_ADMIN_ROLES as readonly string[]).includes(cloud.role)
+    ? cloud.role as typeof SYNCED_ADMIN_ROLES[number]
+    : current.adminRole;
+  const next = {
+    adminName: typeof cloud.fullName === 'string' && cloud.fullName.trim() ? cloud.fullName.trim() : current.adminName,
+    phone: typeof cloud.phone === 'string' ? cloud.phone.trim() : current.phone,
+    adminRole: role,
+  };
+  const changed = next.adminName !== current.adminName
+    || next.phone !== current.phone
+    || next.adminRole !== current.adminRole;
+  if (changed) await db.update(adminSessions).set(next).where(eq(adminSessions.id, current.id));
+
+  setSetting('sync.last.profile.v1', JSON.stringify({ at: new Date().toISOString(), changed, email: current.email }));
+  return {
+    changed,
+    profile: {
+      id: current.id,
+      fullName: next.adminName,
+      email: current.email,
+      phone: next.phone,
+      role: next.adminRole,
+      avatar: typeof cloud.avatar === 'string' ? cloud.avatar : null,
+    },
+  };
+}
+
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   try {
     const action = req.query.action || 'status';
@@ -307,6 +358,21 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           cloudAuthorization,
           auth.adminRole !== 'Cashier',
         );
+        setSetting('sync.last.error.v1', '');
+        return res.status(200).json(result);
+      } catch (error) {
+        return reportSyncFailure(res, error);
+      }
+    }
+
+    if (req.method === 'POST' && action === 'pull-profile') {
+      const auth = await requireAdmin(req, res, [...SYNCED_ADMIN_ROLES]);
+      if (!auth) return;
+      if (!cloudAuthorization) {
+        return res.status(409).json({ error: 'Sign in while online to connect this till to the website.' });
+      }
+      try {
+        const result = await pullOwnProfile(cloudOrigin, cloudAuthorization, auth.email);
         setSetting('sync.last.error.v1', '');
         return res.status(200).json(result);
       } catch (error) {
