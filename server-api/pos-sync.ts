@@ -2,7 +2,7 @@ import type { ApiRequest, ApiResponse } from './_http.js';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, getSetting, setSetting } from '../src/db/index.js';
-import { posSyncQueue, products, inventoryMovements, orders, adminSessions } from '../src/db/schema.js';
+import { posSyncQueue, products, inventoryMovements, orders, adminSessions, storeSettings } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 
 const { readStoredProductImage, saveProductImage } = require('../electron/media.cjs') as {
@@ -386,6 +386,39 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         const result = await pullOwnProfile(cloudOrigin, cloudAuthorization, auth.email);
         setSetting('sync.last.error.v1', '');
         return res.status(200).json(result);
+      } catch (error) {
+        return reportSyncFailure(res, error);
+      }
+    }
+
+    // ─ Pull store settings from cloud ───────────────────────────────────
+    if (req.method === 'POST' && action === 'pull-settings') {
+      const auth = await requireAdmin(req, res, [...SYNCED_ADMIN_ROLES]);
+      if (!auth) return;
+      if (!cloudAuthorization) {
+        return res.status(409).json({ error: 'Sign in while online to connect this till to the website.' });
+      }
+      try {
+        const url = new URL('/api/settings', cloudOrigin);
+        const response = await fetch(url, {
+          headers: { Authorization: cloudAuthorization, Accept: 'application/json' },
+          signal: AbortSignal.timeout(10_000),
+        });
+        const body = await readCloudJson(response, 'Could not refresh store settings from the website.');
+        const rows = Array.isArray(body.settings) ? body.settings : [];
+        let updated = 0;
+        for (const row of rows) {
+          const key = String(row.key || '');
+          const value = typeof row.value === 'string' ? row.value : JSON.stringify(row.value ?? '');
+          if (!key) continue;
+          await db.insert(storeSettings)
+            .values({ id: randomUUID(), key, value, updatedAt: new Date() })
+            .onConflictDoUpdate({ target: storeSettings.key, set: { value, updatedAt: new Date() } });
+          updated++;
+        }
+        setSetting('sync.last.settings.v1', JSON.stringify({ at: new Date().toISOString(), updated }));
+        setSetting('sync.last.error.v1', '');
+        return res.status(200).json({ updated });
       } catch (error) {
         return reportSyncFailure(res, error);
       }

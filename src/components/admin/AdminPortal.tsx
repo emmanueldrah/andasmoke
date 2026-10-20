@@ -223,6 +223,7 @@ export const AdminPortal: React.FC = () => {
     let backfillQueued = false;
     let lastCloudPull = 0;
     let lastProfilePull = 0;
+    let lastSettingsPull = 0;
     const fetchSync = async () => {
       if (!backfillQueued && !isCashier && localStorage.getItem('anda_cloud_auth_token')) {
         try {
@@ -248,6 +249,15 @@ export const AdminPortal: React.FC = () => {
         lastProfilePull = Date.now();
         if (active) await store.syncProfileFromCloud();
       }
+      if (localStorage.getItem('anda_cloud_auth_token') && Date.now() - lastSettingsPull >= 60_000) {
+        lastSettingsPull = Date.now();
+        try {
+          await api.post('/pos-sync?action=pull-settings', {});
+          if (active) await store.fetchSettings();
+        } catch {
+          // Settings sync is best-effort; next cycle will retry.
+        }
+      }
       try {
         const res = await api.get<{
           pendingCount: number;
@@ -262,7 +272,7 @@ export const AdminPortal: React.FC = () => {
     void fetchSync();
     const syncTimer = window.setInterval(fetchSync, 12_000);
     return () => { active = false; window.clearInterval(syncTimer); };
-  }, [isDesktopApp, isCashier, store.adminSession.isLoggedIn, store.fetchProducts, store.syncProfileFromCloud]);
+  }, [isDesktopApp, isCashier, store.adminSession.isLoggedIn, store.fetchProducts, store.fetchSettings, store.syncProfileFromCloud]);
 
   useEffect(() => {
     let active = true;
