@@ -1328,7 +1328,7 @@ return (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[620px] text-left text-sm">
                   <thead className="border-b border-[var(--border-color)] text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-subtle)]">
-                    <tr><th className="px-3 py-2">Sale</th><th className="px-3 py-2">Cashier</th><th className="px-3 py-2">Customer</th><th className="px-3 py-2">Payment</th><th className="px-3 py-2">Total</th><th className="px-3 py-2">When</th><th className="px-3 py-2 text-right">Receipt</th></tr>
+                    <tr><th className="px-3 py-2">Sale</th><th className="px-3 py-2">Cashier</th><th className="px-3 py-2">Customer</th><th className="px-3 py-2">Payment</th><th className="px-3 py-2">Total</th><th className="px-3 py-2">When</th><th className="px-3 py-2 text-right">Actions</th></tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-color)]">
                     {posHistory.map(order => (
@@ -1349,10 +1349,30 @@ return (
                         <td className="px-3 py-3 font-bold tabular-nums text-[var(--text-primary)]">{money(Number(order.total))}</td>
                         <td className="whitespace-nowrap px-3 py-3 text-xs tabular-nums text-[var(--text-muted)]">{new Date(order.createdAt).toLocaleString()}</td>
                         <td className="px-3 py-3 text-right">
-                          <button type="button" onClick={() => printReceipt(order)} aria-label={`Print receipt for ${order.orderNumber}`} className="lux-btn lux-btn--outline lux-btn--sm">
-                            <Printer className="h-3.5 w-3.5" />
-                            Print
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button type="button" onClick={() => printReceipt(order)} aria-label={`Print receipt for ${order.orderNumber}`} className="lux-btn lux-btn--outline lux-btn--sm">
+                              <Printer className="h-3.5 w-3.5" />
+                              Print
+                            </button>
+                            {['Super Admin', 'Store Manager'].includes(adminSession.adminRole) && (
+                              <button type="button" onClick={() => {
+                                if (window.confirm(`Delete sale ${order.orderNumber}? This cannot be undone.`)) {
+                                  void (async () => {
+                                    try {
+                                      await api.delete(`/orders?id=${encodeURIComponent(order.id)}`);
+                                      showAlert(`Sale ${order.orderNumber} deleted.`, 'success');
+                                      await fetchOrders();
+                                    } catch (error: any) {
+                                      showAlert(error?.data?.error || error?.message || 'Could not delete sale.', 'error');
+                                    }
+                                  })();
+                                }
+                              }} aria-label={`Delete sale ${order.orderNumber}`} className="lux-btn lux-btn--outline lux-btn--sm text-[var(--danger)]">
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Delete
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
