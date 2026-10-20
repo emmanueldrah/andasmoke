@@ -599,15 +599,19 @@ export function AdminPOSWorkspace() {
         ...tender,
         method: payment,
         allocated: totalMinor,
-        tendered: payment === 'cash-on-delivery' ? tenderedMinor : totalMinor,
+        tendered: payment === 'cash-on-delivery' ? (tenderedMinor || totalMinor) : totalMinor,
       })));
       return;
     }
-    // Changing the payment method switches the whole ticket to split entry.
-    if (!tenders.length) return;
-    setTenders([{ ...newTender(payment), allocated: totalMinor, tendered: payment === 'cash-on-delivery' ? tenderedMinor : totalMinor }]);
+    // No tenders yet: create the first one for the chosen payment method.
+    if (!tenders.length) {
+      setTenders([{ ...newTender(payment), allocated: totalMinor, tendered: payment === 'cash-on-delivery' ? (tenderedMinor || totalMinor) : totalMinor }]);
+      return;
+    }
+    // Multiple tenders: changing the payment method switches to a fresh single tender.
+    setTenders([{ ...newTender(payment), allocated: totalMinor, tendered: payment === 'cash-on-delivery' ? (tenderedMinor || totalMinor) : totalMinor }]);
     setSplitPayment(true);
-  }, [payment, totalMinor, tenderedMinor]);
+  }, [payment, totalMinor, tenderedMinor, tenders.length]);
 
   const allocatedMinor = tenders.reduce((sum, tender) => sum + Math.max(0, tender.allocated), 0);
   const totalTenderedMinor = tenders.reduce((sum, tender) => sum + Math.max(0, tender.tendered), 0);
