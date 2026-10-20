@@ -490,7 +490,7 @@ export function AdminPOSWorkspace() {
       @page{size:80mm auto;margin:0}
       *{box-sizing:border-box}
       html,body{margin:0;padding:0;background:#fff}
-      body{width:72mm;font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:11px;line-height:1.5;color:#111;padding:3mm 0}
+      body{width:72mm;margin:0 auto;font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:11px;line-height:1.5;color:#111;padding:3mm 4mm}
       
       /* Header */
       header{text-align:center;padding:2mm 0 4mm}
