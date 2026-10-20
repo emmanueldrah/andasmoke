@@ -2,7 +2,7 @@ import type { ApiRequest, ApiResponse } from './_http.js';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, getSetting, setSetting } from '../src/db/index.js';
-import { posSyncQueue, products, inventoryMovements, orders, adminSessions, storeSettings } from '../src/db/schema.js';
+import { posSyncQueue, products, inventoryMovements, orders, adminSessions, storeSettings, categories, brands, promoCodes } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 
 const { readStoredProductImage, saveProductImage } = require('../electron/media.cjs') as {
@@ -417,6 +417,183 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           updated++;
         }
         setSetting('sync.last.settings.v1', JSON.stringify({ at: new Date().toISOString(), updated }));
+        setSetting('sync.last.error.v1', '');
+        return res.status(200).json({ updated });
+      } catch (error) {
+        return reportSyncFailure(res, error);
+      }
+    }
+
+    // ─ Pull orders (sales history) from cloud ──────────────────────────
+    if (req.method === 'POST' && action === 'pull-orders') {
+      const auth = await requireAdmin(req, res, [...SYNCED_ADMIN_ROLES]);
+      if (!auth) return;
+      if (!cloudAuthorization) {
+        return res.status(409).json({ error: 'Sign in while online to connect this till to the website.' });
+      }
+      try {
+        const url = new URL('/api/orders', cloudOrigin);
+        url.searchParams.set('limit', '500');
+        const response = await fetch(url, {
+          headers: { Authorization: cloudAuthorization, Accept: 'application/json' },
+          signal: AbortSignal.timeout(15_000),
+        });
+        const body = await readCloudJson(response, 'Could not refresh sales history from the website.');
+        const remoteOrders = Array.isArray(body.orders) ? body.orders : [];
+        let updated = 0;
+        for (const remote of remoteOrders) {
+          const id = String(remote.id || '');
+          if (!id) continue;
+          const localOrder = {
+            id,
+            orderNumber: String(remote.orderNumber || ''),
+            createdAt: new Date(String(remote.createdAt || new Date())),
+            items: Array.isArray(remote.items) ? remote.items : [],
+            subtotal: Number(remote.subtotal || 0),
+            shippingFee: Number(remote.shippingFee || 0),
+            discount: Number(remote.discount || 0),
+            total: Number(remote.total || 0),
+            paymentMethod: String(remote.paymentMethod || 'cash-on-delivery'),
+            paymentStatus: 'paid',
+            orderSource: 'pos',
+            deliveryMethod: String(remote.deliveryMethod || 'store-pickup'),
+            shippingAddress: remote.shippingAddress || { fullName: 'Walk-in customer', phone: '', city: 'In-store', area: 'POS counter' },
+            status: String(remote.status || 'completed'),
+            appliedPromoCode: remote.appliedPromoCode ?? null,
+            paymentReference: remote.paymentReference ?? null,
+            paymentSenderPhone: remote.paymentSenderPhone ?? null,
+            cashierName: remote.cashierName ?? auth.adminName ?? null,
+          };
+          await db.insert(orders)
+            .values(localOrder)
+            .onConflictDoUpdate({ target: orders.id, set: localOrder });
+          updated++;
+        }
+        setSetting('sync.last.orders.v1', JSON.stringify({ at: new Date().toISOString(), updated }));
+        setSetting('sync.last.error.v1', '');
+        return res.status(200).json({ updated });
+      } catch (error) {
+        return reportSyncFailure(res, error);
+      }
+    }
+
+    //  Pull categories from cloud ──────────────────────────────────────
+    if (req.method === 'POST' && action === 'pull-categories') {
+      const auth = await requireAdmin(req, res, [...SYNCED_ADMIN_ROLES]);
+      if (!auth) return;
+      if (!cloudAuthorization) {
+        return res.status(409).json({ error: 'Sign in while online to connect this till to the website.' });
+      }
+      try {
+        const url = new URL('/api/categories', cloudOrigin);
+        const response = await fetch(url, {
+          headers: { Authorization: cloudAuthorization, Accept: 'application/json' },
+          signal: AbortSignal.timeout(10_000),
+        });
+        const body = await readCloudJson(response, 'Could not refresh categories from the website.');
+        const remoteCategories = Array.isArray(body) ? body : [];
+        let updated = 0;
+        for (const remote of remoteCategories) {
+          const id = String(remote.id || remote.slug || '');
+          if (!id) continue;
+          const localCategory = {
+            id,
+            slug: String(remote.slug || remote.id || ''),
+            name: String(remote.name || ''),
+            department: remote.department ?? null,
+            image: remote.image ?? null,
+            description: String(remote.description || ''),
+            isActive: Boolean(remote.isActive ?? true),
+            sortOrder: Number(remote.sortOrder ?? 0),
+          };
+          await db.insert(categories)
+            .values(localCategory)
+            .onConflictDoUpdate({ target: categories.id, set: localCategory });
+          updated++;
+        }
+        setSetting('sync.last.categories.v1', JSON.stringify({ at: new Date().toISOString(), updated }));
+        setSetting('sync.last.error.v1', '');
+        return res.status(200).json({ updated });
+      } catch (error) {
+        return reportSyncFailure(res, error);
+      }
+    }
+
+    // ─ Pull brands from cloud ──────────────────────────────────────────
+    if (req.method === 'POST' && action === 'pull-brands') {
+      const auth = await requireAdmin(req, res, [...SYNCED_ADMIN_ROLES]);
+      if (!auth) return;
+      if (!cloudAuthorization) {
+        return res.status(409).json({ error: 'Sign in while online to connect this till to the website.' });
+      }
+      try {
+        const url = new URL('/api/brands', cloudOrigin);
+        const response = await fetch(url, {
+          headers: { Authorization: cloudAuthorization, Accept: 'application/json' },
+          signal: AbortSignal.timeout(10_000),
+        });
+        const body = await readCloudJson(response, 'Could not refresh brands from the website.');
+        const remoteBrands = Array.isArray(body) ? body : [];
+        let updated = 0;
+        for (const remote of remoteBrands) {
+          const name = String(remote.name || '');
+          if (!name) continue;
+          await db.insert(brands)
+            .values({ name, isActive: Boolean(remote.isActive ?? true) })
+            .onConflictDoUpdate({ target: brands.name, set: { isActive: Boolean(remote.isActive ?? true) } });
+          updated++;
+        }
+        setSetting('sync.last.brands.v1', JSON.stringify({ at: new Date().toISOString(), updated }));
+        setSetting('sync.last.error.v1', '');
+        return res.status(200).json({ updated });
+      } catch (error) {
+        return reportSyncFailure(res, error);
+      }
+    }
+
+    // ─ Pull promo codes from cloud ────────────────────────────────────
+    if (req.method === 'POST' && action === 'pull-promos') {
+      const auth = await requireAdmin(req, res, [...SYNCED_ADMIN_ROLES]);
+      if (!auth) return;
+      if (!cloudAuthorization) {
+        return res.status(409).json({ error: 'Sign in while online to connect this till to the website.' });
+      }
+      try {
+        const url = new URL('/api/promo-codes', cloudOrigin);
+        const response = await fetch(url, {
+          headers: { Authorization: cloudAuthorization, Accept: 'application/json' },
+          signal: AbortSignal.timeout(10_000),
+        });
+        const body = await readCloudJson(response, 'Could not refresh promo codes from the website.');
+        const remotePromos = Array.isArray(body) ? body : [];
+        let updated = 0;
+        for (const remote of remotePromos) {
+          const id = String(remote.id || '');
+          const code = String(remote.code || '');
+          if (!id || !code) continue;
+          const localPromo = {
+            id,
+            code,
+            discountType: String(remote.discountType || 'percentage'),
+            discountValue: Number(remote.discountValue || 0),
+            discountValuePesewas: remote.discountValuePesewas != null ? Number(remote.discountValuePesewas) : null,
+            minSpend: remote.minSpend != null ? Number(remote.minSpend) : null,
+            minSpendPesewas: remote.minSpendPesewas != null ? Number(remote.minSpendPesewas) : null,
+            freeShipping: Boolean(remote.freeShipping ?? false),
+            isActive: Boolean(remote.isActive ?? true),
+            usageCount: Number(remote.usageCount || 0),
+            maxUsage: remote.maxUsage != null ? Number(remote.maxUsage) : null,
+            description: String(remote.description || ''),
+            expiryDate: remote.expiryDate ? new Date(String(remote.expiryDate)) : null,
+            createdAt: new Date(String(remote.createdAt || new Date())),
+            updatedAt: new Date(String(remote.updatedAt || new Date())),
+          };
+          await db.insert(promoCodes)
+            .values(localPromo)
+            .onConflictDoUpdate({ target: promoCodes.id, set: localPromo });
+          updated++;
+        }
+        setSetting('sync.last.promos.v1', JSON.stringify({ at: new Date().toISOString(), updated }));
         setSetting('sync.last.error.v1', '');
         return res.status(200).json({ updated });
       } catch (error) {

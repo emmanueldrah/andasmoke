@@ -224,6 +224,8 @@ export const AdminPortal: React.FC = () => {
     let lastCloudPull = 0;
     let lastProfilePull = 0;
     let lastSettingsPull = 0;
+    let lastOrdersPull = 0;
+    let lastCatalogPull = 0;
     const fetchSync = async () => {
       if (!backfillQueued && !isCashier && localStorage.getItem('anda_cloud_auth_token')) {
         try {
@@ -258,6 +260,34 @@ export const AdminPortal: React.FC = () => {
           // Settings sync is best-effort; next cycle will retry.
         }
       }
+      if (localStorage.getItem('anda_cloud_auth_token') && Date.now() - lastOrdersPull >= 60_000) {
+        lastOrdersPull = Date.now();
+        try {
+          await api.post('/pos-sync?action=pull-orders', {});
+          if (active) await store.fetchOrders();
+        } catch {
+          // Orders sync is best-effort; next cycle will retry.
+        }
+      }
+      if (localStorage.getItem('anda_cloud_auth_token') && Date.now() - lastCatalogPull >= 120_000) {
+        lastCatalogPull = Date.now();
+        try {
+          await Promise.allSettled([
+            api.post('/pos-sync?action=pull-categories', {}),
+            api.post('/pos-sync?action=pull-brands', {}),
+            api.post('/pos-sync?action=pull-promos', {}),
+          ]);
+          if (active) {
+            await Promise.allSettled([
+              store.fetchCategories(),
+              store.fetchBrands(),
+              store.fetchPromoCodes(),
+            ]);
+          }
+        } catch {
+          // Catalog sync is best-effort; next cycle will retry.
+        }
+      }
       try {
         const res = await api.get<{
           pendingCount: number;
@@ -272,7 +302,7 @@ export const AdminPortal: React.FC = () => {
     void fetchSync();
     const syncTimer = window.setInterval(fetchSync, 12_000);
     return () => { active = false; window.clearInterval(syncTimer); };
-  }, [isDesktopApp, isCashier, store.adminSession.isLoggedIn, store.fetchProducts, store.fetchSettings, store.syncProfileFromCloud]);
+  }, [isDesktopApp, isCashier, store.adminSession.isLoggedIn, store.fetchProducts, store.fetchSettings, store.fetchOrders, store.fetchCategories, store.fetchBrands, store.fetchPromoCodes, store.syncProfileFromCloud]);
 
   useEffect(() => {
     let active = true;
