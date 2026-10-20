@@ -434,9 +434,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const fetchSettings = useCallback(async () => {
     try {
-      const data = await api.get<StoreSettingsRow[]>('/settings');
-      if (data && Array.isArray(data) && data.length > 0) {
-        const settings = data.reduce((acc, s) => {
+      const data = await api.get<{ settings: StoreSettingsRow[]; hardware?: any }>('/settings');
+      const rows = data?.settings || (Array.isArray(data) ? data : []);
+      if (rows && Array.isArray(rows) && rows.length > 0) {
+        const settings = rows.reduce((acc, s) => {
           let value = s.value;
           if (typeof value === 'string') {
             try {
