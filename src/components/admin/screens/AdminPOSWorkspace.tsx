@@ -441,39 +441,49 @@ export function AdminPOSWorkspace() {
   ) => {
     const receipt = existingWindow || window.open('', '_blank');
     if (!receipt) return;
-    const lines = order.items.map(item => {
-      const unitPrice = Number(item.selectedVariant?.price ?? item.product.price);
-      const variant = item.selectedVariant?.name ? ` - ${escapeReceipt(item.selectedVariant.name)}` : '';
-      const priceType = item.priceType === 'wholesale' ? ' · Wholesale' : '';
-      return `<div class="item"><div class="desc">${escapeReceipt(item.product.name)}${variant}</div><div class="meta">${escapeReceipt(item.product.brand)} · ${item.quantity} x ${money(unitPrice)}${priceType} <b>${money(unitPrice * item.quantity)}</b></div></div>`;
-    }).join('');
+
     const storeName = escapeReceipt(storeSettings.storeName || 'ANDA C SMOKE HUB');
-    // The receipt always carries the current business line, even if the stored
-    // setting is blank or holds a number the store has since replaced.
     const storePhoneLine = escapeReceipt(resolveStorePhone(storeSettings.storePhone));
+    const tin = storeSettings.tin ? escapeReceipt(storeSettings.tin) : '';
+    const logoSrc = storeSettings.logo ? escapeReceipt(storeSettings.logo) : '';
     const servedBy = escapeReceipt(order.cashierName || serverName || 'Staff');
-    // Ghana-local, because the receipt has to agree with the day's report.
     const servedOn = new Date(order.createdAt);
     const servedDate = servedOn.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
     const servedTime = servedOn.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+    const buyerName = order.shippingAddress?.fullName ? escapeReceipt(order.shippingAddress.fullName) : '';
 
-    /* Payments, one line each. A split sale shows every tender and the change
-       given, so the customer can check the till's arithmetic at the counter. */
-    const tenderRows = (paymentSummary?.tenders?.length
-      ? paymentSummary.tenders
-      : [{ method: order.paymentMethod, amount: Number(order.total), tendered: Number(order.total), reference: order.paymentReference }]
-    ).map(tender => {
-      const label = tender.method === 'cash-on-delivery' ? 'Cash' : 'MTN Mobile Money';
-      const reference = tender.reference ? ` · ${escapeReceipt(tender.reference)}` : '';
-      return `<div class="row"><span>${label}${reference}</span><b>${money(Number(tender.amount))}</b></div>`;
+    /* Items as table rows: name, unit price, quantity, line amount.
+       The thermal roll is 72 mm printable, so the table uses fixed-width
+       columns that fit without wrapping on the narrow paper. */
+    const itemRows = order.items.map(item => {
+      const unitPrice = Number(item.selectedVariant?.price ?? item.product.price);
+      const variant = item.selectedVariant?.name ? ` (${escapeReceipt(item.selectedVariant.name)})` : '';
+      const name = `${escapeReceipt(item.product.name)}${variant}`;
+      return `<tr>
+        <td class="name">${name}</td>
+        <td class="num">${money(unitPrice)}</td>
+        <td class="num">${item.quantity}</td>
+        <td class="num">${money(unitPrice * item.quantity)}</td>
+      </tr>`;
     }).join('');
+
+    /* Payments: cash and MoMo shown separately, with the total tendered and
+       any change due. A split sale lists every tender so the till balances. */
+    const tenders = paymentSummary?.tenders?.length
+      ? paymentSummary.tenders
+      : [{ method: order.paymentMethod, amount: Number(order.total), tendered: Number(order.total), reference: order.paymentReference }];
+    const cashTenders = tenders.filter(t => t.method === 'cash-on-delivery');
+    const momoTenders = tenders.filter(t => t.method !== 'cash-on-delivery');
+    const totalPaid = tenders.reduce((sum, t) => sum + Number(t.amount), 0);
     const changeDue = Math.max(0, Number(paymentSummary?.change ?? 0));
-    const changeRow = changeDue > 0
-      ? `<div class="row change"><span>Change</span><b>${money(changeDue)}</b></div>`
-      : '';
-    const cashHandedOver = paymentSummary?.tenders?.some(t => t.method === 'cash-on-delivery' && t.tendered > t.amount)
-      ? `<div class="row"><span>Cash handed over</span><b>${money(paymentSummary.tenders.filter(t => t.method === 'cash-on-delivery').reduce((sum, t) => sum + Number(t.tendered), 0))}</b></div>`
-      : '';
+    const cashTotal = cashTenders.reduce((sum, t) => sum + Number(t.tendered), 0);
+    const cashReference = cashTenders.find(t => t.reference)?.reference;
+    const momoReference = momoTenders.find(t => t.reference)?.reference;
+
+    const paymentRows = [
+      cashTenders.length ? `<tr><td>Cash${cashReference ? ` <span class="ref">(${escapeReceipt(cashReference)})</span>` : ''}</td><td class="num">${money(cashTotal)}</td></tr>` : '',
+      momoTenders.length ? `<tr><td>MTN Mobile Money${momoReference ? ` <span class="ref">(${escapeReceipt(momoReference)})</span>` : ''}</td><td class="num">${money(momoTenders.reduce((s, t) => s + Number(t.amount), 0))}</td></tr>` : '',
+    ].filter(Boolean).join('');
 
     /* An 80 mm thermal roll: 72 mm printable, so the page is sized to the
        paper rather than to a sheet of A4. Width is fixed, height grows. */
@@ -482,40 +492,71 @@ export function AdminPOSWorkspace() {
       html,body{margin:0;padding:0;background:#fff}
       body{width:72mm;font-family:"Courier New",Courier,monospace;font-size:11px;line-height:1.45;color:#000;padding:4mm 0}
       header{text-align:center;border-bottom:1px dashed #000;padding-bottom:6px;margin-bottom:8px}
-      h1{font-size:15px;margin:0 0 3px;letter-spacing:.06em}
+      .logo{max-width:28mm;max-height:14mm;margin:0 auto 4px;display:block}
+      h1{font-size:14px;margin:0 0 2px;letter-spacing:.04em;text-transform:uppercase}
       p{margin:2px 0;font-size:10px}
-      .meta{font-size:10px;margin:1px 0}
+      .tin{font-size:10px;font-weight:700;margin:2px 0}
+      .meta-row{display:flex;justify-content:space-between;font-size:10px;margin:2px 0;gap:4px}
+      .meta-row span{overflow-wrap:anywhere}
       .rule{border-top:1px dashed #000;margin:6px 0}
-      .line{display:flex;justify-content:space-between;gap:4px;margin:3px 0}
-      .line span{flex:1 1 auto;overflow-wrap:anywhere}
-      .line b{flex:0 0 auto;font-weight:700;text-align:right}
-      .item{margin:4px 0}
-      .item .desc{font-size:11px}
-      .item .meta{font-size:10px;padding-left:2px}
-      .total{font-size:14px;font-weight:700;margin-top:4px}
-      .change{font-size:14px;font-weight:700;border-top:1px solid #000;margin-top:4px;padding-top:4px}
-      .served{font-size:10px;margin:2px 0}
+      table{width:100%;border-collapse:collapse;font-size:10px;margin:2px 0}
+      th{text-align:left;font-size:9px;text-transform:uppercase;border-bottom:1px solid #000;padding:2px 0;font-weight:700}
+      th.num{text-align:right}
+      td{padding:3px 0;vertical-align:top}
+      td.num{text-align:right;white-space:nowrap}
+      td.name{word-break:break-word}
+      .ref{font-size:9px;opacity:.7}
+      .totals{margin-top:4px}
+      .totals .row{display:flex;justify-content:space-between;gap:4px;margin:2px 0;font-size:11px}
+      .totals .row span{flex:1}
+      .totals .row b{flex:0 0 auto;text-align:right}
+      .grand{font-size:13px;font-weight:700;border-top:1px solid #000;margin-top:4px;padding-top:4px}
+      .paid{font-size:12px;font-weight:700;margin-top:2px}
+      .change{font-size:12px;font-weight:700;border-top:1px solid #000;margin-top:4px;padding-top:4px}
       .foot{text-align:center;font-size:10px;margin-top:10px;padding-top:6px;border-top:1px dashed #000}
+      .notice{font-size:9px;text-align:center;margin-top:6px;font-style:italic}
       button{width:100%;padding:10px;background:#000;color:#fff;border:0;font-family:inherit;font-size:12px;font-weight:700;margin-top:10px}
       @media print{button{display:none}}
     </style></head><body>
-      <header><h1>${storeName}</h1>
-      <p>${escapeReceipt(storeSettings.storeAddress || '')}</p>
-      <p>${storePhoneLine}${storeSettings.storeEmail ? ` · ${escapeReceipt(storeSettings.storeEmail)}` : ''}</p>
-      <p class="meta">Receipt ${escapeReceipt(order.orderNumber)}</p></header>
-      <div class="served">Served by <b>${servedBy}</b> · ${escapeReceipt(servedDate)} ${escapeReceipt(servedTime)}</div>
+      <header>
+        ${logoSrc ? `<img class="logo" src="${logoSrc}" alt="">` : ''}
+        <h1>${storeName}</h1>
+        <p>${escapeReceipt(storeSettings.storeAddress || '')}</p>
+        <p>${storePhoneLine}${storeSettings.storeEmail ? ` · ${escapeReceipt(storeSettings.storeEmail)}` : ''}</p>
+        ${tin ? `<p class="tin">TIN: ${tin}</p>` : ''}
+      </header>
+
+      <div class="meta-row"><span>Receipt #</span><b>${escapeReceipt(order.orderNumber)}</b></div>
+      <div class="meta-row"><span>Date</span><b>${escapeReceipt(servedDate)} ${escapeReceipt(servedTime)}</b></div>
+      <div class="meta-row"><span>Cashier</span><b>${servedBy}</b></div>
+      ${buyerName ? `<div class="meta-row"><span>Customer</span><b>${buyerName}</b></div>` : ''}
+
       <div class="rule"></div>
-      ${lines}
+
+      <table>
+        <thead><tr><th>Item</th><th class="num">Price</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+
       <div class="rule"></div>
-      <div class="line"><span>Subtotal</span><b>${money(Number(order.subtotal))}</b></div>
-      ${Number(order.discount) > 0 ? `<div class="line"><span>Discount${order.appliedPromoCode ? ` (${escapeReceipt(order.appliedPromoCode)})` : ''}</span><b>-${money(Number(order.discount))}</b></div>` : ''}
-      ${Number(order.shippingFee) > 0 ? `<div class="line"><span>Delivery</span><b>${money(Number(order.shippingFee))}</b></div>` : ''}
-      <div class="line total"><span>TOTAL</span><b>${money(Number(order.total))}</b></div>
+
+      <div class="totals">
+        <div class="row"><span>Subtotal</span><b>${money(Number(order.subtotal))}</b></div>
+        ${Number(order.discount) > 0 ? `<div class="row"><span>Discount${order.appliedPromoCode ? ` (${escapeReceipt(order.appliedPromoCode)})` : ''}</span><b>-${money(Number(order.discount))}</b></div>` : ''}
+        ${Number(order.shippingFee) > 0 ? `<div class="row"><span>Delivery</span><b>${money(Number(order.shippingFee))}</b></div>` : ''}
+        <div class="row grand"><span>PAYABLE</span><b>${money(Number(order.total))}</b></div>
+      </div>
+
       <div class="rule"></div>
-      ${tenderRows}
-      ${cashHandedOver}
-      ${changeRow}
-      <div class="foot">Thank you for shopping with ${storeName}<br>Served by ${servedBy}</div>
+
+      <div class="totals">
+        <table style="font-size:10px">${paymentRows}</table>
+        <div class="row paid"><span>Amount Paid</span><b>${money(totalPaid)}</b></div>
+        ${changeDue > 0 ? `<div class="row change"><span>Change</span><b>${money(changeDue)}</b></div>` : ''}
+      </div>
+
+      <div class="foot">Thank you for shopping with ${storeName}</div>
+      <p class="notice">Goods sold are not returnable.</p>
       <button onclick="window.print()">Print receipt</button>
     </body></html>`);
     receipt.document.close();

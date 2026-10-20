@@ -36,6 +36,10 @@ export interface StoreSettings {
   storeEmail: string;
   storePhone: string;
   storeAddress: string;
+  /** Tax Identification Number for receipts. */
+  tin?: string;
+  /** Logo URL or data URI for receipts. */
+  logo?: string;
 }
 
 export interface StoreSettingsRow {

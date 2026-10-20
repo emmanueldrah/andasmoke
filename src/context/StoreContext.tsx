@@ -102,6 +102,8 @@ const normalizeStoreSettings = (settings: Partial<StoreSettings>): Partial<Store
     storeEmail: settings.storeEmail?.trim() || '',
     storePhone: resolveStorePhone(settings.storePhone),
     storeAddress: settings.storeAddress?.trim() || DEFAULT_STORE_SETTINGS.storeAddress,
+    tin: settings.tin?.trim() || '',
+    logo: settings.logo?.trim() || '',
   };
 };
 

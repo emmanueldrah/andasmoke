@@ -7,7 +7,7 @@ import { normalizeHardwareSettings } from '../src/lib/hardware.js';
 import { requireAdmin } from './_auth.js';
 import handleAdminAccounts from './_admin-accounts.js';
 
-const receiptSettingKeys = ['storeName', 'storeEmail', 'storePhone', 'storeAddress'] as const;
+const receiptSettingKeys = ['storeName', 'storeEmail', 'storePhone', 'storeAddress', 'tin', 'logo'] as const;
 
 /** Where the till's hardware behaviour is stored. */
 const HARDWARE_KEY = 'hardware.settings';
@@ -61,7 +61,32 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (req.method !== 'GET') return res.status(405).json({ error: 'POS settings are read-only.' });
+  if (req.method !== 'GET') {
+    // Only managers may change store-level settings (name, TIN, logo, etc.).
+    const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager']);
+    if (!auth) return;
+    if (!['PUT', 'PATCH'].includes(req.method || '')) return res.status(405).json({ error: 'Method not allowed' });
+    try {
+      const updates = req.body?.settings as Partial<Record<string, unknown>> | undefined;
+      if (!updates || typeof updates !== 'object') return res.status(400).json({ error: 'Missing settings.' });
+      const allowed = ['storeName', 'storeEmail', 'storePhone', 'storeAddress', 'tin', 'logo'] as const;
+      for (const key of allowed) {
+        if (key in updates) {
+          const value = typeof updates[key] === 'string' ? (updates[key] as string).trim() : '';
+          setSetting(key, value);
+        }
+      }
+      // Return the full settings bundle so the client can refresh in place.
+      const rows = await db.select().from(storeSettings).where(inArray(storeSettings.key, [...allowed]));
+      const settings = rows.map(row => row.key === 'storePhone'
+        ? { ...row, value: resolveStorePhone(row.value) }
+        : row);
+      return res.status(200).json({ settings });
+    } catch (error) {
+      console.error('POS settings save error:', error);
+      return res.status(500).json({ error: 'Could not save store settings.' });
+    }
+  }
   const auth = await requireAdmin(req, res);
   if (!auth) return;
   res.setHeader('Cache-Control', 'private, no-store');

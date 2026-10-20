@@ -499,10 +499,31 @@ async function settingsHandler(req: ApiRequest, res: ApiResponse): Promise<unkno
     await setSetting('hardware.settings', JSON.stringify(cleaned));
     return res.status(200).json(cleaned);
   }
-  const auth = await requireCloudAdmin(req, res);
+  const auth = await requireCloudAdmin(req, res, req.method === 'GET' ? undefined : ['Super Admin', 'Store Manager']);
   if (!auth) return;
-  if (req.method !== 'GET') return res.status(405).json({ error: 'POS settings are read-only.' });
-  const { rows } = await getCloudPool().query('SELECT key, value FROM store_settings WHERE key = ANY($1::text[])', [['storeName','storeEmail','storePhone','storeAddress']]);
+  if (req.method !== 'GET') {
+    if (!['PUT', 'PATCH'].includes(req.method || '')) return res.status(405).json({ error: 'Method not allowed' });
+    const updates = req.body?.settings as Partial<Record<string, unknown>> | undefined;
+    if (!updates || typeof updates !== 'object') return res.status(400).json({ error: 'Missing settings.' });
+    const allowed = ['storeName', 'storeEmail', 'storePhone', 'storeAddress', 'tin', 'logo'];
+    try {
+      for (const key of allowed) {
+        if (key in updates) {
+          const value = typeof updates[key] === 'string' ? (updates[key] as string).trim() : '';
+          await pool.query(
+            `INSERT INTO store_settings(id,key,value,updated_at) VALUES($1,$2,$3,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()`,
+            [randomUUID(), key, value],
+          );
+        }
+      }
+      const { rows } = await pool.query('SELECT key, value FROM store_settings WHERE key = ANY($1::text[])', [allowed]);
+      return res.status(200).json({ settings: rows.map(fromDbRow) });
+    } catch (error) {
+      console.error('Cloud store settings save error:', error);
+      return res.status(500).json({ error: 'Could not save store settings.' });
+    }
+  }
+  const { rows } = await getCloudPool().query('SELECT key, value FROM store_settings WHERE key = ANY($1::text[])', [['storeName','storeEmail','storePhone','storeAddress','tin','logo']]);
   return res.status(200).json({ settings: rows.map(fromDbRow), hardware: normalizeHardwareSettings(JSON.parse(await getSetting('hardware.settings') || 'null')) });
 }
 

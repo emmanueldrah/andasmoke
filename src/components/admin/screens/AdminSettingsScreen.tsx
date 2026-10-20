@@ -3,6 +3,7 @@ import { MonitorCog, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../../../context/ThemeContext';
 import { AdminPageHeader } from '../components/AdminPrimitives';
 import { AdminMyProfilePanel } from '../components/AdminMyProfilePanel';
+import { AdminStoreSettingsPanel } from '../components/AdminStoreSettingsPanel';
 
 export function AdminSettingsScreen(): React.ReactElement {
   const { theme, setTheme } = useTheme();
@@ -10,6 +11,8 @@ export function AdminSettingsScreen(): React.ReactElement {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <AdminPageHeader description="Choose the display style for this device." />
+
+      <AdminStoreSettingsPanel />
 
       <section className="lux-card p-5 md:p-6">
         <div className="flex items-start gap-3">
