@@ -597,6 +597,7 @@ export function AdminPOSWorkspace() {
       </footer>
 
       <button onclick="window.print()">Print Receipt</button>
+      <script>window.addEventListener('load', function () { setTimeout(function () { window.focus(); window.print(); }, 300); });</script>
     </body></html>`);
     receipt.document.close();
   };
@@ -1302,7 +1303,27 @@ return (
           <section className="lux-card p-4 sm:p-5">
             {/* The shell's Refresh already pulls sales again, so the card does
                 not carry a second button that does the same thing. */}
-            <h2 className="brand-display text-lg font-semibold text-[var(--text-primary)]">Recent POS sales</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="brand-display text-lg font-semibold text-[var(--text-primary)]">Recent POS sales</h2>
+              {posHistory.length > 0 && ['Super Admin', 'Store Manager'].includes(adminSession.adminRole) && (
+                <button type="button" onClick={() => {
+                  if (window.confirm('Clear all sales history? This cannot be undone.')) {
+                    void (async () => {
+                      try {
+                        const result = await api.delete<{ deleted: number }>('/orders?action=clear-all');
+                        showAlert(`Cleared ${result.deleted} sale${result.deleted === 1 ? '' : 's'}.`, 'success');
+                        await fetchOrders();
+                      } catch (error: any) {
+                        showAlert(error?.data?.error || error?.message || 'Could not clear sales.', 'error');
+                      }
+                    })();
+                  }
+                }} className="lux-btn lux-btn--outline lux-btn--sm text-[var(--danger)]">
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Clear all
+                </button>
+              )}
+            </div>
             {posHistory.length ? (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[620px] text-left text-sm">
@@ -1759,9 +1780,28 @@ return (
                 <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] p-3">
                   <div className="mb-2 flex items-center justify-between">
                     <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Held sales</h3>
-                    <button type="button" onClick={() => setHeldSalesOpen(false)} aria-label="Close held sales" className="text-[var(--text-subtle)] hover:text-[var(--text-primary)]">
-                      <X className="h-3.5 w-3.5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {heldSales.length > 0 && ['Super Admin', 'Store Manager'].includes(adminSession.adminRole) && (
+                        <button type="button" onClick={() => {
+                          if (window.confirm('Clear all held tickets? This cannot be undone.')) {
+                            void (async () => {
+                              try {
+                                const result = await api.delete<{ deleted: number }>('/held-sales?action=clear-all');
+                                showAlert(`Cleared ${result.deleted} ticket${result.deleted === 1 ? '' : 's'}.`, 'success');
+                                await loadHeldSales();
+                              } catch (error: any) {
+                                showAlert(error?.data?.error || error?.message || 'Could not clear tickets.', 'error');
+                              }
+                            })();
+                          }
+                        }} className="text-[10px] font-bold text-[var(--danger)] hover:underline">
+                          Clear all
+                        </button>
+                      )}
+                      <button type="button" onClick={() => setHeldSalesOpen(false)} aria-label="Close held sales" className="text-[var(--text-subtle)] hover:text-[var(--text-primary)]">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                   {heldSales.length === 0 ? (
                     <p className="py-3 text-center text-[11px] text-[var(--text-subtle)]">No tickets are on hold.</p>

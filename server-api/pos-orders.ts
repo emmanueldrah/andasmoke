@@ -503,6 +503,41 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       return res.status(201).json({ voided: true, ...voided });
     }
 
+    if (req.method === 'DELETE') {
+      const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager']);
+      if (!auth) return;
+      const action = req.query.action;
+      if (action === 'clear-all') {
+        const allOrders = db.select({ id: orders.id }).from(orders).where(eq(orders.orderSource, 'pos')).all();
+        if (!allOrders.length) return res.status(200).json({ deleted: 0 });
+        const orderIds = allOrders.map(o => o.id);
+        db.transaction(tx => {
+          tx.delete(posPayments).where(inArray(posPayments.orderId, orderIds)).run();
+          tx.delete(inventoryMovements).where(inArray(inventoryMovements.orderId, orderIds)).run();
+          tx.delete(orders).where(inArray(orders.id, orderIds)).run();
+          tx.insert(auditLogs).values({
+            action: 'POS_SALES_CLEARED', entityType: 'order', entityId: 'all', actorName: auth.adminName,
+            metadata: { count: orderIds.length, adminId: auth.sub },
+          }).run();
+        });
+        return res.status(200).json({ deleted: orderIds.length });
+      }
+      const id = req.query.id;
+      if (!id || typeof id !== 'string') return res.status(400).json({ error: 'An order ID is required.' });
+      const [order] = db.select().from(orders).where(eq(orders.id, id)).limit(1).all();
+      if (!order) return res.status(404).json({ error: 'Order not found.' });
+      db.transaction(tx => {
+        tx.delete(posPayments).where(eq(posPayments.orderId, id)).run();
+        tx.delete(inventoryMovements).where(eq(inventoryMovements.orderId, id)).run();
+        tx.delete(orders).where(eq(orders.id, id)).run();
+        tx.insert(auditLogs).values({
+          action: 'POS_SALE_DELETED', entityType: 'order', entityId: id, actorName: auth.adminName,
+          metadata: { orderNumber: order.orderNumber, adminId: auth.sub },
+        }).run();
+      });
+      return res.status(200).json({ deleted: 1, order });
+    }
+
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error: any) {
     console.error('POS orders API error:', error);

@@ -532,6 +532,35 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
   const pool = getCloudPool();
   const auth = await requireCloudAdmin(req, res, ROLES);
   if (!auth) return;
+  if (req.method === 'DELETE') {
+    if (!['Super Admin', 'Store Manager'].includes(auth.adminRole)) return res.status(403).json({ error: 'Only a manager can delete sales.' });
+    const action = getQuery(req.query, 'action');
+    if (action === 'clear-all') {
+      const deleted = await withCloudTransaction(async client => {
+        const { rows: orders } = await client.query('SELECT id FROM orders WHERE order_source = \'pos\'');
+        if (!orders.length) return { count: 0 };
+        const orderIds = orders.map((o: PgRow) => o.id);
+        await client.query('DELETE FROM pos_payments WHERE order_id = ANY($1::text[])', [orderIds]);
+        await client.query('DELETE FROM inventory_movements WHERE order_id = ANY($1::text[])', [orderIds]);
+        const { rowCount } = await client.query('DELETE FROM orders WHERE id = ANY($1::text[])', [orderIds]);
+        await client.query('INSERT INTO audit_logs(id,action,entity_type,entity_id,actor_name,metadata) VALUES($1,$2,$3,$4,$5,$6::jsonb)', [randomUUID(), 'POS_SALES_CLEARED', 'order', 'all', auth.adminName, JSON.stringify({ count: rowCount, adminId: auth.sub })]);
+        return { count: rowCount || 0 };
+      });
+      return res.status(200).json({ deleted: deleted.count });
+    }
+    const id = getQuery(req.query, 'id');
+    if (!id) return res.status(400).json({ error: 'An order ID is required.' });
+    const deleted = await withCloudTransaction(async client => {
+      const { rows } = await client.query('SELECT * FROM orders WHERE id = $1 FOR UPDATE', [id]);
+      if (!rows[0]) throw Object.assign(new Error('Order not found.'), { statusCode: 404 });
+      await client.query('DELETE FROM pos_payments WHERE order_id = $1', [id]);
+      await client.query('DELETE FROM inventory_movements WHERE order_id = $1', [id]);
+      await client.query('DELETE FROM orders WHERE id = $1', [id]);
+      await client.query('INSERT INTO audit_logs(id,action,entity_type,entity_id,actor_name,metadata) VALUES($1,$2,$3,$4,$5,$6::jsonb)', [randomUUID(), 'POS_SALE_DELETED', 'order', id, auth.adminName, JSON.stringify({ orderNumber: rows[0].order_number, adminId: auth.sub })]);
+      return rows[0];
+    });
+    return res.status(200).json({ deleted: 1, order: fromDbRow(deleted) });
+  }
   if (req.method === 'GET') {
     const limit = Math.min(Math.max(Number(getQuery(req.query, 'limit')) || 50, 1), 100);
     const id = getQuery(req.query, 'id');
@@ -889,6 +918,13 @@ async function heldSalesHandler(req: ApiRequest, res: ApiResponse): Promise<unkn
     });
   }
   if (req.method === 'DELETE') {
+    if (!['Super Admin', 'Store Manager'].includes(auth.adminRole)) return res.status(403).json({ error: 'Only a manager can clear held tickets.' });
+    const action = getQuery(req.query, 'action');
+    if (action === 'clear-all') {
+      const { rowCount } = await pool.query('DELETE FROM held_sales');
+      await recordCloudAudit(auth, 'POS_HELD_SALES_CLEARED', 'held_sale', 'all', { count: rowCount || 0 });
+      return res.status(200).json({ deleted: rowCount || 0 });
+    }
     const id = getQuery(req.query, 'id');
     if (!id) return res.status(400).json({ error: 'Which held sale should be discarded?' });
     const { rows } = await pool.query('DELETE FROM held_sales WHERE id=$1 RETURNING id', [id]);

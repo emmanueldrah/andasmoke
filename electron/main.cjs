@@ -63,7 +63,10 @@ app.whenReady().then(async () => {
   const origin = DEV_URL ? DEV_URL : await boot();
   if (DEV_URL) console.log('[pos] dev mode: loading ' + DEV_URL + ' (edit src/ and the window hot-reloads)');
 
-  const { BrowserWindow, ipcMain } = require('electron');
+  const { BrowserWindow, ipcMain, Menu } = require('electron');
+
+  // Remove the default menu bar (File, Edit, View, Window) for a cleaner POS interface.
+  Menu.setApplicationMenu(null);
 
   // Receipt printing goes through the main process; the renderer is sandboxed.
   ipcMain.handle('pos:print', (event) => new Promise((resolve, reject) => {

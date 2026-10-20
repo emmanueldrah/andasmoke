@@ -100,6 +100,22 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     // ── Discard: throw the hold away without ringing it up ─────────────────
     if (req.method === 'DELETE') {
+      const action = req.query.action;
+      if (action === 'clear-all') {
+        const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager']);
+        if (!auth) return;
+        const allHeld = await db.select({ id: heldSales.id }).from(heldSales);
+        if (!allHeld.length) return res.status(200).json({ deleted: 0 });
+        await db.delete(heldSales);
+        await db.insert(auditLogs).values({
+          action: 'POS_HELD_SALES_CLEARED',
+          entityType: 'held_sale',
+          entityId: 'all',
+          actorName: auth.adminName,
+          metadata: { adminId: auth.sub, count: allHeld.length },
+        });
+        return res.status(200).json({ deleted: allHeld.length });
+      }
       const id = typeof req.query.id === 'string' ? req.query.id : '';
       if (!id) return res.status(400).json({ error: 'Which held sale should be discarded?' });
 
