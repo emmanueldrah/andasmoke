@@ -64,11 +64,11 @@ export function AdminAboutScreen(): React.ReactElement {
       <AdminPageHeader description="Application information, developer contact details, and software updates." />
 
       <section className="flex flex-col gap-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-5 sm:flex-row sm:items-center md:p-6">
-        <BrandMark name="Anda C Smoke Hub POS" className="h-14 w-14 shrink-0 rounded-xl text-sm" />
+        <BrandMark name="SAD POS" className="h-14 w-14 shrink-0 rounded-xl text-sm" />
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--text-subtle)]">Point of sale</p>
-          <h2 className="brand-display mt-1 text-xl font-semibold text-[var(--text-primary)]">Anda C Smoke Hub POS</h2>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">{appMetadata.description}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--text-subtle)]">Point of sale system</p>
+          <h2 className="brand-display mt-1 text-xl font-semibold text-[var(--text-primary)]">SAD POS</h2>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--text-muted)]">A modern point of sale built for retail businesses. Manage your till, inventory, staff, and sales reporting from one place, on desktop or web.</p>
         </div>
       </section>
 
@@ -88,8 +88,12 @@ export function AdminAboutScreen(): React.ReactElement {
               <dd className="text-sm font-semibold text-[var(--text-primary)]">Windows desktop &amp; web</dd>
             </div>
             <div className="flex items-start justify-between gap-4 py-3">
-              <dt className="shrink-0 text-sm text-[var(--text-muted)]">Purpose</dt>
-              <dd className="max-w-xs text-right text-sm text-[var(--text-primary)]">Till, inventory, team and sales reporting</dd>
+              <dt className="shrink-0 text-sm text-[var(--text-muted)]">Built with</dt>
+              <dd className="max-w-xs text-right text-sm text-[var(--text-primary)]">React, TypeScript, Electron, PostgreSQL</dd>
+            </div>
+            <div className="flex items-start justify-between gap-4 py-3">
+              <dt className="shrink-0 text-sm text-[var(--text-muted)]">Features</dt>
+              <dd className="max-w-xs text-right text-sm text-[var(--text-primary)]">POS till, inventory management, staff accounts, sales reports, barcode scanning, receipt printing</dd>
             </div>
           </dl>
         </div>
@@ -101,6 +105,7 @@ export function AdminAboutScreen(): React.ReactElement {
           </div>
           <div>
             <p className="text-base font-bold text-[var(--text-primary)]">Success Above Dreams (SAD)</p>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">Software and web developer building tools for small businesses.</p>
           </div>
           <dl className="space-y-3 border-t border-[var(--border-color)] pt-4 text-sm">
             <div className="flex items-center gap-2 text-[var(--text-muted)]">
