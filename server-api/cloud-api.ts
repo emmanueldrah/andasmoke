@@ -506,6 +506,7 @@ async function settingsHandler(req: ApiRequest, res: ApiResponse): Promise<unkno
     const updates = req.body?.settings as Partial<Record<string, unknown>> | undefined;
     if (!updates || typeof updates !== 'object') return res.status(400).json({ error: 'Missing settings.' });
     const allowed = ['storeName', 'storeEmail', 'storePhone', 'storeAddress', 'tin', 'logo'];
+    const pool = getCloudPool();
     try {
       for (const key of allowed) {
         if (key in updates) {
@@ -1070,7 +1071,7 @@ export default async function cloudApi(req: ApiRequest, res: ApiResponse): Promi
       return await catalogHandler(req, res);
     }
     if (resource === 'admin-accounts') return await adminAccountsHandler(req, res, id || '');
-    if (resource === 'settings') return await settingsHandler(req, res);
+    if (resource === 'settings' || resource === 'pos-settings') return await settingsHandler(req, res);
     if (resource === 'orders') return await ordersHandler(req, res);
     if (resource === 'reports') return await reportsHandler(req, res);
     if (resource === 'held-sales') return await heldSalesHandler(req, res);
