@@ -459,11 +459,10 @@ export function AdminPOSWorkspace() {
       const unitPrice = Number(item.selectedVariant?.price ?? item.product.price);
       const variant = item.selectedVariant?.name ? ` (${escapeReceipt(item.selectedVariant.name)})` : '';
       const name = `${escapeReceipt(item.product.name)}${variant}`;
+      const lineTotal = money(unitPrice * item.quantity);
       return `<tr>
-        <td class="name">${name}</td>
-        <td class="num">${money(unitPrice)}</td>
-        <td class="num">${item.quantity}</td>
-        <td class="num">${money(unitPrice * item.quantity)}</td>
+        <td class="name">${name}<br><span class="qty">${item.quantity} × ${money(unitPrice)}</span></td>
+        <td class="amount">${lineTotal}</td>
       </tr>`;
     }).join('');
 
@@ -481,83 +480,123 @@ export function AdminPOSWorkspace() {
     const momoReference = momoTenders.find(t => t.reference)?.reference;
 
     const paymentRows = [
-      cashTenders.length ? `<tr><td>Cash${cashReference ? ` <span class="ref">(${escapeReceipt(cashReference)})</span>` : ''}</td><td class="num">${money(cashTotal)}</td></tr>` : '',
-      momoTenders.length ? `<tr><td>MTN Mobile Money${momoReference ? ` <span class="ref">(${escapeReceipt(momoReference)})</span>` : ''}</td><td class="num">${money(momoTenders.reduce((s, t) => s + Number(t.amount), 0))}</td></tr>` : '',
+      cashTenders.length ? `<div class="pay-row"><span>Cash${cashReference ? `<em>${escapeReceipt(cashReference)}</em>` : ''}</span><b>${money(cashTotal)}</b></div>` : '',
+      momoTenders.length ? `<div class="pay-row"><span>MTN MoMo${momoReference ? `<em>${escapeReceipt(momoReference)}</em>` : ''}</span><b>${money(momoTenders.reduce((s, t) => s + Number(t.amount), 0))}</b></div>` : '',
     ].filter(Boolean).join('');
 
     /* An 80 mm thermal roll: 72 mm printable, so the page is sized to the
        paper rather than to a sheet of A4. Width is fixed, height grows. */
     receipt.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Receipt ${escapeReceipt(order.orderNumber)}</title><style>
       @page{size:80mm auto;margin:0}
+      *{box-sizing:border-box}
       html,body{margin:0;padding:0;background:#fff}
-      body{width:72mm;font-family:"Courier New",Courier,monospace;font-size:11px;line-height:1.45;color:#000;padding:4mm 0}
-      header{text-align:center;border-bottom:1px dashed #000;padding-bottom:6px;margin-bottom:8px}
-      .logo{max-width:28mm;max-height:14mm;margin:0 auto 4px;display:block}
-      h1{font-size:14px;margin:0 0 2px;letter-spacing:.04em;text-transform:uppercase}
-      p{margin:2px 0;font-size:10px}
-      .tin{font-size:10px;font-weight:700;margin:2px 0}
-      .meta-row{display:flex;justify-content:space-between;font-size:10px;margin:2px 0;gap:4px}
-      .meta-row span{overflow-wrap:anywhere}
-      .rule{border-top:1px dashed #000;margin:6px 0}
-      table{width:100%;border-collapse:collapse;font-size:10px;margin:2px 0}
-      th{text-align:left;font-size:9px;text-transform:uppercase;border-bottom:1px solid #000;padding:2px 0;font-weight:700}
-      th.num{text-align:right}
-      td{padding:3px 0;vertical-align:top}
-      td.num{text-align:right;white-space:nowrap}
-      td.name{word-break:break-word}
-      .ref{font-size:9px;opacity:.7}
-      .totals{margin-top:4px}
-      .totals .row{display:flex;justify-content:space-between;gap:4px;margin:2px 0;font-size:11px}
-      .totals .row span{flex:1}
-      .totals .row b{flex:0 0 auto;text-align:right}
-      .grand{font-size:13px;font-weight:700;border-top:1px solid #000;margin-top:4px;padding-top:4px}
-      .paid{font-size:12px;font-weight:700;margin-top:2px}
-      .change{font-size:12px;font-weight:700;border-top:1px solid #000;margin-top:4px;padding-top:4px}
-      .foot{text-align:center;font-size:10px;margin-top:10px;padding-top:6px;border-top:1px dashed #000}
-      .notice{font-size:9px;text-align:center;margin-top:6px;font-style:italic}
-      button{width:100%;padding:10px;background:#000;color:#fff;border:0;font-family:inherit;font-size:12px;font-weight:700;margin-top:10px}
+      body{width:72mm;font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:11px;line-height:1.5;color:#111;padding:3mm 0}
+      
+      /* Header */
+      header{text-align:center;padding:2mm 0 4mm}
+      .logo{max-width:24mm;max-height:12mm;margin:0 auto 3mm;display:block}
+      h1{font-size:15px;font-weight:800;margin:0 0 1mm;letter-spacing:.5px;text-transform:uppercase}
+      .tagline{font-size:9px;color:#666;margin:0 0 2mm;letter-spacing:.3px}
+      .contact{font-size:10px;color:#444;margin:1mm 0}
+      .tin{font-size:9px;font-weight:600;color:#333;margin:1mm 0;padding:1mm 2mm;background:#f5f5f5;border-radius:2px;display:inline-block}
+      
+      /* Dividers */
+      .divider{border:none;border-top:1px dashed #ccc;margin:3mm 0}
+      .divider-thick{border:none;border-top:2px solid #111;margin:3mm 0}
+      
+      /* Meta info */
+      .meta{margin:2mm 0}
+      .meta-row{display:flex;justify-content:space-between;font-size:10px;margin:1.5mm 0;gap:2mm}
+      .meta-row .label{color:#666}
+      .meta-row .value{font-weight:600;color:#111;text-align:right}
+      .order-num{font-family:"SF Mono",Monaco,"Cascadia Code",monospace;font-size:11px;font-weight:700;letter-spacing:.5px}
+      
+      /* Items table */
+      .items{margin:2mm 0}
+      .item-row{display:flex;justify-content:space-between;align-items:flex-start;margin:2mm 0;gap:2mm;padding-bottom:2mm;border-bottom:1px dotted #e5e5e5}
+      .item-row:last-child{border-bottom:none}
+      .item-name{flex:1;font-size:11px;font-weight:500;color:#111;line-height:1.4}
+      .item-qty{font-size:9px;color:#666;margin-top:0.5mm}
+      .item-amount{font-size:11px;font-weight:600;color:#111;text-align:right;white-space:nowrap}
+      
+      /* Totals */
+      .totals{margin:2mm 0}
+      .total-row{display:flex;justify-content:space-between;font-size:11px;margin:1.5mm 0;gap:2mm}
+      .total-row .label{color:#444}
+      .total-row .value{font-weight:500;color:#111;text-align:right}
+      .total-row.discount .value{color:#059669}
+      .grand-total{display:flex;justify-content:space-between;font-size:14px;font-weight:800;margin:3mm 0 2mm;padding-top:2mm;border-top:2px solid #111;gap:2mm}
+      .grand-total .label{color:#111}
+      .grand-total .value{color:#111;text-align:right}
+      
+      /* Payment */
+      .payment{margin:2mm 0;padding:2mm;background:#fafafa;border-radius:3mm}
+      .pay-row{display:flex;justify-content:space-between;font-size:10px;margin:1.5mm 0;gap:2mm}
+      .pay-row span{color:#444}
+      .pay-row em{font-size:8px;color:#888;font-style:normal;margin-left:1mm}
+      .pay-row b{font-weight:600;color:#111;text-align:right}
+      .amount-paid{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin:2mm 0 1mm;padding-top:1.5mm;border-top:1px solid #ddd;gap:2mm}
+      .change-due{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#059669;margin:1.5mm 0 0;padding-top:1.5mm;border-top:1px solid #059669;gap:2mm}
+      
+      /* Footer */
+      footer{text-align:center;margin-top:4mm;padding-top:3mm;border-top:1px dashed #ccc}
+      .thanks{font-size:11px;font-weight:600;color:#111;margin:0 0 1mm}
+      .notice{font-size:9px;color:#666;font-style:italic;margin:2mm 0}
+      .barcode{font-family:"SF Mono",Monaco,monospace;font-size:10px;letter-spacing:1px;color:#999;margin-top:2mm}
+      
+      /* Print button */
+      button{width:100%;padding:3mm;background:#111;color:#fff;border:0;font-family:inherit;font-size:12px;font-weight:600;margin-top:4mm;cursor:pointer;border-radius:2mm}
+      button:hover{background:#333}
       @media print{button{display:none}}
     </style></head><body>
       <header>
         ${logoSrc ? `<img class="logo" src="${logoSrc}" alt="">` : ''}
         <h1>${storeName}</h1>
-        <p>${escapeReceipt(storeSettings.storeAddress || '')}</p>
-        <p>${storePhoneLine}${storeSettings.storeEmail ? ` · ${escapeReceipt(storeSettings.storeEmail)}` : ''}</p>
-        ${tin ? `<p class="tin">TIN: ${tin}</p>` : ''}
+        <p class="tagline">Your trusted retail partner</p>
+        <p class="contact">${escapeReceipt(storeSettings.storeAddress || '')}</p>
+        <p class="contact">${storePhoneLine}${storeSettings.storeEmail ? ` · ${escapeReceipt(storeSettings.storeEmail)}` : ''}</p>
+        ${tin ? `<div><span class="tin">TIN: ${tin}</span></div>` : ''}
       </header>
 
-      <div class="meta-row"><span>Receipt #</span><b>${escapeReceipt(order.orderNumber)}</b></div>
-      <div class="meta-row"><span>Date</span><b>${escapeReceipt(servedDate)} ${escapeReceipt(servedTime)}</b></div>
-      <div class="meta-row"><span>Cashier</span><b>${servedBy}</b></div>
-      ${buyerName ? `<div class="meta-row"><span>Customer</span><b>${buyerName}</b></div>` : ''}
+      <div class="divider-thick"></div>
 
-      <div class="rule"></div>
-
-      <table>
-        <thead><tr><th>Item</th><th class="num">Price</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-
-      <div class="rule"></div>
-
-      <div class="totals">
-        <div class="row"><span>Subtotal</span><b>${money(Number(order.subtotal))}</b></div>
-        ${Number(order.discount) > 0 ? `<div class="row"><span>Discount${order.appliedPromoCode ? ` (${escapeReceipt(order.appliedPromoCode)})` : ''}</span><b>-${money(Number(order.discount))}</b></div>` : ''}
-        ${Number(order.shippingFee) > 0 ? `<div class="row"><span>Delivery</span><b>${money(Number(order.shippingFee))}</b></div>` : ''}
-        <div class="row grand"><span>PAYABLE</span><b>${money(Number(order.total))}</b></div>
+      <div class="meta">
+        <div class="meta-row"><span class="label">Receipt No.</span><span class="value order-num">${escapeReceipt(order.orderNumber)}</span></div>
+        <div class="meta-row"><span class="label">Date & Time</span><span class="value">${escapeReceipt(servedDate)} · ${escapeReceipt(servedTime)}</span></div>
+        <div class="meta-row"><span class="label">Cashier</span><span class="value">${servedBy}</span></div>
+        ${buyerName ? `<div class="meta-row"><span class="label">Customer</span><span class="value">${buyerName}</span></div>` : ''}
       </div>
 
-      <div class="rule"></div>
+      <div class="divider"></div>
 
-      <div class="totals">
-        <table style="font-size:10px">${paymentRows}</table>
-        <div class="row paid"><span>Amount Paid</span><b>${money(totalPaid)}</b></div>
-        ${changeDue > 0 ? `<div class="row change"><span>Change</span><b>${money(changeDue)}</b></div>` : ''}
+      <div class="items">
+        ${itemRows}
       </div>
 
-      <div class="foot">Thank you for shopping with ${storeName}</div>
-      <p class="notice">Goods sold are not returnable.</p>
-      <button onclick="window.print()">Print receipt</button>
+      <div class="divider"></div>
+
+      <div class="totals">
+        <div class="total-row"><span class="label">Subtotal</span><span class="value">${money(Number(order.subtotal))}</span></div>
+        ${Number(order.discount) > 0 ? `<div class="total-row discount"><span class="label">Discount${order.appliedPromoCode ? ` (${escapeReceipt(order.appliedPromoCode)})` : ''}</span><span class="value">-${money(Number(order.discount))}</span></div>` : ''}
+        ${Number(order.shippingFee) > 0 ? `<div class="total-row"><span class="label">Delivery Fee</span><span class="value">${money(Number(order.shippingFee))}</span></div>` : ''}
+        <div class="grand-total"><span class="label">TOTAL</span><span class="value">${money(Number(order.total))}</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="payment">
+        ${paymentRows}
+        <div class="amount-paid"><span>Amount Paid</span><span>${money(totalPaid)}</span></div>
+        ${changeDue > 0 ? `<div class="change-due"><span>Change Due</span><span>${money(changeDue)}</span></div>` : ''}
+      </div>
+
+      <footer>
+        <p class="thanks">Thank you for your purchase!</p>
+        <p class="notice">Goods sold are not returnable.</p>
+        <div class="barcode">${escapeReceipt(order.orderNumber)}</div>
+      </footer>
+
+      <button onclick="window.print()">Print Receipt</button>
     </body></html>`);
     receipt.document.close();
   };
