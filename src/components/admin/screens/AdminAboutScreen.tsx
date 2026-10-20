@@ -6,25 +6,78 @@ import { AdminPageHeader } from '../components/AdminPrimitives';
 
 type UpdateStatus = 'idle' | 'checking' | 'downloading' | 'ready' | 'current' | 'unsupported' | 'error';
 
+const UPDATE_MANIFEST_URL = '/updates/win/latest.yml';
+
+/** Parses `version: 1.2.3` from the electron-updater latest.yml manifest. */
+const parseManifestVersion = (text: string): string | null => {
+  const match = text.match(/^version:\s*(.+)$/m);
+  return match ? match[1].trim() : null;
+};
+
 export function AdminAboutScreen(): React.ReactElement {
   const [status, setStatus] = useState<UpdateStatus>('idle');
   const [updateVersion, setUpdateVersion] = useState('');
+  const [latestVersion, setLatestVersion] = useState(appMetadata.version);
   const bridge = window.andaPos;
 
+  // On mount, find out what the latest released version is. Desktop asks the
+  // auto-updater; web fetches the manifest directly so the number is never
+  // stale between releases.
   useEffect(() => {
-    if (!bridge) return;
-    const offAvailable = bridge.onUpdateAvailable(info => {
-      setUpdateVersion(info?.version || '');
-      setStatus(current => current === 'ready' ? current : 'downloading');
-    });
-    const offDownloaded = bridge.onUpdateDownloaded(info => {
-      setUpdateVersion(info?.version || '');
-      setStatus('ready');
-    });
-    return () => {
-      offAvailable();
-      offDownloaded();
-    };
+    let cancelled = false;
+    if (bridge) {
+      const offAvailable = bridge.onUpdateAvailable(info => {
+        const v = info?.version || '';
+        if (v) setLatestVersion(v);
+        setUpdateVersion(v);
+        setStatus(current => current === 'ready' ? current : 'downloading');
+      });
+      const offDownloaded = bridge.onUpdateDownloaded(info => {
+        const v = info?.version || '';
+        if (v) setLatestVersion(v);
+        setUpdateVersion(v);
+        setStatus('ready');
+      });
+      // Kick off a check so the latest version shows even before the user
+      // clicks the button.
+      void (async () => {
+        setStatus('checking');
+        try {
+          const result = await bridge.checkForUpdates();
+          if (cancelled) return;
+          if (!result.supported) {
+            setStatus('unsupported');
+          } else if (result.available) {
+            const v = result.version || '';
+            if (v) setLatestVersion(v);
+            setUpdateVersion(v);
+            setStatus('downloading');
+          } else {
+            setStatus('current');
+          }
+        } catch {
+          if (!cancelled) setStatus('error');
+        }
+      })();
+      return () => { cancelled = true; offAvailable(); offDownloaded(); };
+    }
+    // Web path: read the manifest so the version number reflects the latest
+    // release even when the user has not yet refreshed the desktop installer.
+    void (async () => {
+      setStatus('checking');
+      try {
+        const res = await fetch(UPDATE_MANIFEST_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('manifest unavailable');
+        const text = await res.text();
+        const v = parseManifestVersion(text);
+        if (cancelled) return;
+        if (v) setLatestVersion(v);
+        setStatus(v && v !== appMetadata.version ? 'downloading' : 'current');
+      } catch {
+        if (!cancelled) setStatus('unsupported');
+      }
+    })();
+    return () => { cancelled = true; };
   }, [bridge]);
 
   const checkForUpdates = async () => {
@@ -38,7 +91,9 @@ export function AdminAboutScreen(): React.ReactElement {
       if (!result.supported) {
         setStatus('unsupported');
       } else if (result.available) {
-        setUpdateVersion(result.version || '');
+        const v = result.version || '';
+        if (v) setLatestVersion(v);
+        setUpdateVersion(v);
         setStatus('downloading');
       } else {
         setUpdateVersion('');
@@ -49,11 +104,13 @@ export function AdminAboutScreen(): React.ReactElement {
     }
   };
 
+  const isOutdated = latestVersion !== appMetadata.version;
+
   const updateMessage: Record<UpdateStatus, string> = {
-    idle: 'Check for the latest version of Anda C Smoke Hub POS.',
+    idle: 'Check for the latest version of SAD POS.',
     checking: 'Checking the update service…',
-    downloading: `Version ${updateVersion || 'new'} is available and downloading in the background.`,
-    ready: `Version ${updateVersion || 'new'} is downloaded and ready to install.`,
+    downloading: `Version ${updateVersion || latestVersion} is available and downloading in the background.`,
+    ready: `Version ${updateVersion || latestVersion} is downloaded and ready to install.`,
     current: 'You are using the latest available version.',
     unsupported: 'Update checks are available in the installed desktop app.',
     error: 'The update check could not be completed. Check your connection and try again.',
@@ -81,7 +138,16 @@ export function AdminAboutScreen(): React.ReactElement {
           <dl className="divide-y divide-[var(--border-color)]">
             <div className="flex items-center justify-between gap-4 py-3">
               <dt className="text-sm text-[var(--text-muted)]">Version</dt>
-              <dd className="font-mono text-sm font-semibold text-[var(--text-primary)]">{appMetadata.version}</dd>
+              <dd className="flex items-center gap-2">
+                <span className="font-mono text-sm font-semibold text-[var(--text-primary)]">{latestVersion}</span>
+                {isOutdated && (
+                  <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--accent)]">Latest</span>
+                )}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <dt className="text-sm text-[var(--text-muted)]">Installed</dt>
+              <dd className="font-mono text-sm text-[var(--text-muted)]">{appMetadata.version}{isOutdated ? ' — update available' : ''}</dd>
             </div>
             <div className="flex items-center justify-between gap-4 py-3">
               <dt className="text-sm text-[var(--text-muted)]">Platform</dt>
