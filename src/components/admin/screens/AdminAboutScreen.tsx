@@ -87,14 +87,6 @@ export function AdminAboutScreen(): React.ReactElement {
               <dt className="text-sm text-[var(--text-muted)]">Platform</dt>
               <dd className="text-sm font-semibold text-[var(--text-primary)]">Windows desktop &amp; web</dd>
             </div>
-            <div className="flex items-start justify-between gap-4 py-3">
-              <dt className="shrink-0 text-sm text-[var(--text-muted)]">Built with</dt>
-              <dd className="max-w-xs text-right text-sm text-[var(--text-primary)]">React, TypeScript, Electron, PostgreSQL</dd>
-            </div>
-            <div className="flex items-start justify-between gap-4 py-3">
-              <dt className="shrink-0 text-sm text-[var(--text-muted)]">Features</dt>
-              <dd className="max-w-xs text-right text-sm text-[var(--text-primary)]">POS till, inventory management, staff accounts, sales reports, barcode scanning, receipt printing</dd>
-            </div>
           </dl>
         </div>
 
