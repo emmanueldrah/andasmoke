@@ -1,8 +1,8 @@
-version: 1.1.4301
+version: 1.1.4401
 files:
-  - url: https://github.com/emmanueldrah/andasmoke/releases/download/v1.1.4301/Anda.C.Smoke.Hub.POS.Setup.1.1.4301.exe
-    sha512: rs5l4+SEJbOM1/PPJw6+tirhyHhRmuuGF9M0XR0u2Ctdt4k5jzShjuKODP3hg1cmzjgrb0/Dhf/sw3U0tyQJmA==
-    size: 125435659
-path: https://github.com/emmanueldrah/andasmoke/releases/download/v1.1.4301/Anda.C.Smoke.Hub.POS.Setup.1.1.4301.exe
-sha512: rs5l4+SEJbOM1/PPJw6+tirhyHhRmuuGF9M0XR0u2Ctdt4k5jzShjuKODP3hg1cmzjgrb0/Dhf/sw3U0tyQJmA==
-releaseDate: '2026-10-27T19:56:44.935Z'
+  - url: https://github.com/emmanueldrah/andasmoke/releases/download/v1.1.4401/Anda.C.Smoke.Hub.POS.Setup.1.1.4401.exe
+    sha512: /Kx3VLnga+UfzAXcLVERZ+0+Uq70K7y/JyrpQ9AJ0lJd5hBazYY4VAfF3qI/GNVOcaGL/oOohwwWYMQFcsnkJg==
+    size: 125435571
+path: https://github.com/emmanueldrah/andasmoke/releases/download/v1.1.4401/Anda.C.Smoke.Hub.POS.Setup.1.1.4401.exe
+sha512: /Kx3VLnga+UfzAXcLVERZ+0+Uq70K7y/JyrpQ9AJ0lJd5hBazYY4VAfF3qI/GNVOcaGL/oOohwwWYMQFcsnkJg==
+releaseDate: '2026-10-27T20:34:14.216Z'
