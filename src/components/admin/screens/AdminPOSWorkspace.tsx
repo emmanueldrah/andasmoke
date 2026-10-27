@@ -102,6 +102,34 @@ export function containsCodeWord(identity: string): boolean {
     .some(word => word === 'barcode' || word === 'barcodes' || word === 'pin' || word === 'pins');
 }
 
+export function matchesPosItemCode(item: PosItem, value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return [
+    item.product.id,
+    item.product.name,
+    item.product.serialNumber,
+    item.variant?.id,
+    item.variant?.name,
+    item.variant?.serialNumber,
+    item.barcode,
+  ].filter(Boolean).some(candidate => String(candidate).trim().toLowerCase() === normalized);
+}
+
+export function matchesPosItemSearch(item: PosItem, value: string): boolean {
+  const needle = value.trim().toLowerCase();
+  if (!needle) return true;
+  const searchable = [
+    item.title,
+    item.product.brand,
+    item.product.id,
+    item.product.serialNumber,
+    item.variant?.id,
+    item.variant?.serialNumber,
+    item.barcode,
+  ].filter(Boolean).join(' ').toLowerCase();
+  return searchable.includes(needle);
+}
+
 const currency = new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS' });
 const lineKey = (line: PosLine | PosItem) => `${line.product.id}:${line.variant?.id || 'base'}`;
 
@@ -245,11 +273,7 @@ export function AdminPOSWorkspace() {
   }), [posProducts]);
 
   const filteredItems = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    return items.filter(item => {
-      const searchable = [item.title, item.product.brand, item.product.id, item.variant?.id, item.barcode].filter(Boolean).join(' ').toLowerCase();
-      return !needle || searchable.includes(needle);
-    });
+    return items.filter(item => matchesPosItemSearch(item, search));
   }, [items, search]);
 
   const priceFor = (line: PosLine) => {
@@ -366,12 +390,12 @@ export function AdminPOSWorkspace() {
       : previous.map(item => lineKey(item) === lineKey(line) ? { ...item, quantity: Math.min(quantity, max) } : item));
   };
 
-  const scanItem = async () => {
-    const code = scannerValue.trim();
+  const scanItem = async (rawCode = scannerValue) => {
+    const code = rawCode.trim();
     const value = code.toLowerCase();
     if (!value) return;
 
-    const local = items.find(item => [item.product.id, item.product.name, item.variant?.id, item.variant?.name, item.barcode].filter(Boolean).some(candidate => String(candidate).toLowerCase() === value));
+    const local = items.find(item => matchesPosItemCode(item, value));
     if (local) {
       // In stock-in mode a scan selects the item to receive, it does not sell it.
       if (stockInMode) {
@@ -381,9 +405,11 @@ export function AdminPOSWorkspace() {
           label: local.title,
         });
         setStockInQuantity('1');
+        clearScan();
         return;
       }
       addToCart(local);
+      clearScan();
       return;
     }
 
@@ -419,8 +445,7 @@ export function AdminPOSWorkspace() {
     } catch {
       showAlert('Could not search the catalogue right now.', 'error');
     }
-    setScannerValue('');
-    scannerRef.current?.focus();
+    clearScan();
   };
 
   /**
@@ -937,9 +962,7 @@ export function AdminPOSWorkspace() {
   const commitScan = async () => {
     const value = scannerValue.trim().toLowerCase();
     if (!value) return;
-    const exact = items.find(item => [item.product.id, item.product.name, item.variant?.id, item.variant?.name, item.barcode]
-      .filter(Boolean)
-      .some(candidate => String(candidate).toLowerCase() === value));
+    const exact = items.find(item => matchesPosItemCode(item, value));
 
     // In stock-in mode a scan selects the item to receive rather than selling
     // it. Handled here as well as in scanItem, because the Enter key on the scan
@@ -947,14 +970,12 @@ export function AdminPOSWorkspace() {
     if (stockInMode && exact) {
       setStockInTarget({ product: exact.product, variantId: exact.variant?.id, label: exact.title });
       setStockInQuantity('1');
-      setScannerValue('');
-      setSearch('');
-      scannerRef.current?.focus();
+      clearScan();
       return;
     }
 
-    if (exact) { addToCart(exact); return; }
-    if (filteredItems.length === 1) { addToCart(filteredItems[0]); return; }
+    if (exact) { addToCart(exact); clearScan(); return; }
+    if (filteredItems.length === 1) { addToCart(filteredItems[0]); clearScan(); return; }
     if (filteredItems.length > 1) {
       showAlert(`${filteredItems.length} items match that. Tap the one you want to sell.`, 'info');
       return;
@@ -1042,7 +1063,13 @@ export function AdminPOSWorkspace() {
 
         const scanned = looksLikeScanner ? burst.text : '';
         scannerBurst.current = { chars: 0, startedAt: 0, lastAt: 0, text: '' };
-        if (!looksLikeScanner) return;
+        if (!looksLikeScanner) {
+          if (event.key === 'Enter' && event.target === scannerRef.current) {
+            event.preventDefault();
+            void commitScan();
+          }
+          return;
+        }
 
         // Take the burst back out of whatever field it landed in, so the code
         // does not stay visible in (or get submitted from) the wrong place.
@@ -1102,11 +1129,9 @@ export function AdminPOSWorkspace() {
   const commitScanFor = async (raw: string) => {
     const value = raw.trim().toLowerCase();
     if (!value) return;
-    const exact = items.find(item => [item.product.id, item.product.name, item.variant?.id, item.variant?.name, item.barcode]
-      .filter(Boolean)
-      .some(candidate => String(candidate).toLowerCase() === value));
-    if (exact) { addToCart(exact); return; }
-    await scanItem();
+    const exact = items.find(item => matchesPosItemCode(item, value));
+    if (exact) { addToCart(exact); clearScan(); return; }
+    await scanItem(raw);
   };
 
 return (
@@ -1199,7 +1224,6 @@ return (
                   ref={scannerRef}
                   value={scannerValue}
                   onChange={event => handleScanChange(event.target.value)}
-                  onKeyDown={event => { if (event.key === 'Enter') void commitScan(); }}
                   placeholder="Scan barcode or type a name"
                   aria-label="Scan a barcode or search for a product"
                   className="pos-scan w-full pl-11 pr-11"

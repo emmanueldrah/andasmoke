@@ -378,6 +378,41 @@ test('barcode, PIN and data-barcode-input fields are exempt from scanner capture
   assert.equal(isScannerExempt(document.createElement('div')), false, 'a div is not a field');
 });
 
+test('POS search and exact scan matching include product and variant serial numbers', () => {
+  const source = readComponentSource('AdminPOSWorkspace.tsx');
+  const jsdom = new JSDOM();
+  const loadMatcher = name => jsdom.loadFunctionFromSource(
+    extractNamedFunction(source, name).replace(/item: PosItem/g, 'item').replace(/value: string/g, 'value'),
+  );
+  const matchesCode = loadMatcher('matchesPosItemCode');
+  const matchesSearch = loadMatcher('matchesPosItemSearch');
+  const productItem = {
+    product: { id: 'p-1', name: 'Hookah', brand: 'Anda', serialNumber: 'SN-PRODUCT' },
+    title: 'Hookah', stock: 2, barcode: 'BC-PRODUCT',
+  };
+  const variantItem = {
+    product: { id: 'p-2', name: 'Flavor', brand: 'Anda' },
+    variant: { id: 'v-1', name: 'Mint', serialNumber: 'SN-VARIANT' },
+    title: 'Flavor - Mint', stock: 1, barcode: 'BC-VARIANT',
+  };
+
+  assert.equal(matchesCode(productItem, 'sn-product'), true);
+  assert.equal(matchesCode(variantItem, 'SN-VARIANT'), true);
+  assert.equal(matchesSearch(productItem, 'SN-PRODUCT'), true);
+  assert.equal(matchesSearch(variantItem, 'sn-variant'), true);
+});
+
+test('recovered scanner codes are passed explicitly to server fallback', () => {
+  const source = readComponentSource('AdminPOSWorkspace.tsx');
+  assert.match(source, /const scanItem = async \(rawCode = scannerValue\)/);
+  assert.match(source, /const commitScanFor = async \(raw: string\)[\s\S]*?await scanItem\(raw\);/);
+  const scanBox = /<input\b[^>]*?\bref=\{scannerRef\}[\s\S]*?>/.exec(source);
+  assert.ok(scanBox);
+  assert.doesNotMatch(scanBox[0], /onKeyDown=/,
+    'the scan input must not commit Enter before global burst detection');
+  assert.match(source, /if \(event\.key === 'Enter' && event\.target === scannerRef\.current\)[\s\S]*?void commitScan\(\);/);
+});
+
 test('the product form really marks its barcode fields, and the counter scan box does not', () => {
   const modal = readComponentSource('POSProductModal.tsx');
   assert.match(modal, /data-barcode-input="product-form"/,
@@ -615,4 +650,10 @@ function extractExemptFunction(source) {
     }
   }
   return source.slice(start, index);
+}
+
+function extractNamedFunction(source, name) {
+  const match = source.match(new RegExp(`(?:export )?function ${name}\\([\\s\\S]*?\\n}`));
+  assert.ok(match, `${name} should be findable in the POS screen source`);
+  return match[0].replace(/^export /, '');
 }
