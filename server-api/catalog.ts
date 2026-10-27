@@ -4,6 +4,7 @@ import { brands, categories } from '../src/db/schema.js';
 import { and, asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAdmin } from './_auth.js';
+import { cloudConnection, forwardToCloud, isCloudConfigured } from './_cloud-proxy.js';
 
 const categoryEnum = ['all', 'skincare', 'makeup', 'fragrances', 'body-care', 'beauty-tools', 'rice-grains', 'cooking-oils', 'seasoning-spices', 'beverages', 'snacks-sweets', 'household-care', 'daily-essentials', 'new-arrivals', 'best-sellers', 'offers'] as const;
 const brandCreateSchema = z.object({ name: z.string().min(1).max(100), isActive: z.boolean().default(true) });
@@ -33,6 +34,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (method === 'GET') {
       const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager', 'Inventory Dispatcher', 'Cashier']);
       if (!auth) return;
+      const connection = cloudConnection(req);
+      if (connection) {
+        await forwardToCloud(req, res, resource, connection.origin, connection.token);
+        return;
+      }
       res.setHeader('Cache-Control', 'private, no-store');
       if (resource === 'brands') {
         const { id, active } = query;
@@ -61,6 +67,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
     const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager']);
     if (!auth) return;
+    const connection = cloudConnection(req);
+    if (connection) {
+      await forwardToCloud(req, res, resource, connection.origin, connection.token);
+      return;
+    }
+    if (isCloudConfigured()) {
+      return res.status(409).json({ error: 'Connect to the cloud to sync store catalog changes across devices.' });
+    }
 
     if (method === 'POST') {
       if (resource === 'brands') {

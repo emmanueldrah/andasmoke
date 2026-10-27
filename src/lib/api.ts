@@ -25,7 +25,7 @@ async function request<T>(
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  if (/^\/pos-sync(?:\?|$)/.test(endpoint)) {
+  if (/^\/(?:pos-sync|admin-accounts|held-sales|stock-in|pos-shifts|catalog|promo-codes|settings)(?:\?|$)/.test(endpoint)) {
     const cloudToken = localStorage.getItem('anda_cloud_auth_token');
     if (cloudToken) headers['X-Cloud-Authorization'] = `Bearer ${cloudToken}`;
   }

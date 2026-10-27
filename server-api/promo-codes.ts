@@ -5,6 +5,7 @@ import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAdmin } from './_auth.js';
 import { AUDIT_ACTIONS, recordAudit } from './_audit.js';
+import { cloudConnection, forwardToCloud, isCloudConfigured } from './_cloud-proxy.js';
 
 const promoCreateSchema = z.object({
   id: z.string().optional(),
@@ -25,6 +26,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (method === 'GET') {
       const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager', 'Cashier']);
       if (!auth) return;
+      const connection = cloudConnection(req);
+      if (connection) {
+        await forwardToCloud(req, res, 'promo-codes', connection.origin, connection.token);
+        return;
+      }
       res.setHeader('Cache-Control', 'private, no-store');
       const results = await db.select().from(promoCodes).orderBy(desc(promoCodes.createdAt));
       return res.status(200).json(results);
@@ -33,6 +39,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (method === 'POST') {
       const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager']);
       if (!auth) return;
+      const connection = cloudConnection(req);
+      if (connection) {
+        await forwardToCloud(req, res, 'promo-codes', connection.origin, connection.token);
+        return;
+      }
+      if (isCloudConfigured()) {
+        return res.status(409).json({ error: 'Connect to the cloud to sync promotions across devices.' });
+      }
 
       const parsed = promoCreateSchema.safeParse(body);
       if (!parsed.success) {
@@ -60,6 +74,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (method === 'PATCH') {
       const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager']);
       if (!auth) return;
+      const connection = cloudConnection(req);
+      if (connection) {
+        await forwardToCloud(req, res, 'promo-codes', connection.origin, connection.token);
+        return;
+      }
+      if (isCloudConfigured()) {
+        return res.status(409).json({ error: 'Connect to the cloud to sync promotions across devices.' });
+      }
 
       const { id } = query;
       if (!id || typeof id !== 'string') {
@@ -114,6 +136,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     if (method === 'DELETE') {
       const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager']);
       if (!auth) return;
+      const connection = cloudConnection(req);
+      if (connection) {
+        await forwardToCloud(req, res, 'promo-codes', connection.origin, connection.token);
+        return;
+      }
+      if (isCloudConfigured()) {
+        return res.status(409).json({ error: 'Connect to the cloud to sync promotions across devices.' });
+      }
 
       const { id } = query;
       if (!id || typeof id !== 'string') {

@@ -28,7 +28,7 @@ interface AdminLoginProps {
   mode?: 'admin' | 'pos';
 }
 
-type SetupState = 'checking' | 'needed' | 'done';
+type SetupState = 'checking' | 'needed' | 'done' | 'unavailable';
 
 interface CachedTeamMember {
   id: string;
@@ -108,9 +108,11 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
   // Check setup status
   useEffect(() => {
     let active = true;
-    api.get<{ needsSetup: boolean }>('/auth?action=setup-status')
-      .then(r => { if (active) setSetup(r?.needsSetup ? 'needed' : 'done'); })
-      .catch(() => { if (active) setSetup('done'); });
+    api.get<{ needsSetup: boolean; cloudCheckUnavailable?: boolean }>('/auth?action=setup-status')
+      .then(r => {
+        if (active) setSetup(r?.needsSetup ? 'needed' : r?.cloudCheckUnavailable ? 'unavailable' : 'done');
+      })
+      .catch(() => { if (active) setSetup('unavailable'); });
     return () => { active = false; };
   }, []);
 
@@ -435,6 +437,12 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                       </p>
                     )}
                   </div>
+
+                  {setup === 'unavailable' && (
+                    <div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                      Could not verify your account with the cloud. Connect to the internet and sign in with your existing account.
+                    </div>
+                  )}
 
                   {/* Email — the single email field, shown whenever we are not
                       signing in as one named person off the roster. */}

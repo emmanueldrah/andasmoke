@@ -5,6 +5,7 @@ import { db } from '../src/db/index.js';
 import { adminSessions } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 import { AUDIT_ACTIONS, recordAudit } from './_audit.js';
+import { cloudConnection, forwardToCloud, isCloudConfigured } from './_cloud-proxy.js';
 
 const allowedRoles = ['Super Admin', 'Store Manager', 'Inventory Dispatcher', 'Cashier'] as const;
 type AdminRole = typeof allowedRoles[number];
@@ -32,6 +33,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!session) return;
 
   try {
+    const connection = cloudConnection(req);
+    if (connection) {
+      await forwardToCloud(req, res, 'admin-accounts', connection.origin, connection.token);
+      return;
+    }
+    if (isCloudConfigured() && req.method !== 'GET') {
+      return res.status(409).json({ error: 'Connect to the cloud to sync team accounts across devices.' });
+    }
+
     if (req.method === 'GET') {
       if (session.adminRole !== 'Super Admin') {
         return res.status(403).json({ error: 'Only Super Admins can view team accounts' });

@@ -1467,16 +1467,88 @@ test('a broken or empty website reply keeps the till catalog intact', async () =
   }
 });
 
-test('desktop sign-in returns a cloud token for catalog synchronization', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-login-'));
+test('fresh desktop setup status follows cloud admins and fails closed during outages', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-setup-status-'));
   process.env.ANDA_DATA_DIR = dir;
   const previousOrigin = process.env.ANDA_CLOUD_API_ORIGIN;
   process.env.ANDA_CLOUD_API_ORIGIN = 'https://cloud.example.test';
   const api = freshBundle();
-  await seedTill(api);
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = async (url) => {
+      assert.equal(String(url), 'https://cloud.example.test/api/auth?action=setup-status');
+      return new Response(JSON.stringify({ needsSetup: false }), {
+        status: 200, headers: { 'Content-Type': 'application/json' },
+      });
+    };
+    const existingCloudAdmin = await callApi(api.auth, { query: { action: 'setup-status' } });
+    assert.equal(existingCloudAdmin.body.needsSetup, false);
+    const duplicateSetup = await callApi(api.auth, {
+      method: 'POST', query: { action: 'setup' },
+      body: { name: 'Another Owner', email: 'other@smokehub.com', pin: '8642' },
+    });
+    assert.equal(duplicateSetup.status, 409);
+    assert.match(duplicateSetup.body.error, /existing account/i);
+
+    globalThis.fetch = async () => {
+      throw new Error('Cloud is unavailable');
+    };
+    const cloudUnavailable = await callApi(api.auth, { query: { action: 'setup-status' } });
+    assert.equal(cloudUnavailable.body.needsSetup, false);
+    assert.equal(cloudUnavailable.body.cloudCheckUnavailable, true);
+    const blockedSetup = await callApi(api.auth, {
+      method: 'POST', query: { action: 'setup' },
+      body: { name: 'Another Owner', email: 'other@smokehub.com', pin: '8642' },
+    });
+    assert.equal(blockedSetup.status, 503);
+
+    let cloudSetupRequest;
+    globalThis.fetch = async (url, options = {}) => {
+      if (String(url).endsWith('/api/auth?action=setup-status')) {
+        return new Response(JSON.stringify({ needsSetup: true }), {
+          status: 200, headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      cloudSetupRequest = { url: String(url), body: JSON.parse(options.body) };
+      return new Response(JSON.stringify({
+        token: 'cloud-owner-token',
+        admin: { id: 'cloud-owner-id', adminName: 'First Owner' },
+      }), { status: 201, headers: { 'Content-Type': 'application/json' } });
+    };
+    const noCloudAdmin = await callApi(api.auth, { query: { action: 'setup-status' } });
+    assert.equal(noCloudAdmin.body.needsSetup, true);
+    const firstSetup = await callApi(api.auth, {
+      method: 'POST', query: { action: 'setup' },
+      body: { name: 'First Owner', email: 'first@smokehub.com', pin: '8642' },
+    });
+    assert.equal(firstSetup.status, 201);
+    assert.equal(cloudSetupRequest.url, 'https://cloud.example.test/api/auth?action=setup&client=desktop');
+    assert.deepEqual(cloudSetupRequest.body, { name: 'First Owner', email: 'first@smokehub.com', pin: '8642' });
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousOrigin === undefined) delete process.env.ANDA_CLOUD_API_ORIGIN;
+    else process.env.ANDA_CLOUD_API_ORIGIN = previousOrigin;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('desktop sign-in returns a cloud token for catalog synchronization', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-login-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const previousOrigin = process.env.ANDA_CLOUD_API_ORIGIN;
+  delete process.env.ANDA_CLOUD_API_ORIGIN;
+  const api = freshBundle();
   const originalFetch = globalThis.fetch;
   let cloudRequest;
   globalThis.fetch = async (url, options) => {
+    if (String(url).endsWith('/api/auth?action=setup-status')) {
+      return new Response(JSON.stringify({ needsSetup: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
     cloudRequest = { url: String(url), body: JSON.parse(options.body) };
     return new Response(JSON.stringify({ token: 'cloud-session-token' }), {
       status: 200,
@@ -1485,6 +1557,8 @@ test('desktop sign-in returns a cloud token for catalog synchronization', async 
   };
 
   try {
+    await seedTill(api);
+    process.env.ANDA_CLOUD_API_ORIGIN = 'https://cloud.example.test';
     const login = await callApi(api.auth, {
       method: 'POST',
       query: { action: 'admin' },
@@ -1494,6 +1568,186 @@ test('desktop sign-in returns a cloud token for catalog synchronization', async 
     assert.equal(login.body.cloudToken, 'cloud-session-token');
     assert.equal(cloudRequest.url, 'https://cloud.example.test/api/auth?action=admin&client=desktop');
     assert.equal(cloudRequest.body.email, 'ama@smokehub.com');
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousOrigin === undefined) delete process.env.ANDA_CLOUD_API_ORIGIN;
+    else process.env.ANDA_CLOUD_API_ORIGIN = previousOrigin;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('existing local owner is provisioned to cloud on successful sign-in', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-owner-migration-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const previousOrigin = process.env.ANDA_CLOUD_API_ORIGIN;
+  delete process.env.ANDA_CLOUD_API_ORIGIN;
+  const api = freshBundle();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    await seedTill(api);
+    process.env.ANDA_CLOUD_API_ORIGIN = 'https://cloud.example.test';
+    const cloudOwner = { id: 'shared-owner-id', adminName: 'Ama Boateng', email: 'ama@smokehub.com' };
+    const requests = [];
+    globalThis.fetch = async (url, options = {}) => {
+      const target = String(url);
+      requests.push({ url: target, body: options.body ? JSON.parse(options.body) : undefined });
+      if (target.endsWith('/api/auth?action=admin&client=desktop')) {
+        return new Response(JSON.stringify({ error: 'Incorrect email or PIN.' }), { status: 401 });
+      }
+      if (target.endsWith('/api/auth?action=setup-status')) {
+        return new Response(JSON.stringify({ needsSetup: true }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ token: 'migrated-cloud-token', admin: cloudOwner }), { status: 201 });
+    };
+
+    const login = await callApi(api.auth, {
+      method: 'POST', query: { action: 'admin' },
+      body: { email: 'ama@smokehub.com', pin: '2468' },
+    });
+    assert.equal(login.status, 200);
+    assert.equal(login.body.cloudToken, 'migrated-cloud-token');
+    assert.deepEqual(requests.at(-1), {
+      url: 'https://cloud.example.test/api/auth?action=setup&client=desktop',
+      body: { name: 'Ama Boateng', email: 'ama@smokehub.com', pin: '2468' },
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousOrigin === undefined) delete process.env.ANDA_CLOUD_API_ORIGIN;
+    else process.env.ANDA_CLOUD_API_ORIGIN = previousOrigin;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('desktop team-account operations use the shared cloud account store', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-team-accounts-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const previousOrigin = process.env.ANDA_CLOUD_API_ORIGIN;
+  delete process.env.ANDA_CLOUD_API_ORIGIN;
+  const api = freshBundle();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    const { ownerToken } = await seedTill(api);
+    process.env.ANDA_CLOUD_API_ORIGIN = 'https://cloud.example.test';
+    const calls = [];
+    globalThis.fetch = async (url, options = {}) => {
+      calls.push({ url: String(url), method: options.method, authorization: options.headers?.Authorization });
+      return new Response(JSON.stringify([{ id: 'shared-cashier', fullName: 'Cashier', email: 'cashier@smokehub.com' }]), {
+        status: 200, headers: { 'Content-Type': 'application/json' },
+      });
+    };
+
+    const accounts = await callApi(api.adminAccounts, {
+      token: ownerToken, cloudToken: 'Bearer shared-cloud-token',
+    });
+    assert.equal(accounts.status, 200);
+    assert.equal(accounts.body[0].id, 'shared-cashier');
+    assert.deepEqual(calls, [{
+      url: 'https://cloud.example.test/api/admin-accounts',
+      method: 'GET',
+      authorization: 'Bearer shared-cloud-token',
+    }]);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousOrigin === undefined) delete process.env.ANDA_CLOUD_API_ORIGIN;
+    else process.env.ANDA_CLOUD_API_ORIGIN = previousOrigin;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('desktop held sales and stock movements use the shared cloud store', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-pos-records-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const previousOrigin = process.env.ANDA_CLOUD_API_ORIGIN;
+  delete process.env.ANDA_CLOUD_API_ORIGIN;
+  const api = freshBundle();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    const { ownerToken } = await seedTill(api);
+    process.env.ANDA_CLOUD_API_ORIGIN = 'https://cloud.example.test';
+    const requests = [];
+    globalThis.fetch = async (url, options = {}) => {
+      const target = String(url);
+      requests.push({ url: target, method: options.method, body: options.body ? JSON.parse(options.body) : undefined });
+      const held = target.includes('/held-sales');
+      const payload = held
+        ? options.method === 'GET' ? { heldSales: [] } : { id: 'held-cloud-1' }
+        : options.method === 'GET' ? { movements: [] } : { productId: 'p1', stockAfter: 6 };
+      return new Response(JSON.stringify(payload), {
+        status: options.method === 'POST' ? 201 : 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+    const auth = { token: ownerToken, cloudToken: 'Bearer shared-cloud-token' };
+    const held = await callApi(api.heldSales, { ...auth, method: 'POST', body: {
+      items: [{ productId: 'p1', quantity: 1 }], subtotal: 5, total: 5, deviceId: 'till-1',
+    } });
+    const heldList = await callApi(api.heldSales, auth);
+    const stock = await callApi(api.stockIn, { ...auth, method: 'POST', body: {
+      productId: 'p1', quantity: 5, reason: 'Delivery',
+    } });
+    const movements = await callApi(api.stockIn, auth);
+
+    assert.equal(held.status, 201);
+    assert.equal(heldList.status, 200);
+    assert.equal(stock.status, 201);
+    assert.equal(movements.status, 200);
+    assert.deepEqual(requests.map(({ url, method }) => ({ url, method })), [
+      { url: 'https://cloud.example.test/api/held-sales', method: 'POST' },
+      { url: 'https://cloud.example.test/api/held-sales', method: 'GET' },
+      { url: 'https://cloud.example.test/api/stock-in', method: 'POST' },
+      { url: 'https://cloud.example.test/api/stock-in', method: 'GET' },
+    ]);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousOrigin === undefined) delete process.env.ANDA_CLOUD_API_ORIGIN;
+    else process.env.ANDA_CLOUD_API_ORIGIN = previousOrigin;
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('desktop catalog, promotions, and store settings read from cloud', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cloud-store-records-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const previousOrigin = process.env.ANDA_CLOUD_API_ORIGIN;
+  delete process.env.ANDA_CLOUD_API_ORIGIN;
+  const api = freshBundle();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    const { ownerToken } = await seedTill(api);
+    process.env.ANDA_CLOUD_API_ORIGIN = 'https://cloud.example.test';
+    const requests = [];
+    globalThis.fetch = async (url) => {
+      const target = new URL(String(url));
+      requests.push(`${target.pathname}${target.search}`);
+      const payload = target.pathname.endsWith('/settings') ? { settings: [] } : [];
+      return new Response(JSON.stringify(payload), {
+        status: 200, headers: { 'Content-Type': 'application/json' },
+      });
+    };
+    const auth = { token: ownerToken, cloudToken: 'Bearer shared-cloud-token' };
+    const categories = await callApi(api.catalog, { ...auth, query: { resource: 'categories' } });
+    const brands = await callApi(api.catalog, { ...auth, query: { resource: 'brands' } });
+    const promotions = await callApi(api.promoCodes, auth);
+    const settings = await callApi(api.settings, auth);
+
+    assert.equal(categories.status, 200);
+    assert.equal(brands.status, 200);
+    assert.equal(promotions.status, 200);
+    assert.equal(settings.status, 200);
+    assert.deepEqual(requests, [
+      '/api/categories?resource=categories',
+      '/api/brands?resource=brands',
+      '/api/promo-codes',
+      '/api/settings',
+    ]);
   } finally {
     globalThis.fetch = originalFetch;
     if (previousOrigin === undefined) delete process.env.ANDA_CLOUD_API_ORIGIN;

@@ -5,6 +5,7 @@ import { db } from '../src/db/index.js';
 import { inventoryMovements, products } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 import { AUDIT_ACTIONS, recordAudit } from './_audit.js';
+import { cloudConnection, forwardToCloud, isCloudConfigured } from './_cloud-proxy.js';
 
 /**
  * Stock-in: goods arriving at the till.
@@ -34,6 +35,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (!auth) return;
 
   try {
+    const connection = cloudConnection(req);
+    if (connection) {
+      await forwardToCloud(req, res, 'stock-in', connection.origin, connection.token);
+      return;
+    }
+    if (isCloudConfigured() && req.method !== 'GET') {
+      return res.status(409).json({ error: 'Connect to the cloud to sync inventory changes across devices.' });
+    }
+
     if (req.method === 'POST' && !req.query.action) {
       const parsed = stockInSchema.safeParse(req.body);
       if (!parsed.success) {

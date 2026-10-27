@@ -22,11 +22,52 @@ export const PIN_LOCKOUT_MINUTES = 5;
 const PIN_LOCKOUT_MS = PIN_LOCKOUT_MINUTES * 60 * 1000;
 const configuredCloudOrigin = () => process.env.ANDA_CLOUD_API_ORIGIN?.trim().replace(/\/+$/, '') || null;
 
+async function createCloudOwner(cloudOrigin: string, owner: { name: string; email: string; pin: string; phone?: string }): Promise<string> {
+  const cloudRes = await fetch(`${cloudOrigin}/api/auth?action=setup&client=desktop`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(owner),
+    signal: AbortSignal.timeout(10_000),
+  });
+  const cloudResult = await cloudRes.json().catch(() => ({})) as { error?: unknown; token?: unknown; admin?: unknown };
+  if (!cloudRes.ok) {
+    const error = new Error(typeof cloudResult.error === 'string' ? cloudResult.error : 'Cloud account creation failed');
+    Object.assign(error, { statusCode: cloudRes.status });
+    throw error;
+  }
+  if (typeof cloudResult.token !== 'string' || !cloudResult.admin) {
+    throw new Error('Invalid cloud setup response');
+  }
+  return cloudResult.token;
+}
+
+async function cloudNeedsSetup(cloudOrigin: string): Promise<boolean> {
+  const cloudRes = await fetch(`${cloudOrigin}/api/auth?action=setup-status`, {
+    signal: AbortSignal.timeout(4000),
+  });
+  if (!cloudRes.ok) throw new Error(`Cloud setup check failed: ${cloudRes.status}`);
+
+  const cloudStatus = await cloudRes.json() as { needsSetup?: unknown };
+  if (typeof cloudStatus.needsSetup !== 'boolean') throw new Error('Invalid cloud setup status');
+  return cloudStatus.needsSetup;
+}
+
 /** Reports how many staff accounts exist, so the UI can show first-run setup. */
 async function handleSetupStatus(_req: ApiRequest, res: ApiResponse) {
   const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(adminSessions);
   const total = Number(count || 0);
-  return res.status(200).json({ needsSetup: total === 0 });
+  if (total > 0) return res.status(200).json({ needsSetup: false });
+
+  const cloudOrigin = configuredCloudOrigin();
+  if (!cloudOrigin || process.env.NODE_ENV === 'test') {
+    return res.status(200).json({ needsSetup: true });
+  }
+
+  try {
+    return res.status(200).json({ needsSetup: await cloudNeedsSetup(cloudOrigin) });
+  } catch {
+    return res.status(200).json({ needsSetup: false, cloudCheckUnavailable: true });
+  }
 }
 
 /**
@@ -48,6 +89,26 @@ async function handleSetup(req: ApiRequest, res: ApiResponse) {
   const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from(adminSessions);
   if (Number(count || 0) > 0) {
     return res.status(409).json({ error: 'Setup has already been completed on this till.' });
+  }
+
+  const cloudOrigin = configuredCloudOrigin();
+  if (cloudOrigin) {
+    try {
+      if (!(await cloudNeedsSetup(cloudOrigin))) {
+        return res.status(409).json({ error: 'An administrator account already exists. Sign in with your existing account.' });
+      }
+      await createCloudOwner(cloudOrigin, {
+        name: parsed.data.name,
+        email,
+        pin: parsed.data.pin,
+        phone: parsed.data.phone,
+      });
+    } catch (error: any) {
+      if (error?.statusCode === 409) {
+        return res.status(409).json({ error: 'An administrator account already exists. Sign in with your existing account.' });
+      }
+      return res.status(503).json({ error: 'Could not verify cloud accounts. Connect to the internet and try again.' });
+    }
   }
 
   const [existing] = await db.select({ id: adminSessions.id }).from(adminSessions).where(eq(adminSessions.email, email)).limit(1);
@@ -207,6 +268,14 @@ async function handleAdminLogin(req: ApiRequest, res: ApiResponse) {
       if (cloudRes.ok) {
         const cloudData = await cloudRes.json() as { token?: unknown };
         if (typeof cloudData.token === 'string') cloudToken = cloudData.token;
+      } else if (cloudRes.status === 401 && currentAdmin.adminRole === 'Super Admin'
+        && await cloudNeedsSetup(cloudOrigin)) {
+        cloudToken = await createCloudOwner(cloudOrigin, {
+          name: currentAdmin.adminName,
+          email: currentAdmin.email,
+          pin: parsed.data.pin,
+          phone: currentAdmin.phone || undefined,
+        });
       }
     } catch {
       // Keep local sign-in available when the hosted service is offline.

@@ -5,6 +5,7 @@ import { db } from '../src/db/index.js';
 import { auditLogs, heldSales } from '../src/db/schema.js';
 import { requireAdmin } from './_auth.js';
 import { AUDIT_ACTIONS } from './_audit.js';
+import { cloudConnection, forwardToCloud, isCloudConfigured } from './_cloud-proxy.js';
 
 /**
  * Held (parked) sales.
@@ -36,6 +37,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     // serving a customer, not a money decision.
     const auth = await requireAdmin(req, res);
     if (!auth) return;
+
+    const connection = cloudConnection(req);
+    if (connection) {
+      await forwardToCloud(req, res, 'held-sales', connection.origin, connection.token);
+      return;
+    }
+    if (isCloudConfigured() && req.method !== 'GET') {
+      return res.status(409).json({ error: 'Connect to the cloud to sync held sales across devices.' });
+    }
 
     if (req.method === 'GET') {
       const rows = await db.select().from(heldSales).orderBy(desc(heldSales.createdAt)).limit(100);

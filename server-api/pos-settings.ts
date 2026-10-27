@@ -6,6 +6,7 @@ import { resolveStorePhone } from '../src/lib/storeContact.js';
 import { normalizeHardwareSettings } from '../src/lib/hardware.js';
 import { requireAdmin } from './_auth.js';
 import handleAdminAccounts from './_admin-accounts.js';
+import { cloudConnection, forwardToCloud, isCloudConfigured } from './_cloud-proxy.js';
 
 const receiptSettingKeys = ['storeName', 'storeEmail', 'storePhone', 'storeAddress', 'tin', 'logo'] as const;
 
@@ -66,6 +67,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const auth = await requireAdmin(req, res, ['Super Admin', 'Store Manager']);
     if (!auth) return;
     if (!['PUT', 'PATCH'].includes(req.method || '')) return res.status(405).json({ error: 'Method not allowed' });
+    const connection = cloudConnection(req);
+    if (connection) {
+      await forwardToCloud(req, res, 'settings', connection.origin, connection.token);
+      return;
+    }
+    if (isCloudConfigured()) {
+      return res.status(409).json({ error: 'Connect to the cloud to sync store settings across devices.' });
+    }
     try {
       const updates = req.body?.settings as Partial<Record<string, unknown>> | undefined;
       if (!updates || typeof updates !== 'object') return res.status(400).json({ error: 'Missing settings.' });
@@ -89,6 +98,11 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   }
   const auth = await requireAdmin(req, res);
   if (!auth) return;
+  const connection = cloudConnection(req);
+  if (connection) {
+    await forwardToCloud(req, res, 'settings', connection.origin, connection.token);
+    return;
+  }
   res.setHeader('Cache-Control', 'private, no-store');
 
   try {
