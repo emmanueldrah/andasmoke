@@ -63,7 +63,9 @@ for (const [theme, selector] of [['light', /:root\s*\{([\s\S]*?)\n\s*\}/], ['dar
     const page = block.match(/--page-background:([\s\S]*?);/)[1];
     const canvases = [...page.matchAll(/#[\da-f]{6}/gi)].map(match => match[0]);
     const glows = [...page.matchAll(/rgba\(([^)]+)\)/g)].map(match => match[1].split(',').map(Number));
-    const stressCanvases = [...canvases, ...canvases.map(canvas => glows.reduce((backing, glow) => composite(glow, backing), canvas))];
+    const markAlpha = Number(block.match(/--mark-opacity:\s*([\d.]+)/)[1]);
+    const pageCanvases = [...canvases, ...canvases.map(canvas => glows.reduce((backing, glow) => composite(glow, backing), canvas))];
+    const stressCanvases = [...pageCanvases, ...pageCanvases.flatMap(canvas => [composite([0, 0, 0, markAlpha], canvas), composite([255, 255, 255, markAlpha], canvas)])];
     for (const key of ['bg-card', 'bg-card-alt', 'bg-soft', 'control-bg', 'sheet-surface', 'disabled-bg']) {
       const tint = block.match(new RegExp(`--${key}:\\s*rgba\\(([^)]+)\\)`))[1].split(',').map(Number);
       const inks = key === 'disabled-bg' ? ['disabled-ink'] : ['text-primary', 'text-muted', 'text-subtle'];
@@ -106,8 +108,22 @@ test('page, card, nested panel, field and dialog backings are translucent in bot
   }
 });
 
+test('watermark remains large, sharp and behind the interface in both themes', () => {
+  for (const selector of [/:root\s*\{([\s\S]*?)\n\s*\}/, /html\.dark\s*\{([\s\S]*?)\n\s*\}/]) {
+    const block = css.match(selector)[1];
+    assert(Number(block.match(/--mark-opacity:\s*([\d.]+)/)[1]) >= 0.12);
+    assert(Number(block.match(/--glass-blur:\s*(\d+)px/)[1]) <= 3);
+  }
+  assert.match(css, /--mark-blur:\s*0px/);
+  const mark = css.match(/body::before\s*\{([\s\S]*?)\n\s*\}/)[1];
+  assert.match(mark, /background-size:\s*min\(780px, 82vw, 84dvh\)/);
+  assert.match(mark, /pointer-events:\s*none/);
+  assert.match(mark, /z-index:\s*0/);
+  assert.doesNotMatch(css, /body::after\s*\{/);
+});
+
 test('clear glass does not regress to nearly opaque paint on panels or controls', () => {
-  const caps = { 'bg-main': 0.1, 'bg-card': 0.5, 'bg-card-alt': 0.5, 'bg-soft': 0.25, 'control-bg': 0.4, 'sheet-surface': 0.75, 'disabled-bg': 0.5, 'table-action-bg': 0.65 };
+  const caps = { 'bg-main': 0.03, 'bg-card': 0.15, 'bg-card-alt': 0.1, 'bg-soft': 0.06, 'control-bg': 0.15, 'sheet-surface': 0.25, 'disabled-bg': 0.2, 'table-action-bg': 0.2 };
   for (const selector of [/:root\s*\{([\s\S]*?)\n\s*\}/, /html\.dark\s*\{([\s\S]*?)\n\s*\}/]) {
     const block = css.match(selector)[1];
     for (const [token, cap] of Object.entries(caps)) {
@@ -218,6 +234,8 @@ test('login uses the shared theme instead of an inline blue palette', () => {
   const login = readFileSync(new URL('../src/components/admin/AdminLoginView.tsx', import.meta.url), 'utf8');
   assert.match(login, /className="admin-login /);
   assert.doesNotMatch(login, /background: isDark/);
+  assert.doesNotMatch(login, /opacity-\[0\.0[56]\]/);
+  assert.match(css, /\.admin-login:not\([^}]*background:\s*transparent/);
   assert.doesNotMatch(login, /to-\[var\(--accent-strong\)\][^"\n]*text-white/);
   assert.match(login, /grid grid-cols-1 lg:grid-cols-\[minmax\(0,0\.9fr\)_minmax\(0,1\.1fr\)\]/);
   assert.match(login, /grid grid-cols-1 gap-2 sm:grid-cols-2/);

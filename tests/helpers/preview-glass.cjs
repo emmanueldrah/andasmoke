@@ -19,7 +19,7 @@ if (!app || !BrowserWindow) {
 }
 
 const ROOT = path.resolve(__dirname, '../..');
-const OUTPUT = path.join(ROOT, 'tests', 'ui-preview-output');
+const OUTPUT = path.join(ROOT, 'tests', process.env.PREVIEW_GLASS_OUTPUT || 'ui-preview-output');
 const TARGET = new URL(process.env.PREVIEW_GLASS_URL || 'http://127.0.0.1:3006/admin');
 if (TARGET.protocol !== 'http:' || TARGET.username || TARGET.password || !['127.0.0.1', 'localhost', '[::1]'].includes(TARGET.hostname)) {
   throw new Error('PREVIEW_GLASS_URL must be a local HTTP static origin without credentials.');
@@ -90,7 +90,7 @@ app.setPath('sessionData', path.join(temp, 'session-data'));
 fs.mkdirSync(app.getPath('userData'), { recursive: true });
 fs.mkdirSync(app.getPath('sessionData'), { recursive: true });
 app.setAppLogsPath(path.join(temp, 'logs'));
-watchdog = setTimeout(() => { fail('watchdog', 'Verification exceeded 240 seconds.'); finish(); }, 240_000);
+watchdog = setTimeout(() => { fail('watchdog', 'Verification exceeded 360 seconds.'); finish(); }, 360_000);
 process.on('uncaughtException', error => { fail('main-exception', error.stack || error.message); finish(); });
 process.on('unhandledRejection', error => { fail('main-rejection', String(error?.stack || error)); finish(); });
 
@@ -521,6 +521,27 @@ async function capture(theme, size, page, variant = 'page', needsFooter = false)
   const image = await win.webContents.capturePage();
   check(`${name}:nonempty-screenshot`, !image.isEmpty(), image.getSize());
   fs.writeFileSync(entry.screenshot, image.toPNG());
+  if (variant === 'page') {
+    await execute(() => {
+      const style = document.createElement('style');
+      style.id = 'preview-hide-watermark';
+      style.textContent = 'body::before { opacity: 0 !important; }';
+      document.head.append(style);
+    });
+    await delay();
+    const withoutMark = await win.webContents.capturePage();
+    await execute(() => document.getElementById('preview-hide-watermark').remove());
+    await delay();
+    const marked = image.toBitmap(), plain = withoutMark.toBitmap();
+    let changed = 0, maximumDelta = 0;
+    for (let offset = 0; offset < marked.length; offset += 4) {
+      const delta = Math.max(Math.abs(marked[offset] - plain[offset]), Math.abs(marked[offset + 1] - plain[offset + 1]), Math.abs(marked[offset + 2] - plain[offset + 2]));
+      if (delta >= 5) changed++;
+      maximumDelta = Math.max(maximumDelta, delta);
+    }
+    entry.watermark = { changedPixelRatio: changed / (marked.length / 4), maximumDelta };
+    check(`${name}:watermark-visible-through-panes`, entry.watermark.changedPixelRatio >= 0.005 && maximumDelta >= 10, entry.watermark);
+  }
   // Finalization/watchdog writes the accumulated JSON once, avoiding quadratic
   // I/O over the large matrix of compositing evidence.
 }

@@ -192,16 +192,6 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
         .fade-in { animation: fadeSlideIn 0.3s ease both; }
       `}</style>
 
-      {/* Brand watermark stays behind the glass surface, not inside a card. */}
-      <div className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden">
-        <img
-          src="/brand-mark.png"
-          alt=""
-          aria-hidden="true"
-          className="h-[48rem] w-[48rem] max-w-[96vw] object-contain opacity-[0.06] grayscale sepia dark:opacity-[0.05] dark:invert"
-        />
-      </div>
-
       {/* ── Top Bar ──────────────────────────────────────────────────────────── */}
       <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
         {/* Left: Brand Identity */}
