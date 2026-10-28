@@ -113,7 +113,7 @@ function createTables(sqlite: Database.Database): void {
 
     CREATE TABLE IF NOT EXISTS inventory_movements (
       id TEXT PRIMARY KEY,
-      product_id TEXT NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+      product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
       variant_id TEXT, order_id TEXT REFERENCES orders(id) ON DELETE RESTRICT,
       movement_type TEXT NOT NULL, quantity INTEGER NOT NULL,
       quantity_before INTEGER NOT NULL, quantity_after INTEGER NOT NULL,
@@ -239,8 +239,50 @@ function createTables(sqlite: Database.Database): void {
   `);
 
   addMissingColumns(sqlite);
+  migrateLegacyForeignKeys(sqlite);
   removeLegacyPaymentUniqueness(sqlite);
   backfillPesewas(sqlite);
+}
+
+function migrateLegacyForeignKeys(sqlite: Database.Database): void {
+  const foreignKeys = sqlite.prepare("PRAGMA foreign_key_list('inventory_movements')").all() as Array<{
+    table: string;
+    from: string;
+    to: string;
+    on_delete: string;
+  }>;
+  const hasCascadeDelete = foreignKeys.some(fk => fk.table === 'products' && fk.from === 'product_id' && fk.on_delete === 'CASCADE');
+  if (hasCascadeDelete) return;
+
+  sqlite.transaction(() => {
+    sqlite.exec(`
+      CREATE TABLE inventory_movements_migrating (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        variant_id TEXT,
+        order_id TEXT REFERENCES orders(id) ON DELETE RESTRICT,
+        movement_type TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        quantity_before INTEGER NOT NULL,
+        quantity_after INTEGER NOT NULL,
+        actor_name TEXT,
+        reason TEXT,
+        created_at INTEGER NOT NULL
+      );
+      INSERT INTO inventory_movements_migrating (
+        id, product_id, variant_id, order_id, movement_type,
+        quantity, quantity_before, quantity_after, actor_name, reason, created_at
+      )
+      SELECT
+        id, product_id, variant_id, order_id, movement_type,
+        quantity, quantity_before, quantity_after, actor_name, reason, created_at
+      FROM inventory_movements;
+      DROP TABLE inventory_movements;
+      ALTER TABLE inventory_movements_migrating RENAME TO inventory_movements;
+      CREATE INDEX inventory_movements_product_idx ON inventory_movements (product_id);
+      CREATE INDEX inventory_movements_order_idx ON inventory_movements (order_id);
+    `);
+  })();
 }
 
 /** Rebuilds early payment tables whose inline UNIQUE blocked split tenders. */

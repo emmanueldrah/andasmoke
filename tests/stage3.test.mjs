@@ -91,6 +91,30 @@ async function makeProduct(api, token, overrides = {}) {
   return created.body;
 }
 
+test('product deletion removes inventory history instead of hitting a foreign-key error', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-product-delete-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const { ownerToken } = await seedTill(api);
+  const product = await makeProduct(api, ownerToken, {
+    id: 'p-delete', name: 'Delete Me', barcode: 'ACS-DEL-001',
+  });
+
+  const sqlite = api.getSqliteHandle();
+  sqlite.prepare(`
+    INSERT INTO inventory_movements (id, product_id, movement_type, quantity, quantity_before, quantity_after, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run('im-delete-1', product.id, 'ADJUSTMENT', 5, 10, 15, Date.now());
+
+  const deleted = await callApi(api.products, {
+    method: 'DELETE', token: ownerToken, query: { id: product.id },
+  });
+
+  assert.equal(deleted.status, 200, `delete should succeed: ${JSON.stringify(deleted.body)}`);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM products WHERE id = ?').get(product.id).count, 0);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM inventory_movements WHERE product_id = ?').get(product.id).count, 0);
+});
+
 // ─────────────────────────────────────────────────────────────────────────
 // Money is held in integer minor units.
 // ─────────────────────────────────────────────────────────────────────────

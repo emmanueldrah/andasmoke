@@ -1,7 +1,7 @@
 import type { ApiRequest, ApiResponse } from './_http.js';
 import { randomUUID } from 'node:crypto';
 import { db, getBarcodeSequence, setBarcodeSequence } from '../src/db/index.js';
-import { posSyncQueue, products } from '../src/db/schema.js';
+import { inventoryMovements, posSyncQueue, products } from '../src/db/schema.js';
 import { eq, and, or, like, desc, asc, sql, inArray, SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { requireAdmin } from './_auth.js';
@@ -539,6 +539,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         return res.status(400).json({ error: 'Product ID is required' });
       }
 
+      const existing = await db.select({ id: products.id, name: products.name }).from(products).where(eq(products.id, id)).limit(1);
+      if (!existing[0]) return res.status(404).json({ error: 'Product not found' });
+
+      await db.delete(inventoryMovements).where(eq(inventoryMovements.productId, id));
       const [deleted] = await db.delete(products).where(eq(products.id, id)).returning({ id: products.id, name: products.name });
       if (!deleted) return res.status(404).json({ error: 'Product not found' });
       await db.insert(posSyncQueue).values({

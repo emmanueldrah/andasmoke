@@ -328,7 +328,7 @@ export const inventoryMovements = sqliteTable(
     id: text('id').primaryKey().$defaultFn(uuid),
     productId: text('product_id')
       .notNull()
-      .references(() => products.id, { onDelete: 'restrict' }),
+      .references(() => products.id, { onDelete: 'cascade' }),
     variantId: text('variant_id'),
     orderId: text('order_id').references(() => orders.id, { onDelete: 'restrict' }),
     movementType: text('movement_type').notNull(),

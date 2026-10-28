@@ -108,7 +108,7 @@ const schemaStatements = [
     cashier_name text, created_at timestamptz NOT NULL DEFAULT now()
   )`,
   `CREATE TABLE IF NOT EXISTS inventory_movements (
-    id text PRIMARY KEY, product_id text NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+    id text PRIMARY KEY, product_id text NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     variant_id text, order_id text REFERENCES orders(id) ON DELETE RESTRICT, movement_type text NOT NULL,
     quantity integer NOT NULL, quantity_before integer NOT NULL, quantity_after integer NOT NULL,
     actor_name text, reason text, created_at timestamptz NOT NULL DEFAULT now()
