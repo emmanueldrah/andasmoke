@@ -6,46 +6,58 @@
   :root {
     --font-sans: "Manrope", "Segoe UI", sans-serif;
     --font-display: "Fraunces", Georgia, serif;
-    /* Sea-mist glass surfaces with deep blue text and sea-blue accents. */
-    --bg-main: rgba(234, 245, 250, 0.05);
-    --bg-card: rgba(250, 253, 255, 0.08);
-    --bg-card-alt: rgba(215, 235, 245, 0.06);
-    --bg-soft: rgba(218, 237, 246, 0.03);
-    --text-primary: #173344;
-    --text-muted: #496575;
-    --text-subtle: #718895;
-    --border-color: rgba(72, 114, 132, 0.2);
-    --control-bg: rgba(250, 253, 255, 0.72);
-    --control-border: rgba(63, 119, 145, 0.3);
-    --accent: #167995;
-    --accent-strong: #13758f;
-    --accent-soft: rgba(22, 121, 149, 0.12);
+    /* Icy glass: tinted backing carries contrast; reflection adds the light. */
+    --bg-main: rgba(228, 241, 248, 0.84);
+    --bg-card: rgba(247, 252, 255, 0.86);
+    --bg-card-alt: rgba(223, 239, 247, 0.82);
+    --bg-soft: rgba(226, 239, 246, 0.88);
+    --surface-main-solid: #e4f1f8;
+    --surface-solid: #f2f9fc;
+    --surface-alt-solid: #dfeff7;
+    --surface-soft-solid: #e2eff6;
+    --control-solid: #f7fcff;
+    --sheet-surface: rgba(241, 249, 253, 0.97);
+    --text-primary: #142f40;
+    --text-muted: #3b5566;
+    --text-subtle: #516978;
+    --border-color: rgba(57, 102, 126, 0.22);
+    --control-bg: rgba(247, 252, 255, 0.96);
+    --control-border: rgba(57, 102, 126, 0.34);
+    --disabled-bg: #dce7ed;
+    --disabled-ink: #4b6170;
+    --disabled-border: #bccdd7;
+    --table-action-bg: #edf6fb;
+    --accent: #0f6e7c;
+    --accent-strong: #116574;
+    --accent-soft: rgba(15, 110, 124, 0.12);
     --accent-ink: #ffffff;
-    --highlight: #23849a;
-    --jade: #477b68;
-    --jade-soft: rgba(71, 123, 104, 0.12);
-    --violet: #795f7d;
-    --violet-strong: #957798;
-    --violet-soft: rgba(121, 95, 125, 0.1);
-    --olive: #66805f;
-    --olive-strong: #78956f;
-    --danger: #a84332;
-    --danger-soft: rgba(168, 67, 50, 0.1);
-    --shadow-soft: 0 12px 30px rgba(30, 66, 82, 0.1);
-    --shadow-card: 0 14px 32px rgba(30, 66, 82, 0.12);
-    /* Glass layer: every surface sits on the backdrop as frosted panes. */
-    --glass-blur: 16px;
-    --glass-sheen: rgba(255, 255, 255, 0.86);
-    --glass-sheen-soft: rgba(255, 255, 255, 0.34);
-    --glass-reflection: rgba(255, 255, 255, 0.7);
-    --glass-tint: 72%;
-    --glass-tint-deep: 52%;
-    --glass-edge: rgba(255, 255, 255, 0.94);
-    /* Clay layer: controls extruded from the pane with lit tops and cast bases. */
+    --highlight: #136b80;
+    --jade: #30644f;
+    --jade-soft: rgba(48, 100, 79, 0.12);
+    --violet: #725577;
+    --violet-strong: #806084;
+    --violet-soft: rgba(114, 85, 119, 0.1);
+    --olive: #526b46;
+    --olive-strong: #5a724d;
+    --danger: #a13b2d;
+    --danger-ink: #ffffff;
+    --danger-soft: rgba(161, 59, 45, 0.1);
+    --shadow-soft: 0 10px 28px -12px rgba(30, 66, 82, 0.16);
+    --shadow-card: 0 18px 40px -24px rgba(30, 66, 82, 0.26);
+    --glass-blur: 24px;
+    --glass-filter: blur(var(--glass-blur)) saturate(140%);
+    --glass-sheen: rgba(255, 255, 255, 0.48);
+    --glass-sheen-soft: rgba(255, 255, 255, 0.2);
+    --glass-reflection: rgba(255, 255, 255, 0.36);
+    --glass-edge: rgba(111, 158, 179, 0.32);
+    --glass-background:
+      linear-gradient(132deg, var(--glass-reflection), transparent 28%, transparent 76%, var(--accent-soft)),
+      linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    /* One upper-edge highlight and diffuse depth, not stacked white outlines. */
     --clay-lift: inset 0 1px 0 var(--glass-sheen);
-    --clay-well: inset 0 2px 5px color-mix(in srgb, #244555 12%, transparent);
-    --clay-base: 0 2px 0 color-mix(in srgb, var(--text-primary) 9%, transparent);
-    --clay-cast: 0 10px 20px -10px color-mix(in srgb, var(--text-primary) 28%, transparent);
+    --clay-well: inset 0 1px 3px rgba(36, 69, 85, 0.1);
+    --clay-base: 0 1px 2px rgba(30, 66, 82, 0.08);
+    --clay-cast: 0 6px 16px -10px rgba(30, 66, 82, 0.22);
     /* The lounge mark, sitting behind every pane. Cut out to a transparent
        PNG so its white plate no longer washes out the background. */
     --mark-opacity: 0.07;
@@ -63,43 +75,52 @@
 
   html.dark {
     color-scheme: dark;
-    /* Deep sea-blue surfaces keep dark mode cool and legible. */
-    --bg-main: rgba(5, 24, 36, 0.12);
-    --bg-card: rgba(8, 36, 52, 0.18);
-    --bg-card-alt: rgba(12, 49, 67, 0.13);
-    --bg-soft: rgba(7, 29, 43, 0.08);
-    --text-primary: #f4ebdf;
-    --text-muted: #d3c1a9;
-    --text-subtle: #ab8d70;
-    --border-color: rgba(105, 184, 207, 0.18);
-    --control-bg: rgba(8, 36, 52, 0.76);
-    --control-border: rgba(105, 184, 207, 0.3);
-    --accent: #d18c57;
-    --accent-strong: #e5bd72;
-    --accent-soft: rgba(209, 140, 87, 0.14);
-    --accent-ink: #1d130d;
-    --highlight: #e3bd70;
-    --jade: #78ad91;
-    --jade-soft: rgba(120, 173, 145, 0.12);
-    --violet: #b49ab9;
-    --violet-strong: #c7aeca;
-    --violet-soft: rgba(180, 154, 185, 0.12);
-    --olive: #c2ad78;
-    --olive-strong: #d2c18e;
-    --danger: #df8065;
-    --danger-soft: rgba(223, 128, 101, 0.13);
-    --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.28);
-    --shadow-card: 0 20px 48px rgba(0, 0, 0, 0.22);
-    /* Dark glass keeps a brighter rim so panes stay legible on near-black. */
-    --glass-blur: 12px;
-    --glass-sheen: rgba(255, 255, 255, 0.10);
-    --glass-sheen-soft: rgba(255, 255, 255, 0.06);
-    --glass-reflection: rgba(255, 255, 255, 0.18);
-    --glass-tint: 40%;
-    --glass-tint-deep: 26%;
-    --glass-edge: rgba(255, 255, 255, 0.10);
-    --clay-base: 0 2px 0 rgba(0, 0, 0, 0.44);
-    --clay-cast: 0 12px 26px -12px rgba(0, 0, 0, 0.66);
+    /* Smoked sea-blue panes, cool opaque text and warm amber actions. */
+    --bg-main: rgba(7, 26, 39, 0.86);
+    --bg-card: rgba(14, 42, 58, 0.88);
+    --bg-card-alt: rgba(10, 33, 48, 0.86);
+    --bg-soft: rgba(17, 47, 63, 0.9);
+    --surface-main-solid: #071a27;
+    --surface-solid: #0e2a3a;
+    --surface-alt-solid: #0a2130;
+    --surface-soft-solid: #112f3f;
+    --control-solid: #0b2433;
+    --sheet-surface: rgba(9, 31, 45, 0.97);
+    --text-primary: #f4f7fa;
+    --text-muted: #cedae4;
+    --text-subtle: #adc2d0;
+    --border-color: rgba(126, 177, 199, 0.24);
+    --control-bg: rgba(11, 36, 51, 0.97);
+    --control-border: rgba(126, 177, 199, 0.38);
+    --disabled-bg: #233b49;
+    --disabled-ink: #b8c9d4;
+    --disabled-border: #405b6b;
+    --table-action-bg: #123040;
+    --accent: #e1aa70;
+    --accent-strong: #edc083;
+    --accent-soft: rgba(225, 170, 112, 0.12);
+    --accent-ink: #24180e;
+    --highlight: #edc083;
+    --jade: #96c9ac;
+    --jade-soft: rgba(150, 201, 172, 0.12);
+    --violet: #c6acd0;
+    --violet-strong: #d6bfe0;
+    --violet-soft: rgba(198, 172, 208, 0.12);
+    --olive: #c8bf93;
+    --olive-strong: #d6cea5;
+    --danger: #f29e87;
+    --danger-ink: #2b160f;
+    --danger-soft: rgba(242, 158, 135, 0.12);
+    --shadow-soft: 0 12px 30px -14px rgba(0, 0, 0, 0.38);
+    --shadow-card: 0 18px 44px -22px rgba(0, 0, 0, 0.44);
+    --glass-blur: 24px;
+    --glass-sheen: rgba(187, 220, 238, 0.16);
+    --glass-sheen-soft: rgba(187, 220, 238, 0.07);
+    --glass-reflection: rgba(151, 202, 226, 0.12);
+    --glass-edge: rgba(126, 177, 199, 0.28);
+    --clay-well: inset 0 1px 3px rgba(0, 0, 0, 0.24);
+    --clay-base: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --clay-cast: 0 6px 16px -10px rgba(0, 0, 0, 0.4);
     /* The emblem is almost entirely black, so on a near-black page it would
        vanish. Inverting turns it into a light watermark. */
     --mark-opacity: 0.03;
@@ -120,11 +141,12 @@
     min-height: 100dvh;
     min-width: 0;
     background:
-      radial-gradient(1200px 540px at 90% -14%, rgba(72, 167, 197, 0.2), transparent 58%),
-      radial-gradient(900px 440px at -8% 0%, rgba(106, 176, 202, 0.14), transparent 52%),
-      linear-gradient(180deg, #eaf5fa 0%, #e1f0f6 55%, #f3f9fc 100%);
+      radial-gradient(1200px 640px at 90% -14%, rgba(67, 153, 192, 0.22), transparent 64%),
+      radial-gradient(900px 600px at -8% 12%, rgba(89, 178, 186, 0.16), transparent 64%),
+      radial-gradient(900px 560px at 65% 110%, rgba(228, 193, 138, 0.1), transparent 66%),
+      linear-gradient(180deg, #eaf5fa 0%, #e1eff6 55%, #f3f9fc 100%);
     color: var(--text-primary);
-    overflow-x: hidden;
+    overflow-x: clip;
     overflow-y: auto;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -168,10 +190,10 @@
 
   html.dark body {
     background:
-      radial-gradient(1100px 520px at 85% -10%, rgba(30, 143, 178, 0.16), transparent 60%),
-      radial-gradient(900px 520px at -10% 0%, rgba(24, 112, 137, 0.1), transparent 55%),
-      radial-gradient(700px 500px at 50% 115%, rgba(12, 64, 91, 0.18), transparent 60%),
-      linear-gradient(180deg, #092536 0%, #061b29 48%, #04131f 100%) !important;
+      radial-gradient(1100px 660px at 85% -10%, rgba(45, 142, 180, 0.22), transparent 66%),
+      radial-gradient(950px 660px at -10% 24%, rgba(24, 112, 137, 0.14), transparent 64%),
+      radial-gradient(800px 560px at 76% 110%, rgba(188, 123, 64, 0.1), transparent 68%),
+      linear-gradient(180deg, #092536 0%, #061b29 48%, #04131f 100%);
     color: var(--text-primary);
   }
 
@@ -184,18 +206,14 @@
   }
 
   select option {
-    background-color: #f3f8fa;
-    color: #173344;
-  }
-
-  html.dark select option {
-    background-color: #0b2330;
-    color: #F3EDE2;
+    background-color: var(--control-solid);
+    color: var(--text-primary);
   }
 
   input::placeholder,
   textarea::placeholder {
     color: var(--text-subtle);
+    opacity: 1;
   }
 
   a { text-decoration: none; }
@@ -211,7 +229,7 @@
     color: var(--text-primary);
     min-height: 100dvh;
     min-width: 0;
-    overflow-x: hidden;
+    overflow-x: clip;
     overflow-y: visible;
   }
 
@@ -225,12 +243,10 @@
     border-radius: 1.5rem;
     border: 1px solid var(--glass-edge);
     background: var(--bg-main);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 24px 52px -30px rgba(0, 0, 0, 0.24);
-    overflow: hidden;
-    backdrop-filter: blur(18px) saturate(150%);
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    box-shadow: var(--clay-lift), var(--shadow-card);
+    /* A filtered or scrolling frame traps fixed dialogs and sticky chrome.
+       Frost lives on its child panes; this rim clips without a scroll ancestor. */
+    overflow: clip;
   }
 
   .admin-shell__sidebar {
@@ -243,22 +259,17 @@
 
   .admin-shell__main {
     padding-left: 0;
+    min-width: 0;
   }
 
   .admin-shell__header {
     margin-left: 0;
     border-bottom: 1px solid var(--glass-edge);
-    background: var(--bg-card);
-    backdrop-filter: blur(20px) saturate(170%);
-    -webkit-backdrop-filter: blur(20px) saturate(170%);
   }
 
   .admin-shell__content {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--bg-card) 28%, transparent),
-      color-mix(in srgb, var(--bg-soft) 18%, transparent)
-    );
+    min-width: 0;
+    background: linear-gradient(180deg, transparent, var(--bg-main));
   }
 
   /* Keep legacy utility classes readable while screens are migrated to tokens. */
@@ -291,181 +302,114 @@
     color: var(--text-subtle) !important;
   }
 
-  html [class~="bg-white"],
-  html [class~="bg-stone-50"],
-  html [class~="bg-gray-50"],
-  html [class~="bg-slate-50"],
-  html [class~="bg-zinc-50"] {
-    background: linear-gradient(145deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04)) !important;
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 12px 28px -22px rgba(0,0,0,0.18) !important;
-    backdrop-filter: blur(18px) saturate(170%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(170%) !important;
-  }
-
-  html.dark [class~="bg-white"] {
-    background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)) !important;
-  }
-
-  html.dark [class~="bg-stone-50"],
-  html.dark [class~="bg-gray-50"],
-  html.dark [class~="bg-slate-50"],
-  html.dark [class~="bg-zinc-50"] {
-    background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)) !important;
+  /* Legacy app panes only: never override sheets, their contents or controls.
+     The background exception beats old white utilities without imposing borders. */
+  #root :is(.bg-white, .bg-stone-50, .bg-gray-50, .bg-slate-50, .bg-zinc-50):not(.form-sheet, .form-sheet *, .lux-card, .glass-panel, button, a, input, select, textarea) {
+    background: var(--glass-background) !important;
+    border-color: var(--glass-edge);
+    box-shadow: var(--clay-lift), var(--shadow-soft);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
   }
 }
 
 @layer components {
-  /* ── Design system: Ember & Onyx ─────────────────────────────────────────── */
+  /* ── Design system: Sea Glass ────────────────────────────────────────────── */
 
   .form-sheet {
-    --sheet-head: #f7fafc;
-    --sheet-line: rgba(23, 51, 68, 0.14);
-    --sheet-line-strong: rgba(23, 51, 68, 0.24);
-    --sheet-ink: #173344;
-    --sheet-ink-2: #294858;
-    --sheet-ink-3: #496575;
-    --sheet-ink-4: #607987;
-    --sheet-ink-5: #718895;
-    --sheet-hover: #edf4f7;
-    --sheet-panel: #f2f7f9;
-    --sheet-chip: #e8f0f3;
-    --sheet-button: #ffffff;
-    --sheet-field: #ffffff;
-    --sheet-solid: #d97706;
-    --sheet-solid-hover: #b45309;
-    --sheet-solid-ink: #ffffff;
-    --sheet-divide: rgba(23, 51, 68, 0.12);
-    --sheet-sticky: #f7fafc;
+    --sheet-head: var(--surface-solid);
+    --sheet-line: var(--border-color);
+    --sheet-line-strong: var(--control-border);
+    --sheet-ink: var(--text-primary);
+    --sheet-ink-2: var(--text-primary);
+    --sheet-ink-3: var(--text-muted);
+    --sheet-ink-4: var(--text-subtle);
+    --sheet-ink-5: var(--text-subtle);
+    --sheet-hover: var(--surface-alt-solid);
+    --sheet-panel: var(--bg-soft);
+    --sheet-chip: var(--surface-soft-solid);
+    --sheet-button: var(--control-bg);
+    --sheet-field: var(--control-bg);
+    --sheet-field-focus: var(--control-bg);
+    --sheet-solid: var(--accent);
+    --sheet-solid-hover: var(--accent-strong);
+    --sheet-solid-ink: var(--accent-ink);
+    --sheet-divide: var(--border-color);
+    --sheet-sticky: var(--surface-solid);
+    --sheet-check: var(--accent-soft);
+    --sheet-paper-bed: var(--surface-alt-solid);
     color: var(--sheet-ink);
-    background: #ffffff;
+    background:
+      linear-gradient(132deg, var(--glass-reflection), transparent 28%),
+      var(--sheet-surface);
     border-color: var(--sheet-line);
-    box-shadow: 0 24px 64px rgba(3, 20, 31, 0.28);
+    box-shadow: var(--clay-lift), 0 24px 64px -20px rgba(3, 20, 31, 0.38);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
   }
 
-  html.dark .form-sheet {
-    --sheet-head: #0b2b3c;
-    --sheet-line: rgba(151, 192, 207, 0.16);
-    --sheet-line-strong: rgba(151, 192, 207, 0.28);
-    --sheet-ink: #f4ebdf;
-    --sheet-ink-2: #e4d5c2;
-    --sheet-ink-3: #d3c1a9;
-    --sheet-ink-4: #b39a7d;
-    --sheet-ink-5: #9b846b;
-    --sheet-hover: #12384b;
-    --sheet-panel: #0d3041;
-    --sheet-chip: #12384b;
-    --sheet-button: #103448;
-    --sheet-field: #071f2c;
-    --sheet-solid: #e98400;
-    --sheet-solid-hover: #c86f00;
-    --sheet-solid-ink: #ffffff;
-    --sheet-divide: rgba(151, 192, 207, 0.12);
-    --sheet-sticky: #0b2b3c;
-    background: #082333;
+  .form-sheet :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]), select, textarea) {
+    min-height: 40px;
+    background: var(--sheet-field);
     color: var(--sheet-ink);
-    border-color: var(--sheet-line);
+    border-color: var(--sheet-line-strong);
+  }
+
+  .form-sheet :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]), select, textarea):focus {
+    background: var(--sheet-field-focus);
+    color: var(--sheet-ink);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .form-sheet label {
+    font-size: max(11px, 0.75rem);
+    color: var(--sheet-ink-3);
   }
 
   .profile-management-page {
-    --sheet-head: rgba(255, 255, 255, 0.28);
-    --sheet-panel: rgba(239, 247, 250, 0.42);
-    --sheet-chip: rgba(225, 239, 244, 0.46);
-    --sheet-button: rgba(255, 255, 255, 0.5);
-    --sheet-field: rgba(255, 255, 255, 0.62);
-    background: rgba(232, 244, 249, 0.78);
-    border-color: rgba(255, 255, 255, 0.46);
-    box-shadow: none;
-    backdrop-filter: blur(24px) saturate(150%);
-    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    box-shadow: var(--clay-lift), var(--shadow-soft);
   }
 
   .profile-management-page__header {
     background: var(--sheet-head);
-    backdrop-filter: blur(16px) saturate(145%);
-    -webkit-backdrop-filter: blur(16px) saturate(145%);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
   }
 
-  html.dark .profile-management-page {
-    --sheet-head: rgba(8, 36, 52, 0.44);
-    --sheet-panel: rgba(12, 49, 67, 0.46);
-    --sheet-chip: rgba(18, 56, 75, 0.58);
-    --sheet-button: rgba(16, 52, 72, 0.56);
-    --sheet-field: rgba(7, 31, 44, 0.66);
-    background: rgba(5, 24, 36, 0.78);
-    border-color: rgba(123, 177, 196, 0.22);
+  /* ── Glass panes: full-strength tint under a restrained diagonal sheen ───── */
+  .lux-card,
+  .glass-panel {
+    background: var(--glass-background);
+    color: var(--text-primary);
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--clay-lift), var(--shadow-card);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
   }
-
-  /* ── Layer 1: glass ────────────────────────────────────────────────────────
-     Every background surface is a frosted pane. Controls resting on top
-     (Layer 2) are extruded clay, so the two never compete. */
 
   .lux-card {
     position: relative;
-    background:
-      linear-gradient(132deg, var(--glass-reflection) 0%, color-mix(in srgb, var(--glass-reflection) 42%, transparent) 9%, transparent 30%, transparent 74%, rgba(69, 167, 191, 0.12) 100%),
-      linear-gradient(
-        145deg,
-        color-mix(in srgb, var(--bg-card) 56%, transparent) 0%,
-        color-mix(in srgb, var(--bg-card-alt) 56%, transparent) 72%,
-        color-mix(in srgb, var(--bg-soft) 62%, transparent) 100%
-      );
-    border: 1px solid var(--glass-edge);
-    border-radius: 0.85rem;
-    backdrop-filter: blur(var(--glass-blur)) saturate(155%);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, var(--glass-reflection) 92%, white),
-      inset 1px 0 0 color-mix(in srgb, var(--glass-reflection) 70%, transparent),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.16),
-      0 20px 36px -22px rgba(30, 66, 82, 0.2);
+    border-radius: 0.95rem;
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
   }
 
-  /* Surfaces holding interactive controls get a slightly deeper, softer pane
-     so nested clay controls stay readable. */
-  .lux-card:has(.lux-input),
-  .lux-card:has(.lux-select) {
-    backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(150%);
-    -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(150%);
-  }
-
-  .glass-panel {
-    background:
-      linear-gradient(132deg, var(--glass-reflection) 0%, color-mix(in srgb, var(--glass-reflection) 42%, transparent) 9%, transparent 30%, transparent 74%, rgba(69, 167, 191, 0.12) 100%),
-      color-mix(in srgb, var(--bg-card) 28%, transparent);
-    border: 1px solid var(--glass-edge);
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, var(--glass-reflection) 92%, white),
-      inset 1px 0 0 color-mix(in srgb, var(--glass-reflection) 70%, transparent),
-      inset 0 0 0 1px color-mix(in srgb, var(--glass-edge) 35%, transparent),
-      0 18px 42px -24px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(var(--glass-blur)) saturate(155%);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(155%);
-  }
-
   .glass-panel--dark {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.14);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 30px rgba(0, 0, 0, 0.14);
+    background: var(--glass-background);
+    color: var(--text-primary);
+    border-color: var(--glass-edge);
   }
 
-  html:not(.dark) .admin-shell__sidebar {
-    background:
-      radial-gradient(110% 48% at 52% 0%, rgba(52, 161, 194, 0.2), transparent 72%),
-      linear-gradient(177deg, rgba(230, 246, 253, 0.68), rgba(188, 221, 237, 0.44));
-    border-right-color: rgba(255, 255, 255, 0.74);
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.48), 18px 0 42px -28px rgba(24, 72, 91, 0.3);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-  }
-
-  html:not(.dark) .admin-shell__header {
-    background:
-      linear-gradient(105deg, rgba(26, 135, 170, 0.24), rgba(248, 253, 255, 0.64) 52%, rgba(57, 159, 194, 0.2));
-    border-bottom-color: rgba(45, 119, 151, 0.24);
-    backdrop-filter: blur(22px) saturate(175%);
-    -webkit-backdrop-filter: blur(22px) saturate(175%);
+  .admin-shell .admin-shell__sidebar,
+  .admin-shell .admin-shell__header {
+    background: var(--glass-background);
+    color: var(--text-primary);
+    border-color: var(--glass-edge);
+    box-shadow: var(--clay-lift), var(--shadow-soft);
+    backdrop-filter: var(--glass-filter);
+    -webkit-backdrop-filter: var(--glass-filter);
   }
 
   .brand-seal {
@@ -508,7 +452,7 @@
   .lux-input,
   .lux-select {
     width: 100%;
-    min-height: 2.5rem;
+    min-height: 40px;
     border-radius: 0.72rem;
     border: 1px solid var(--control-border);
     background: var(--control-bg);
@@ -517,31 +461,21 @@
     font-weight: 600;
     color: var(--text-primary);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
-    box-shadow:
-      inset 0 1px 2px rgba(36, 69, 85, 0.08),
-      0 1px 0 rgba(255,255,255,0.52);
+    box-shadow: var(--clay-well);
   }
 
   .lux-input:focus,
   .lux-select:focus {
     outline: none;
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--bg-card) 62%, transparent);
-    box-shadow:
-      var(--clay-well),
-      0 0 0 3px var(--accent-soft),
-      inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
-  }
-
-  .lux-input:disabled,
-  .lux-select:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
+    background: var(--control-bg);
+    color: var(--text-primary);
+    box-shadow: var(--clay-well), 0 0 0 3px var(--accent-soft);
   }
 
   .lux-label {
     display: block;
-    font-size: 0.62rem;
+    font-size: max(11px, 0.6875rem);
     font-weight: 800;
     letter-spacing: 0.11em;
     text-transform: uppercase;
@@ -563,37 +497,30 @@
     border: 1px solid transparent;
     cursor: pointer;
     white-space: nowrap;
-    /* Moulded: lit crown, cast base, and a real press depth. */
-    box-shadow:
-      var(--clay-lift),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.09),
-      var(--clay-base),
-      var(--clay-cast);
-    transition: filter 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease, opacity 0.15s ease;
+    background: var(--control-bg);
+    color: var(--text-primary);
+    box-shadow: var(--clay-lift), var(--clay-cast);
+    transition: filter 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
   }
 
   .lux-btn:hover:not(:disabled) { transform: translateY(-1px); }
   .lux-btn:active:not(:disabled) {
-    transform: translateY(2px);
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+    transform: translateY(1px);
+    box-shadow: var(--clay-well);
   }
-  .lux-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
   .lux-btn--primary {
     background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
     color: var(--accent-ink);
     border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.58),
-      inset 0 -2px 0 color-mix(in srgb, var(--accent) 28%, transparent),
-      0 4px 14px color-mix(in srgb, var(--accent) 27%, transparent);
+    box-shadow: var(--clay-lift), 0 6px 18px -10px color-mix(in srgb, var(--accent) 45%, transparent);
   }
 
-  .lux-btn--primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .lux-btn--primary:hover:not(:disabled) { filter: brightness(1.04); }
   .lux-btn--primary:active:not(:disabled) { box-shadow: inset 0 2px 6px rgba(60, 30, 6, 0.4); }
 
   .lux-btn--ink {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-soft) 80%, var(--text-primary) 20%) 0%, var(--bg-soft) 100%);
+    background: var(--bg-soft);
     color: var(--text-primary);
     border-color: var(--border-color);
     box-shadow: var(--clay-lift), var(--clay-base), var(--clay-cast);
@@ -601,18 +528,17 @@
 
   .lux-btn--ink:hover:not(:disabled) { filter: brightness(1.15); }
 
-  /* Resting on glass, so a translucent clay slab rather than an open outline. */
   .lux-btn--outline {
-    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-card) 72%, transparent) 0%, color-mix(in srgb, var(--bg-soft) 46%, transparent) 100%);
+    background: var(--control-bg);
     color: var(--text-primary);
-    border-color: color-mix(in srgb, var(--border-color) 88%, transparent);
+    border-color: var(--control-border);
     box-shadow: var(--clay-lift), var(--clay-base);
   }
 
   .lux-btn--outline:hover:not(:disabled) {
     border-color: var(--accent);
-    background: linear-gradient(180deg, var(--accent-soft) 0%, color-mix(in srgb, var(--accent) 14%, transparent) 100%);
-    box-shadow: var(--clay-lift), 0 2px 0 color-mix(in srgb, var(--accent) 30%, transparent);
+    background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--control-bg);
+    box-shadow: var(--clay-lift), var(--shadow-soft);
   }
 
   .lux-btn--ghost {
@@ -649,7 +575,7 @@
     gap: 0.375rem;
     border-radius: 9999px;
     padding: 0.3rem 0.75rem;
-    font-size: 0.68rem;
+    font-size: max(11px, 0.6875rem);
     font-weight: 800;
     letter-spacing: 0.04em;
     white-space: nowrap;
@@ -683,7 +609,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.68rem;
+    font-size: max(11px, 0.6875rem);
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -790,7 +716,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0 0.75rem 0.5rem;
-    font-size: 0.5625rem;
+    font-size: max(11px, 0.6875rem);
     font-weight: 800;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -881,7 +807,7 @@
     min-width: 1.4rem;
     padding: 0.1rem 0.4rem;
     border-radius: 999px;
-    font-size: 0.625rem;
+    font-size: max(11px, 0.6875rem);
     font-weight: 800;
     line-height: 1.35;
     text-align: center;
@@ -1031,7 +957,7 @@
     margin: 0;
     min-width: 1.05rem;
     padding: 0 0.2rem;
-    font-size: 0.5625rem;
+    font-size: max(11px, 0.6875rem);
     line-height: 1.3;
   }
 
@@ -1041,16 +967,12 @@
   .pos-scan {
     min-height: 3.25rem;
     border-radius: 0.85rem;
-    border: 1px solid color-mix(in srgb, var(--border-color) 84%, transparent);
-    background: color-mix(in srgb, var(--bg-soft) 34%, transparent);
+    border: 1px solid var(--control-border);
+    background: var(--control-bg);
     font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
-    /* A deep skeuo well: the scanner is pressed into the glass pane. */
-    box-shadow:
-      var(--clay-well),
-      inset 0 -2px 0 var(--glass-sheen-soft),
-      0 1px 0 var(--glass-sheen);
+    box-shadow: var(--clay-well);
     transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
   }
 
@@ -1062,41 +984,41 @@
   .pos-scan:focus {
     outline: none;
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--bg-card) 58%, transparent);
-    box-shadow:
-      var(--clay-well),
-      0 0 0 4px var(--accent-soft),
-      inset 0 0 0 1px color-mix(in srgb, var(--accent) 32%, transparent);
+    background: var(--control-bg);
+    color: var(--text-primary);
+    box-shadow: var(--clay-well), 0 0 0 3px var(--accent-soft);
   }
 
-  /* Compact ticket line keeps the whole basket visible without scrolling. */
+  /* Compact ticket lines scroll independently from settlement and payment. */
   .pos-line {
     display: flex;
     align-items: center;
     gap: 0.625rem;
     padding: 0.5rem 0.625rem;
     border-radius: 0.7rem;
-    background: color-mix(in srgb, var(--bg-soft) 38%, transparent);
-    box-shadow:
-      inset 0 1px 0 var(--glass-sheen-soft),
-      0 1px 2px color-mix(in srgb, var(--text-primary) 14%, transparent);
-    transition: background 140ms ease, transform 140ms ease;
+    background: var(--bg-soft);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
+    transition: background 140ms ease, border-color 140ms ease;
   }
 
   .pos-line:hover {
-    background: var(--accent-soft);
-    transform: translateX(2px);
+    background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--bg-soft);
+    border-color: var(--control-border);
   }
 
   .pos-qty {
     display: grid;
     place-items: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 0.45rem;
-    border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
-    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-card) 78%, transparent) 0%, color-mix(in srgb, var(--bg-soft) 54%, transparent) 100%);
-    color: var(--text-muted);
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+    border: 1px solid var(--control-border);
+    background: var(--control-bg);
+    color: var(--text-primary);
+    cursor: pointer;
     box-shadow: var(--clay-lift), var(--clay-base);
     transition: background 130ms ease, color 130ms ease, border-color 130ms ease, box-shadow 130ms ease, transform 120ms ease;
   }
@@ -1119,11 +1041,10 @@
     gap: 0.75rem;
     padding: 0.75rem 0.875rem;
     border-radius: 0.8rem;
-    background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 16%, transparent) 0%, color-mix(in srgb, var(--accent) 7%, transparent) 100%);
-    box-shadow:
-      inset 0 1px 0 var(--glass-sheen-soft),
-      inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent),
-      0 8px 18px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+    background: linear-gradient(160deg, var(--accent-soft), transparent), var(--bg-soft);
+    color: var(--text-primary);
+    border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border-color));
+    box-shadow: var(--clay-lift), var(--shadow-soft);
   }
 
   .pos-total b {
@@ -1139,90 +1060,386 @@
     justify-content: center;
     gap: 0.6rem;
     min-height: 3.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--accent);
     border-radius: 0.85rem;
     font-size: 1rem;
     font-weight: 800;
-    color: #fff;
-    background: linear-gradient(140deg, var(--accent) 0%, var(--accent-strong) 100%);
-    /* The most moulded object in the app: lit crown, hard cast base, real press. */
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.44),
-      inset 0 -2px 0 color-mix(in srgb, #6d3d10 30%, transparent),
-      0 3px 0 color-mix(in srgb, #6d3d10 48%, transparent),
-      0 14px 28px -12px color-mix(in srgb, var(--accent) 72%, transparent);
+    color: var(--accent-ink);
+    background: linear-gradient(140deg, var(--accent), var(--accent-strong));
+    box-shadow: var(--clay-lift), 0 10px 24px -14px color-mix(in srgb, var(--accent) 56%, transparent);
+    cursor: pointer;
     transition: transform 120ms ease, filter 160ms ease, box-shadow 120ms ease;
   }
 
   .pos-pay:hover:not(:disabled) {
-    filter: brightness(1.07);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      inset 0 -2px 0 color-mix(in srgb, #6d3d10 30%, transparent),
-      0 4px 0 color-mix(in srgb, #6d3d10 48%, transparent),
-      0 18px 34px -12px color-mix(in srgb, var(--accent) 80%, transparent);
+    filter: brightness(1.04);
+    transform: translateY(-1px);
+    box-shadow: var(--clay-lift), 0 14px 28px -14px color-mix(in srgb, var(--accent) 64%, transparent);
   }
 
   .pos-pay:active:not(:disabled) {
-    transform: translateY(3px);
-    box-shadow:
-      inset 0 3px 8px rgba(50, 24, 4, 0.42),
-      0 1px 0 color-mix(in srgb, #6d3d10 40%, transparent);
-  }
-
-  .pos-pay:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-    box-shadow: none;
+    transform: translateY(1px);
+    box-shadow: var(--clay-well);
   }
 
   .pos-pay__hint {
     margin-left: 0.25rem;
-    padding: 0.1rem 0.35rem;
+    padding: 0.15rem 0.4rem;
     border-radius: 0.3rem;
-    background: rgba(0, 0, 0, 0.22);
-    font-size: 0.625rem;
+    background: color-mix(in srgb, var(--accent-ink) 8%, transparent);
+    color: inherit;
+    font-size: max(11px, 0.6875rem);
     font-weight: 800;
     letter-spacing: 0.04em;
   }
 
-  html.dark .pos-pay__hint {
-    background: rgba(0, 0, 0, 0.34);
-  }
-
-  /* ── Accessibility fallbacks ────────────────────────────────────────────────
-     Some users ask the OS for less transparency. Blur is expensive on tills,
-     so drop it and fall back to opaque panes rather than ship a slow register. */
-  /* ── Layer 0 fallback ──────────────────────────────────────────────────────
-     If the cut-out mark cannot load, drop the layers rather than paint an
-     empty stacking layer over the page. */
+  /* Solid theme backings, not translucent substitutes, in both fallbacks. */
   @media (prefers-reduced-transparency: reduce) {
-    .lux-card,
-    .glass-panel,
+    :root,
+    html.dark {
+      --bg-main: var(--surface-main-solid);
+      --bg-card: var(--surface-solid);
+      --bg-card-alt: var(--surface-alt-solid);
+      --bg-soft: var(--surface-soft-solid);
+      --control-bg: var(--control-solid);
+      --sheet-surface: var(--surface-solid);
+      --glass-background: var(--surface-solid);
+      --glass-reflection: transparent;
+      --glass-filter: none;
+      --mark-opacity: 0;
+    }
+
     .pos-sidebar,
-    .lux-card:has(.lux-input),
-    .lux-card:has(.lux-select) {
+    html.dark .pos-sidebar {
+      background: var(--surface-solid);
+      color: var(--text-primary);
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
     }
-
-    .lux-card { background: var(--bg-card); }
-    .glass-panel { background: var(--bg-card); }
-    .pos-sidebar { background: linear-gradient(177deg, #251b16 0%, #1c1512 46%, #14100d 100%); }
-
-    html.dark .lux-card { background: var(--bg-card); }
-    html.dark .glass-panel { background: var(--bg-card); }
-    html.dark .pos-sidebar { background: linear-gradient(177deg, #0b394b 0%, #072738 48%, #051b2a 100%); }
   }
 
-  /* Backdrop-filter is unsupported or disabled: keep the panes readable. */
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .lux-card { background: color-mix(in srgb, var(--bg-card) 96%, transparent); }
-    .glass-panel { background: color-mix(in srgb, var(--bg-card) 96%, transparent); }
-    .pos-sidebar { background: linear-gradient(177deg, #251b16 0%, #1c1512 46%, #14100d 100%); }
-    html.dark .lux-card,
-    html.dark .glass-panel { background: color-mix(in srgb, var(--bg-card) 96%, transparent); }
-    html.dark .pos-sidebar { background: linear-gradient(177deg, #0b394b 0%, #072738 48%, #051b2a 100%); }
+    :root,
+    html.dark {
+      --bg-main: var(--surface-main-solid);
+      --bg-card: var(--surface-solid);
+      --bg-card-alt: var(--surface-alt-solid);
+      --bg-soft: var(--surface-soft-solid);
+      --control-bg: var(--control-solid);
+      --sheet-surface: var(--surface-solid);
+      --glass-background: var(--surface-solid);
+      --glass-reflection: transparent;
+      --glass-filter: none;
+      --mark-opacity: 0;
+    }
+
+    .pos-sidebar,
+    html.dark .pos-sidebar {
+      background: var(--surface-solid);
+      color: var(--text-primary);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
+}
+
+/* Scoped hooks sit outside layers so legacy layout/state utilities cannot win. */
+.admin-shell .admin-shell__sidebar {
+  top: 0.75rem;
+  left: 0.75rem;
+  bottom: 0.75rem;
+}
+
+.admin-shell .admin-shell__nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-shell .admin-shell__nav-link:hover:not(:disabled) {
+  background: var(--bg-soft);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.admin-shell .admin-shell__nav-link.is-active,
+.admin-shell .admin-shell__nav-link.is-active:hover:not(:disabled) {
+  background: linear-gradient(115deg, var(--accent-soft), transparent), var(--bg-card);
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border-color));
+  color: var(--text-primary);
+  box-shadow: var(--clay-lift), inset 2px 0 0 var(--accent);
+}
+
+.admin-shell .admin-shell__nav-link.is-active svg {
+  color: var(--accent);
+}
+
+.admin-shell .admin-shell__nav-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.admin-shell .admin-shell__nav-group + .admin-shell__nav-group {
+  margin-top: 0.75rem;
+}
+
+.admin-shell :is([class~="text-[9px]"], [class~="text-[10px]"]):not([data-print-preview] *) {
+  font-size: 11px;
+}
+
+.pos-workspace > .pos-workspace__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.pos-workspace > .pos-workspace__grid > * {
+  min-width: 0;
+}
+
+.pos-workspace .pos-workspace__history {
+  grid-column: 1 / -1;
+}
+
+.pos-workspace .pos-workspace__ticket {
+  position: static;
+  min-width: 0;
+  align-self: start;
+}
+
+@media (min-width: 1280px) {
+  .pos-workspace > .pos-workspace__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  }
+
+  .pos-workspace .pos-workspace__ticket {
+    position: sticky;
+    top: 5rem;
+  }
+}
+
+.pos-workspace .pos-ticket {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+.pos-workspace .pos-ticket__lines {
+  flex: 0 1 auto;
+  min-height: 130px;
+  max-height: clamp(130px, 25dvh, 260px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+}
+
+.pos-workspace .pos-ticket__settlement {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+  background: var(--bg-soft);
+  color: var(--text-primary);
+}
+
+.pos-workspace .pos-ticket__footer {
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-color);
+  border-radius: 0 0 0.95rem 0.95rem;
+  background: var(--surface-solid);
+}
+
+@media (min-width: 1280px) {
+  .pos-workspace .pos-ticket {
+    max-height: calc(100dvh - 11rem);
+    overflow: hidden;
+  }
+
+  .pos-workspace .pos-ticket__lines {
+    flex-shrink: 0;
+    max-height: clamp(130px, 22dvh, 190px);
+  }
+}
+
+.pos-workspace .pos-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.pos-workspace .pos-product-tile {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--glass-edge);
+  border-radius: 0.9rem;
+  background: var(--glass-background);
+  color: var(--text-primary);
+  box-shadow: var(--clay-lift), var(--shadow-soft);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.pos-workspace .pos-product-tile > div {
+  width: 100%;
+  min-width: 0;
+}
+
+.pos-workspace .pos-product-tile img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  background: var(--bg-soft);
+}
+
+.pos-workspace .pos-product-tile > div:last-child {
+  flex: 1;
+  padding: 12px;
+  color: var(--text-primary);
+}
+
+.pos-workspace .pos-product-tile:hover:not(:disabled) {
+  border-color: var(--accent);
+  box-shadow: var(--clay-lift), var(--shadow-card);
+  transform: translateY(-2px);
+}
+
+.pos-workspace .pos-product-tile:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.pos-workspace .pos-product-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.pos-workspace .pos-sale-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pos-workspace .pos-sale-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 100%;
+  background: var(--bg-soft);
+}
+
+.pos-workspace .pos-sale-switch button {
+  min-height: 36px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.pos-workspace .pos-sale-switch button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--clay-lift);
+}
+
+.pos-workspace .pos-sale-switch button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pos-workspace .pos-history-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--text-primary);
+}
+
+.pos-workspace .pos-history-table thead {
+  background: var(--bg-soft);
+  color: var(--text-muted);
+}
+
+.pos-workspace .pos-history-table thead th {
+  font-size: max(11px, 0.6875rem);
+  font-weight: 800;
+  color: var(--text-muted);
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pos-workspace .pos-history-table tbody td {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pos-workspace .pos-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.pos-workspace .pos-history-table :is(th, td):last-child {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  background: var(--table-action-bg);
+  box-shadow: inset 1px 0 0 var(--border-color), -8px 0 14px -12px rgba(0, 0, 0, 0.3);
+}
+
+.pos-workspace .pos-history-table thead th:last-child {
+  z-index: 2;
+}
+
+.pos-workspace .pos-history-table tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.pos-workspace .pos-history-table tbody tr:hover td:last-child {
+  background: color-mix(in srgb, var(--accent) 5%, var(--table-action-bg));
+}
+
+/* State styling beats disabled opacity utilities without dimming readable ink. */
+#root :is(button, input, select, textarea):disabled {
+  background: var(--disabled-bg);
+  color: var(--disabled-ink);
+  -webkit-text-fill-color: var(--disabled-ink);
+  border-color: var(--disabled-border);
+  opacity: 1;
+  filter: none;
+  box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
+  transform: none;
+  cursor: not-allowed;
+}
+
+#root :is(input, textarea):disabled::placeholder {
+  color: var(--disabled-ink);
+  opacity: 1;
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }

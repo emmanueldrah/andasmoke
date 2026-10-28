@@ -455,7 +455,7 @@ export const AdminAccountsManagementScreen: React.FC = () => {
                               <>
                                 <button
                                   onClick={() => handleDeleteAdmin(account.id)}
-                                  className="flex items-center gap-1 rounded-lg bg-[var(--danger)] px-2.5 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
+                                  className="flex items-center gap-1 rounded-lg bg-[var(--danger)] px-2.5 py-1.5 text-xs font-bold text-[var(--danger-ink)] transition-opacity hover:opacity-90"
                                 >
                                   <AlertTriangle className="w-3 h-3" />
                                   Confirm

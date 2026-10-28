@@ -168,7 +168,7 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
 
   const filterPill = (active: boolean) =>
     `rounded-lg px-3 py-2 text-[11px] font-bold transition ${
-      active ? 'bg-[var(--accent)] text-white shadow-sm' : 'bg-[var(--bg-soft)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+      active ? 'bg-[var(--accent)] text-[var(--accent-ink)] shadow-sm' : 'bg-[var(--bg-soft)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'
     }`;
 
   return (
@@ -402,7 +402,7 @@ export const AdminProductsScreen: React.FC<ProductsScreenProps> = ({
                         type="button"
                         onClick={() => handleDeleteProduct(product)}
                         disabled={busy}
-                        className="rounded-lg bg-[var(--danger)] px-2.5 py-1.5 text-[10px] font-bold text-white transition hover:brightness-110"
+                        className="rounded-lg bg-[var(--danger)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--danger-ink)] transition hover:brightness-110"
                       >
                         Delete
                       </button>

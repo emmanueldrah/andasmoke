@@ -394,14 +394,14 @@ export const AdminPortal: React.FC = () => {
 
       {/* Nav groups */}
       <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
-        <ul className="space-y-5">
+        <ul className="space-y-3">
           {navGroups.map(group => {
             const items = visibleNavItems.filter(item => item.group === group.key);
             if (!items.length) return null;
             return (
-              <li key={group.key}>
+              <li key={group.key} className="admin-shell__nav-group">
                 {!collapsed && (
-                  <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--text-subtle)]">{group.label}</p>
+                  <p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">{group.label}</p>
                 )}
                 <ul className="space-y-1">
                   {items.map(item => {
@@ -412,8 +412,9 @@ export const AdminPortal: React.FC = () => {
                         <button
                           type="button"
                           title={collapsed ? item.label : undefined}
+                          aria-current={isActive ? 'page' : undefined}
                           onClick={() => handleTabChange(item.id)}
-                          className={`relative flex w-full items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-colors ${
+                          className={`admin-shell__nav-link ${isActive ? 'is-active' : ''} relative flex w-full items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-colors ${
                             collapsed ? 'justify-center px-0' : 'px-3'
                           } ${
                             isActive
@@ -471,7 +472,7 @@ export const AdminPortal: React.FC = () => {
           <div className={`flex items-center gap-2 rounded-xl bg-[var(--danger-soft)] p-2 ${collapsed ? 'w-full' : ''}`}>
             <button
               onClick={handleLogout}
-              className="flex-1 rounded-lg bg-[var(--danger)] px-3 py-2 text-xs font-bold text-[#FFF6F2] transition hover:brightness-110"
+              className="flex-1 rounded-lg bg-[var(--danger)] px-3 py-2 text-xs font-bold text-[var(--danger-ink)] transition hover:brightness-110"
             >
               Confirm
             </button>
@@ -514,14 +515,14 @@ export const AdminPortal: React.FC = () => {
     );
   }
 
-  const railWidth = railCollapsed ? 'lg:pl-[84px]' : 'lg:pl-[264px]';
+  const railWidth = railCollapsed ? 'lg:pl-[76px]' : 'lg:pl-[232px]';
 
   return (
     <div className="admin-shell min-h-screen text-[var(--text-primary)]">
       <div className="admin-shell__frame">
         {/* Desktop sidebar */}
         <aside
-          className={`glass-panel admin-shell__sidebar fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-[var(--border-color)] transition-[width] duration-200 lg:flex ${railCollapsed ? 'w-[84px]' : 'w-[264px]'}`}
+          className={`glass-panel admin-shell__sidebar fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-[var(--border-color)] transition-[width] duration-200 lg:flex ${railCollapsed ? 'w-[76px]' : 'w-[232px]'}`}
         >
           {renderNav(railCollapsed)}
         </aside>
@@ -597,7 +598,7 @@ export const AdminPortal: React.FC = () => {
             </div>
           </header>
 
-          <main className="admin-shell__content px-4 py-5 md:px-6 md:py-6">
+          <main className="admin-shell__content px-4 py-4 md:px-5 md:py-5">
             <div className={`mx-auto ${currentTab === 'pos' ? 'max-w-[1600px]' : 'max-w-[1400px]'}`}>
               <AdminTabErrorBoundary
                 key={currentTab}

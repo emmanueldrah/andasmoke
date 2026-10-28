@@ -46,9 +46,9 @@ export function AdminMetricCard({
   accent?: keyof typeof metricAccents;
 }) {
   return (
-    <article className="min-w-0 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-card)]">
+    <article className="lux-card min-w-0 p-4 transition-shadow hover:shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-subtle)]">{label}</span>
+        <span className="truncate text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text-subtle)]">{label}</span>
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--accent-soft)]">
           <Icon className="h-3.5 w-3.5 text-[var(--accent)]" aria-hidden="true" />
         </span>
@@ -67,7 +67,7 @@ export function AdminStatusBadge({ label, tone = 'neutral' }: { label: string; t
     danger: 'bg-[var(--danger-soft)] text-[var(--danger)]',
     info: 'bg-[var(--violet-soft)] text-[var(--violet)]',
   };
-  return <span className={`inline-flex max-w-full items-center rounded-full px-2.5 py-1 text-[10px] font-bold ${styles[tone]}`}><span className="truncate">{label}</span></span>;
+  return <span className={`inline-flex max-w-full items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${styles[tone]}`}><span className="truncate">{label}</span></span>;
 }
 
 export function AdminEmptyState({ title, description, icon: Icon = Inbox, action }: { title: string; description: string; icon?: LucideIcon; action?: React.ReactNode }) {
@@ -136,7 +136,7 @@ export function AdminStatStrip({
               <Icon className={`h-3.5 w-3.5 ${tone}`} aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-subtle)]">
+              <span className="block truncate text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text-subtle)]">
                 {stat.label}
               </span>
               <span className={`mt-0.5 block truncate text-lg font-extrabold leading-none tabular-nums ${tone}`}>

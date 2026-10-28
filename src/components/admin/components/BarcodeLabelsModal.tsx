@@ -829,7 +829,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                 </div>
 
                 <div className="flex justify-center overflow-auto rounded-[24px] bg-[var(--sheet-paper-bed)] p-4">
-                  <div className="shrink-0 bg-[#ffffff] shadow-xl" style={{ width: `${previewPageWidth}px`, aspectRatio: `${pageWidthMm} / ${pageHeightMm}`, boxSizing: 'border-box', paddingTop: template.category === 'thermal' ? 0 : `${template.pagePaddingTopMm * previewScale}px`, paddingInline: template.category === 'thermal' ? 0 : `${template.pagePaddingSideMm * previewScale}px` }}>
+                  <div data-print-preview className="shrink-0 bg-[#ffffff] shadow-xl" style={{ width: `${previewPageWidth}px`, aspectRatio: `${pageWidthMm} / ${pageHeightMm}`, boxSizing: 'border-box', paddingTop: template.category === 'thermal' ? 0 : `${template.pagePaddingTopMm * previewScale}px`, paddingInline: template.category === 'thermal' ? 0 : `${template.pagePaddingSideMm * previewScale}px` }}>
                     <div className="grid h-full w-full" style={{ gridTemplateColumns: `repeat(${template.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${template.rows}, minmax(0, 1fr))`, columnGap: `${template.gapXmm * previewScale}px`, rowGap: `${template.gapYmm * previewScale}px` }}>
                       {flatLabels.slice(0, template.labelsPerPage).map((item, index) => (
                         <div key={`preview-${item.id}-${index}`} className={`flex flex-col justify-between overflow-hidden bg-[#ffffff] px-2 py-1.5 text-black ${showCutBorders ? 'border border-dashed border-[#9c8b7e]' : ''}`} style={{ aspectRatio: `${template.labelWidthMm} / ${template.labelHeightMm}` }}>
@@ -852,7 +852,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                             {item.barcode ? (
                               <div dangerouslySetInnerHTML={{ __html: generateCode128Svg(item.barcode, { height: 34, showText: showBarcodeText, fontSize: 9, quietZone: 8 }) }} className="h-12 w-full" />
                             ) : (
-                              <div className="w-full rounded border border-[var(--accent)] bg-[var(--accent-soft)] px-2 py-1 text-center text-[8px] font-bold text-[var(--accent)]">Barcode needed</div>
+                              <div className="w-full rounded border border-[#9a573c] bg-[#fff0e5] px-2 py-1 text-center text-[11px] font-bold text-[#713b27]">Barcode needed</div>
                             )}
                           </div>
                         </div>

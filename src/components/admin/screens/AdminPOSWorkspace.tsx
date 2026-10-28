@@ -1135,7 +1135,7 @@ export function AdminPOSWorkspace() {
   };
 
 return (
-    <div className="min-h-0 space-y-4 text-[var(--text-primary)]">
+    <div className="pos-workspace min-h-0 space-y-4 text-[var(--text-primary)]">
       {/* ── Counter bar: connectivity + the shift gate, which must be visible
              before a cashier starts selling. ── */}
       <div className="lux-card flex flex-wrap items-center gap-2 px-3 py-2.5">
@@ -1172,7 +1172,7 @@ return (
               {(serverName || 'S').charAt(0).toUpperCase()}
             </span>
             <span className="min-w-0">
-              <span className="block text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-subtle)]">Served by</span>
+              <span className="block text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-subtle)]">Served by</span>
               <span className="block max-w-32 truncate text-xs font-bold leading-tight text-[var(--text-primary)]">{serverName}</span>
             </span>
           </span>
@@ -1187,16 +1187,16 @@ return (
         </div>
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_400px]">
-        {/* ── LEFT: scan, then stock ── */}
+      <div className="pos-workspace__grid grid grid-cols-1 items-start gap-4">
+        {/* Scan and catalogue share one working area. */}
         <div className="min-w-0 space-y-4">
-          <section className="lux-card p-3 sm:p-4" aria-label="Sale type">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <section className="lux-card p-3 sm:p-4" aria-label="Product search and sale type">
+            <div className="pos-sale-toolbar mb-4">
               <div>
-                <p className="eyebrow">Sale type</p>
-                <p className="mt-1 text-xs text-[var(--text-muted)]">Wholesale applies each available bulk price and keeps the buyer on the sale record.</p>
+                <h2 className="text-sm font-bold text-[var(--text-primary)]">Build a sale</h2>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">Scan a barcode or choose from your stock.</p>
               </div>
-              <div className="inline-flex rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-1" role="group" aria-label="Choose sale type">
+              <div className="pos-sale-switch inline-flex rounded-xl border border-[var(--control-border)] bg-[var(--bg-soft)] p-1" role="group" aria-label="Choose sale type">
                 {(['retail', 'wholesale'] as const).map(mode => (
                   <button key={mode} type="button" aria-pressed={saleMode === mode} onClick={() => setTicketMode(mode)} className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize transition ${saleMode === mode ? 'bg-[var(--accent)] text-[var(--accent-ink)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
                     {mode}
@@ -1205,7 +1205,7 @@ return (
               </div>
             </div>
             {saleMode === 'wholesale' && (
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <div className="mb-4 grid gap-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-3 sm:grid-cols-2">
                 <label className="lux-label">Buyer / business
                   <input value={wholesaleBuyer} onChange={event => setWholesaleBuyer(event.target.value)} placeholder="Business or buyer name" className="lux-input mt-1 w-full" />
                 </label>
@@ -1214,10 +1214,8 @@ return (
                 </label>
               </div>
             )}
-          </section>
-          {/* One field: scan a code or type a name. */}
-          <div className="lux-card p-3 sm:p-4">
-            <div className="flex items-stretch gap-3">
+            {/* One field: scan a code or type a name. */}
+            <div className="flex items-stretch gap-2">
               <label className="relative min-w-0 flex-1">
                 <Barcode className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--accent)]" />
                 <input
@@ -1280,23 +1278,23 @@ return (
                 <kbd className="hidden shrink-0 rounded border border-[var(--border-color)] bg-[var(--bg-soft)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--text-subtle)] sm:block">F3</kbd>
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Stock tiles */}
-          <div className="lux-card p-4 sm:p-5">
+          <section className="lux-card p-3 sm:p-4" aria-label="Available stock">
             <div className="mb-3 flex items-center justify-between gap-3 px-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-subtle)]">Stock</p>
-              <span className="text-xs text-[var(--text-muted)]">Tap to add to the ticket</span>
+              <h2 className="text-sm font-bold text-[var(--text-primary)]">Available stock</h2>
+              <span className="text-xs text-[var(--text-muted)]">Tap to add</span>
             </div>
             {loading ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-52 animate-pulse rounded-2xl bg-[var(--bg-soft)]" />)}</div>
+              <div className="pos-product-grid">{Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-52 animate-pulse rounded-2xl bg-[var(--bg-soft)]" />)}</div>
             ) : filteredItems.length ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              <div className="pos-product-grid">
                 {filteredItems.map(item => (
-                  <button type="button" key={lineKey(item)} onClick={() => addToCart(item)} className="group lux-card overflow-hidden text-left transition duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
+                  <button type="button" key={lineKey(item)} onClick={() => addToCart(item)} className="pos-product-tile group lux-card overflow-hidden text-left transition duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
                     <div className="relative">
                       <img src={item.variant?.image || item.product.image} alt="" className="h-28 w-full object-cover" />
-                      <span className={`absolute right-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-bold text-white ${item.stock <= 5 ? 'bg-[var(--highlight)]' : 'bg-black/70'}`}>{item.stock} left</span>
+                      <span className={`absolute right-2 top-2 rounded-md px-2 py-1 text-[11px] font-bold shadow-sm ${item.stock <= 5 ? 'bg-[var(--accent-strong)] text-[var(--accent-ink)]' : 'bg-[#102838] text-white'}`}>{item.stock} left</span>
                     </div>
                     <div className="p-3">
                       <p className="line-clamp-2 min-h-10 text-sm font-semibold text-[var(--text-primary)]">{item.product.name}</p>
@@ -1320,102 +1318,16 @@ return (
                 )}
               </div>
             )}
-          </div>
-
-
-          {/* Recent POS sales */}
-          <section className="lux-card p-4 sm:p-5">
-            {/* The shell's Refresh already pulls sales again, so the card does
-                not carry a second button that does the same thing. */}
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="brand-display text-lg font-semibold text-[var(--text-primary)]">Recent POS sales</h2>
-              {posHistory.length > 0 && ['Super Admin', 'Store Manager'].includes(adminSession.adminRole) && (
-                <button type="button" onClick={() => {
-                  if (window.confirm('Clear all sales history? This cannot be undone.')) {
-                    void (async () => {
-                      try {
-                        const result = await api.delete<{ deleted: number }>('/orders?action=clear-all');
-                        showAlert(`Cleared ${result.deleted} sale${result.deleted === 1 ? '' : 's'}.`, 'success');
-                        await fetchOrders();
-                      } catch (error: any) {
-                        showAlert(error?.data?.error || error?.message || 'Could not clear sales.', 'error');
-                      }
-                    })();
-                  }
-                }} className="lux-btn lux-btn--outline lux-btn--sm text-[var(--danger)]">
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Clear all
-                </button>
-              )}
-            </div>
-            {posHistory.length ? (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[620px] text-left text-sm">
-                  <thead className="border-b border-[var(--border-color)] text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-subtle)]">
-                    <tr><th className="px-3 py-2">Sale</th><th className="px-3 py-2">Cashier</th><th className="px-3 py-2">Customer</th><th className="px-3 py-2">Payment</th><th className="px-3 py-2">Total</th><th className="px-3 py-2">When</th><th className="px-3 py-2 text-right">Actions</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-color)]">
-                    {posHistory.map(order => (
-                      <tr key={order.id}>
-                        <td className="px-3 py-3 font-mono text-xs font-bold text-[var(--text-primary)]">{order.orderNumber}</td>
-                        <td className="px-3 py-3 text-[var(--text-primary)]">
-                          <span className="flex items-center gap-1.5">
-                            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[9px] font-extrabold text-[var(--accent)]">
-                              {(order.cashierName || '?').charAt(0).toUpperCase()}
-                            </span>
-                            <span className="truncate">{order.cashierName || 'Unrecorded'}</span>
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-[var(--text-primary)]">
-                          <span className="flex items-center gap-1.5"><span>{order.shippingAddress?.fullName || 'Walk-in customer'}</span>{order.items?.some(item => item.priceType === 'wholesale') && <span className="lux-chip lux-chip--neutral text-[9px]">Wholesale</span>}</span>
-                        </td>
-                        <td className="px-3 py-3 capitalize text-[var(--text-muted)]">{order.paymentMethod.replaceAll('-', ' ')}</td>
-                        <td className="px-3 py-3 font-bold tabular-nums text-[var(--text-primary)]">{money(Number(order.total))}</td>
-                        <td className="whitespace-nowrap px-3 py-3 text-xs tabular-nums text-[var(--text-muted)]">{new Date(order.createdAt).toLocaleString()}</td>
-                        <td className="px-3 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button type="button" onClick={() => printReceipt(order)} aria-label={`Print receipt for ${order.orderNumber}`} className="lux-btn lux-btn--outline lux-btn--sm">
-                              <Printer className="h-3.5 w-3.5" />
-                              Print
-                            </button>
-                            {['Super Admin', 'Store Manager'].includes(adminSession.adminRole) && (
-                              <button type="button" onClick={() => {
-                                if (window.confirm(`Delete sale ${order.orderNumber}? This cannot be undone.`)) {
-                                  void (async () => {
-                                    try {
-                                      await api.delete(`/orders?id=${encodeURIComponent(order.id)}`);
-                                      showAlert(`Sale ${order.orderNumber} deleted.`, 'success');
-                                      await fetchOrders();
-                                    } catch (error: any) {
-                                      showAlert(error?.data?.error || error?.message || 'Could not delete sale.', 'error');
-                                    }
-                                  })();
-                                }
-                              }} aria-label={`Delete sale ${order.orderNumber}`} className="lux-btn lux-btn--outline lux-btn--sm text-[var(--danger)]">
-                                <Trash2 className="h-3.5 w-3.5" />
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="mt-4 rounded-2xl border border-dashed border-[var(--border-color)] px-4 py-8 text-center text-sm text-[var(--text-muted)]">{loadingOrders ? 'Loading sales...' : 'No sales recorded at this register yet.'}</div>
-            )}
           </section>
         </div>
 
-{/* ── RIGHT: the ticket. Compact so the basket always has room. ── */}
-        <aside className="min-w-0 lg:sticky lg:top-[4.5rem]">
-          <section className="lux-card flex max-h-[calc(100vh-5.5rem)] flex-col overflow-hidden p-0">
+        {/* Payment stays beside the catalogue on wide screens. */}
+        <aside className="pos-workspace__ticket min-w-0">
+          <section className="pos-ticket lux-card flex flex-col overflow-hidden p-0">
             <div className="flex items-center justify-between gap-2 border-b border-[var(--border-color)] px-3.5 py-2.5">
               <div className="flex items-center gap-2">
                 <h2 className="brand-display text-base font-semibold text-[var(--text-primary)]">Current sale</h2>
-                {saleMode === 'wholesale' && <span className="lux-chip lux-chip--neutral text-[9px]">Wholesale</span>}
+                {saleMode === 'wholesale' && <span className="lux-chip lux-chip--neutral">Wholesale</span>}
               </div>
               <span className="lux-chip lux-chip--neutral shrink-0">{itemCount} item{itemCount === 1 ? '' : 's'}</span>
             </div>
@@ -1423,7 +1335,7 @@ return (
             {/* Lines. min-h keeps the basket from collapsing when the
                 settlement block below it is tall — that squeeze is what made
                 this panel feel crowded and clipped the empty state. */}
-            <div className="min-h-[9rem] flex-1 overflow-y-auto p-2.5">
+            <div className="pos-ticket__lines overflow-y-auto p-3">
               {cart.length ? (
                 <ul className="space-y-1.5">
                   {cart.map(line => (
@@ -1451,7 +1363,7 @@ return (
                                 type="button"
                                 aria-pressed={line.priceType === priceType}
                                 onClick={() => updatePriceType(line, priceType)}
-                                className={`rounded px-2 py-1 text-[10px] font-semibold capitalize transition ${line.priceType === priceType ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
+                                className={`rounded px-2 py-1 text-[10px] font-semibold capitalize transition ${line.priceType === priceType ? 'bg-[var(--accent)] text-[var(--accent-ink)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
                               >
                                 {priceType}
                               </button>
@@ -1482,7 +1394,7 @@ return (
             </div>
 
             {/* Settlement, pinned so the total never scrolls away. */}
-            <div className="shrink-0 space-y-2 border-t border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_92%,transparent)] p-2.5">
+            <div className="pos-ticket__settlement space-y-3 border-t border-[var(--border-color)] bg-[var(--bg-soft)]">
               {discountAmount > 0 && (
                 <div className="flex items-center justify-between text-[13px] text-[var(--jade)]">
                   <span className="flex items-center gap-1.5">
@@ -1509,8 +1421,8 @@ return (
               </div>
 
               <div className="pos-total">
-                <span className="text-[9px] font-extrabold uppercase tracking-[0.18em] text-[var(--text-subtle)]">Total due</span>
-                <b className="brand-display tabular-nums text-[var(--accent)]">{money(subtotal)}</b>
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[var(--text-muted)]">Total due</span>
+                <b className="tabular-nums text-[var(--accent-strong)]">{money(subtotal)}</b>
               </div>
 
               {/* Discounts are the exception, not the rule, at a counter. Kept
@@ -1598,7 +1510,7 @@ return (
 
                         <div className="grid grid-cols-2 gap-1.5">
                           <div>
-                            <label className="sr-only" htmlFor={`pos-tender-amount-${index}`}>Amount paid</label>
+                            <label className="mb-1 block text-[11px] font-bold text-[var(--text-muted)]" htmlFor={`pos-tender-amount-${index}`}>Amount applied</label>
                             <input
                               id={`pos-tender-amount-${index}`}
                               type="number"
@@ -1615,7 +1527,7 @@ return (
                           </div>
                           {tender.method === 'cash-on-delivery' && (
                             <div>
-                              <label className="sr-only" htmlFor={`pos-tender-cash-${index}`}>Cash handed over</label>
+                              <label className="mb-1 block text-[11px] font-bold text-[var(--text-muted)]" htmlFor={`pos-tender-cash-${index}`}>Cash received</label>
                               <input
                                 id={`pos-tender-cash-${index}`}
                                 type="number"
@@ -1680,11 +1592,11 @@ return (
               ) : payment === 'cash-on-delivery' ? (
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="sr-only" htmlFor="pos-cash-received">Cash received</label>
-                    <input id="pos-cash-received" type="number" min="0" step="0.01" value={cashReceived} onChange={event => setCashReceived(event.target.value)} placeholder="Cash received" className="lux-input font-bold tabular-nums" />
+                    <label className="mb-1 block text-[11px] font-bold text-[var(--text-muted)]" htmlFor="pos-cash-received">Cash received</label>
+                    <input id="pos-cash-received" type="number" min="0" step="0.01" value={cashReceived} onChange={event => setCashReceived(event.target.value)} placeholder="0.00" className="lux-input font-bold tabular-nums" />
                   </div>
-                  <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] px-2.5 py-2">
-                    <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-[var(--text-subtle)]">Change</p>
+                  <div className="flex flex-col justify-center rounded-xl border border-[var(--control-border)] bg-[var(--control-bg)] px-3 py-2">
+                    <p className="text-[11px] font-bold text-[var(--text-muted)]">Change to give</p>
                     <b className={`block truncate text-sm tabular-nums ${change > 0 ? 'text-[var(--jade)]' : 'text-[var(--text-primary)]'}`}>{money(change)}</b>
                   </div>
                 </div>
@@ -1702,42 +1614,6 @@ return (
                   )}
                 </div>
               )}
-
-              <button
-                type="button"
-                disabled={!online || !cart.length || submitting}
-                onClick={() => void completeSale()}
-                className="pos-pay w-full"
-              >
-                {submitting ? 'Posting sale…' : 'Complete sale'}
-                <ArrowRight className="h-4 w-4" />
-                <kbd className="pos-pay__hint">F4</kbd>
-              </button>
-
-              {/* Rare actions, kept on one quiet line. */}
-              <div className="flex items-center justify-between gap-1 text-[11px] font-bold">
-                <button type="button" onClick={() => void holdSale()} title="Hold sale (F5)" className="rounded-md px-2 py-1 text-[var(--text-muted)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]">
-                  Hold
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHeldSalesOpen(open => !open)}
-                  title="Recall a held sale"
-                  aria-expanded={heldSalesOpen}
-                  className="rounded-md px-2 py-1 text-[var(--text-muted)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
-                >
-                  Held
-                  {heldSales.length > 0 && (
-                    <span className="ml-1 rounded-full bg-[var(--accent)] px-1.5 text-[10px] text-white">{heldSales.length}</span>
-                  )}
-                </button>
-                <button type="button" onClick={voidLine} disabled={!cart.length} title="Remove the last line from this unpaid ticket" className="rounded-md px-2 py-1 text-[var(--text-muted)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] disabled:opacity-35">
-                  Void line
-                </button>
-                <button type="button" onClick={() => void refundLatestSale()} className="rounded-md px-2 py-1 text-[var(--text-subtle)] transition hover:text-[var(--danger)]">
-                  Refund
-                </button>
-              </div>
 
               {/* Last backup, managers only. */}
               {isManager && lastBackup && (
@@ -1823,7 +1699,7 @@ return (
               {heldSalesOpen && (
                 <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] p-3">
                   <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Held sales</h3>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">Held tickets</h3>
                     <div className="flex items-center gap-2">
                       {heldSales.length > 0 && ['Super Admin', 'Store Manager'].includes(adminSession.adminRole) && (
                         <button type="button" onClick={() => {
@@ -1838,7 +1714,7 @@ return (
                               }
                             })();
                           }
-                        }} className="text-[10px] font-bold text-[var(--danger)] hover:underline">
+                        }} className="lux-btn lux-btn--danger lux-btn--sm">
                           Clear all
                         </button>
                       )}
@@ -1868,8 +1744,9 @@ return (
                               <button type="button" disabled={recalled} onClick={() => void recallHeldSale(held.id)} className="text-[var(--jade)] disabled:opacity-40">
                                 {recalled ? 'Recalled' : 'Recall'}
                               </button>
-                              <button type="button" onClick={() => void discardHeldSale(held.id)} className="text-[var(--danger)]">
-                                Discard
+                              <button type="button" onClick={() => void discardHeldSale(held.id)} className="lux-btn lux-btn--danger lux-btn--sm">
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Delete
                               </button>
                             </div>
                           </li>
@@ -1880,8 +1757,134 @@ return (
                 </div>
               )}
             </div>
+
+            <div className="pos-ticket__footer space-y-2">
+              <button
+                type="button"
+                disabled={!online || !cart.length || submitting}
+                onClick={() => void completeSale()}
+                className="pos-pay w-full"
+              >
+                {submitting ? 'Posting sale…' : 'Complete sale'}
+                <ArrowRight className="h-4 w-4" />
+                <kbd className="pos-pay__hint">F4</kbd>
+              </button>
+
+              <div className="flex items-center justify-between gap-1 text-[11px] font-bold">
+                <button type="button" onClick={() => void holdSale()} title="Hold sale (F5)" className="rounded-md px-2 py-1 text-[var(--text-muted)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]">
+                  Hold
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeldSalesOpen(open => !open)}
+                  title="Recall a held sale"
+                  aria-expanded={heldSalesOpen}
+                  className="rounded-md px-2 py-1 text-[var(--text-muted)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)]"
+                >
+                  Tickets
+                  {heldSales.length > 0 && (
+                    <span className="ml-1 rounded-full bg-[var(--accent)] px-1.5 text-[11px] text-[var(--accent-ink)]">{heldSales.length}</span>
+                  )}
+                </button>
+                <button type="button" onClick={voidLine} disabled={!cart.length} title="Remove the last line from this unpaid ticket" className="rounded-md px-2 py-1 text-[var(--text-muted)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text-primary)] disabled:opacity-35">
+                  Void line
+                </button>
+                <button type="button" onClick={() => void refundLatestSale()} className="rounded-md px-2 py-1 text-[var(--text-subtle)] transition hover:text-[var(--danger)]">
+                  Refund
+                </button>
+              </div>
+            </div>
           </section>
         </aside>
+
+        <section className="pos-workspace__history lux-card min-w-0 p-3 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-[var(--text-primary)]">Recent POS sales</h2>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">Receipts and sales history from this register.</p>
+            </div>
+            {posHistory.length > 0 && isManager && (
+              <button type="button" onClick={() => {
+                if (window.confirm('Clear all sales history? This cannot be undone.')) {
+                  void (async () => {
+                    try {
+                      const result = await api.delete<{ deleted: number }>('/orders?action=clear-all');
+                      showAlert(`Cleared ${result.deleted} sale${result.deleted === 1 ? '' : 's'}.`, 'success');
+                      await fetchOrders();
+                    } catch (error: any) {
+                      showAlert(error?.data?.error || error?.message || 'Could not clear sales.', 'error');
+                    }
+                  })();
+                }
+              }} className="lux-btn lux-btn--danger lux-btn--sm">
+                <Trash2 className="h-3.5 w-3.5" />
+                Clear history
+              </button>
+            )}
+          </div>
+          {posHistory.length ? (
+            <div className="mt-4 overflow-x-auto rounded-xl border border-[var(--border-color)]">
+              <table className="pos-history-table w-full min-w-[720px] text-left text-sm">
+                <thead className="border-b border-[var(--border-color)] text-[11px] font-extrabold uppercase tracking-wide text-[var(--text-muted)]">
+                  <tr>
+                    <th className="px-3 py-3">Sale / cashier</th>
+                    <th className="px-3 py-3">Customer</th>
+                    <th className="px-3 py-3">Payment</th>
+                    <th className="px-3 py-3">Total</th>
+                    <th className="px-3 py-3">When</th>
+                    <th className="px-3 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border-color)]">
+                  {posHistory.map(order => (
+                    <tr key={order.id}>
+                      <td className="px-3 py-3">
+                        <p className="whitespace-nowrap font-mono text-xs font-bold text-[var(--text-primary)]">{order.orderNumber}</p>
+                        <p className="mt-1 text-xs text-[var(--text-muted)]">{order.cashierName || 'Unrecorded'}</p>
+                      </td>
+                      <td className="px-3 py-3 text-[var(--text-primary)]">
+                        <span>{order.shippingAddress?.fullName || 'Walk-in customer'}</span>
+                        {order.items?.some(item => item.priceType === 'wholesale') && <span className="lux-chip lux-chip--neutral ml-2">Wholesale</span>}
+                      </td>
+                      <td className="px-3 py-3 text-xs text-[var(--text-muted)]">{order.paymentMethod === 'cash-on-delivery' ? 'Cash' : order.paymentMethod === 'momo-mtn' ? 'MTN MoMo' : order.paymentMethod.replaceAll('-', ' ')}</td>
+                      <td className="whitespace-nowrap px-3 py-3 font-bold tabular-nums text-[var(--text-primary)]">{money(Number(order.total))}</td>
+                      <td className="px-3 py-3 text-xs tabular-nums text-[var(--text-muted)]">
+                        <p className="whitespace-nowrap">{new Date(order.createdAt).toLocaleDateString()}</p>
+                        <p className="mt-1 whitespace-nowrap">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button type="button" onClick={() => printReceipt(order)} aria-label={`Print receipt for ${order.orderNumber}`} className="lux-btn lux-btn--outline lux-btn--sm">
+                            <Printer className="h-3.5 w-3.5" /> Print
+                          </button>
+                          {isManager && (
+                            <button type="button" onClick={() => {
+                              if (window.confirm(`Delete sale ${order.orderNumber}? This cannot be undone.`)) {
+                                void (async () => {
+                                  try {
+                                    await api.delete(`/orders?id=${encodeURIComponent(order.id)}`);
+                                    showAlert(`Sale ${order.orderNumber} deleted.`, 'success');
+                                    await fetchOrders();
+                                  } catch (error: any) {
+                                    showAlert(error?.data?.error || error?.message || 'Could not delete sale.', 'error');
+                                  }
+                                })();
+                              }
+                            }} aria-label={`Delete sale ${order.orderNumber}`} className="lux-btn lux-btn--danger lux-btn--sm">
+                              <Trash2 className="h-3.5 w-3.5" /> Delete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-dashed border-[var(--border-color)] px-4 py-8 text-center text-sm text-[var(--text-muted)]">{loadingOrders ? 'Loading sales...' : 'No sales recorded at this register yet.'}</div>
+          )}
+        </section>
       </div>
     </div>
   );
