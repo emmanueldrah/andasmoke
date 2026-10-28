@@ -175,14 +175,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
   const inputBase = 'lux-input w-full';
 
   return (
-    <div
-      className="relative flex min-h-screen flex-col overflow-x-hidden font-sans text-[var(--text-primary)] transition-colors duration-300 select-none"
-      style={{
-        background: isDark
-          ? 'radial-gradient(ellipse at 14% 8%, rgba(48,195,226,0.20) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(13,111,149,0.22) 0%, transparent 46%), linear-gradient(145deg, #031d2c, #062c40 50%, #021923)'
-          : 'radial-gradient(ellipse at 14% 8%, rgba(72,167,197,0.2) 0%, transparent 44%), radial-gradient(ellipse at 90% 94%, rgba(106,176,202,0.14) 0%, transparent 46%), linear-gradient(145deg, #eaf5fa, #e1f0f6 50%, #f3f9fc)',
-      }}
-    >
+    <div className="admin-login relative flex min-h-screen flex-col overflow-x-hidden font-sans text-[var(--text-primary)] transition-colors duration-300 select-none">
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
@@ -205,7 +198,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
           src="/brand-mark.png"
           alt=""
           aria-hidden="true"
-          className="h-[48rem] w-[48rem] max-w-[96vw] object-contain opacity-[0.12] grayscale sepia saturate-[1.7] hue-rotate-[130deg] dark:opacity-[0.10] dark:invert dark:hue-rotate-[128deg]"
+          className="h-[48rem] w-[48rem] max-w-[96vw] object-contain opacity-[0.06] grayscale sepia dark:opacity-[0.05] dark:invert"
         />
       </div>
 
@@ -219,7 +212,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
               <span className="text-xs font-black uppercase tracking-widest text-[var(--text-primary)]">
                 {storeSettings.storeName}
               </span>
-              <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-strong)]">
+              <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[var(--accent-strong)]">
                 {mode === 'pos' ? 'POS Till' : 'Admin'}
               </span>
             </div>
@@ -234,7 +227,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
             <Clock className="h-3.5 w-3.5 text-[var(--accent-strong)]" />
             <span className="font-mono text-[11px]">{currentTime || '—'}</span>
             <span className="text-[var(--border-color)]">·</span>
-            <span className="text-[10px] text-[var(--text-subtle)]">{currentDate}</span>
+            <span className="text-[11px] text-[var(--text-subtle)]">{currentDate}</span>
           </div>
 
           {/* Theme toggle */}
@@ -255,15 +248,15 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
       {/* ── Main Card ────────────────────────────────────────────────────────── */}
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-4 sm:py-8">
         <div className={`glass-panel w-full max-w-5xl overflow-hidden rounded-3xl border transition-all duration-300 ${isShaking ? 'login-shake' : ''}`}>
-          <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
 
             {/* ── Left Panel: Brand + Info ────────────────────────────────── */}
-            <div className="relative flex flex-col justify-between border-b border-[var(--border-color)] bg-[rgba(16,151,187,0.05)] p-6 lg:border-b-0 lg:border-r sm:p-8">
+            <div className="relative flex min-w-0 flex-col justify-between border-b border-[var(--border-color)] bg-[var(--accent-soft)] p-6 lg:border-b-0 lg:border-r sm:p-8">
               <div className="space-y-6">
                 {/* Brand mark + heading */}
                 <div className="flex items-start gap-4">
-                  <BrandMark name={storeSettings.storeName} className="h-16 w-16 rounded-2xl" />
-                  <div>
+                  <BrandMark name={storeSettings.storeName} className="h-16 w-16 shrink-0 rounded-2xl" />
+                  <div className="min-w-0 flex-1">
                     <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
                       {isSetup ? 'Set up this register' : 'Point of sale'}
                     </h1>
@@ -298,7 +291,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                     </div>
 
                     {!manualEmailMode && (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         {cachedTeam.slice(0, 4).map(member => {
                           const active = selectedMember?.email === member.email;
                           return (
@@ -311,20 +304,20 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                                 setError(null);
                                 setTimeout(() => pinInputRef.current?.focus(), 80);
                               }}
-                              className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all duration-150 ${
+                              className={`flex min-w-0 items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all duration-150 ${
                                 active
                                   ? 'border-[var(--accent-strong)] bg-[var(--accent-soft)] shadow-sm ring-1 ring-[var(--accent-strong)]/50'
-                                  : 'border-transparent bg-white/50 hover:bg-white/90 dark:bg-white/5 dark:hover:bg-white/10'
+                                  : 'border-[var(--glass-edge)] bg-[var(--bg-soft)] hover:bg-[var(--accent-soft)]'
                               }`}
                             >
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-[var(--accent)] to-[var(--accent-strong)] text-xs font-bold uppercase text-white shadow-sm">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-[var(--accent)] to-[var(--accent-strong)] text-xs font-bold uppercase text-[var(--accent-ink)] shadow-sm">
                                 {member.avatar
                                   ? <img src={member.avatar} alt={member.name} className="h-full w-full rounded-lg object-cover" />
                                   : member.name.charAt(0)}
                               </div>
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-bold text-[var(--text-primary)]">{member.name}</p>
-                                <p className="truncate text-[10px] text-[var(--text-subtle)]">{member.role}</p>
+                                <p className="truncate text-[11px] text-[var(--text-subtle)]">{member.role}</p>
                               </div>
                               {active && <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-[var(--accent-strong)]" />}
                             </button>
@@ -340,12 +333,12 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
               {/* Footer */}
               <div className="relative mt-6 flex items-center gap-2 text-xs text-[var(--text-subtle)]">
                 <Store className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{storeSettings.storeName} · {storeSettings.storeAddress || 'Accra, Ghana'}</span>
+                <span className="min-w-0 break-words">{storeSettings.storeName} · {storeSettings.storeAddress || 'Accra, Ghana'}</span>
               </div>
             </div>
 
             {/* ── Right Panel: Sign-In / Setup Form ──────────────────────── */}
-            <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
+            <div className="flex min-w-0 flex-col justify-center p-6 sm:p-8 lg:p-10">
               {setup === 'checking' ? (
                 <div className="flex flex-col items-center py-16 text-center">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border-color)] border-t-[var(--accent-strong)]" />
@@ -471,7 +464,7 @@ export const AdminLoginView: React.FC<AdminLoginProps> = ({ onSuccess, mode = 'a
                   {showStaffTiles && selectedMember && (
                     <div className="fade-in flex items-center justify-between rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]/70 px-4 py-3 backdrop-blur-sm">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[var(--accent)] to-[var(--accent-strong)] text-sm font-bold text-white shadow-sm">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[var(--accent)] to-[var(--accent-strong)] text-sm font-bold text-[var(--accent-ink)] shadow-sm">
                           {selectedMember.avatar
                             ? <img src={selectedMember.avatar} alt={selectedMember.name} className="h-full w-full rounded-xl object-cover" />
                             : selectedMember.name.charAt(0).toUpperCase()}

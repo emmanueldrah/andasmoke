@@ -212,11 +212,11 @@ export const AdminMyProfilePanel: React.FC = () => {
   };
 
   const roleBadgeStyle = {
-    'Super Admin': 'bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200 dark:border-purple-900',
-    'Store Manager': 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200 dark:border-blue-900',
-    'Inventory Dispatcher': 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-900',
-    'Cashier': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900',
-  }[adminSession.adminRole] || 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300 border-stone-200';
+    'Super Admin': 'bg-[var(--violet-soft)] text-[var(--violet)] border-[var(--glass-edge)]',
+    'Store Manager': 'bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--glass-edge)]',
+    'Inventory Dispatcher': 'bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--glass-edge)]',
+    'Cashier': 'bg-[var(--jade-soft)] text-[var(--jade)] border-[var(--glass-edge)]',
+  }[adminSession.adminRole] || 'bg-[var(--bg-soft)] text-[var(--text-muted)] border-[var(--glass-edge)]';
 
   const roleDescription = {
     'Super Admin': 'Manage register access, inventory, discounts, products, and staff accounts.',
@@ -230,7 +230,7 @@ export const AdminMyProfilePanel: React.FC = () => {
         {/* Header */}
         <div className="profile-management-page__header flex shrink-0 items-center justify-between border-b border-[var(--sheet-line)] px-5 py-4 md:px-8">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+            <div className="h-10 w-10 rounded-xl bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center font-bold">
               <User className="h-5 w-5" />
             </div>
             <div>
@@ -249,14 +249,14 @@ export const AdminMyProfilePanel: React.FC = () => {
           <div
             className={`mx-4 mt-4 p-3.5 rounded-xl border flex items-center gap-3 text-xs font-semibold animate-in fade-in duration-150 md:mx-6 ${
               alert.type === 'success'
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/60'
-                : 'bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/60'
+                ? 'bg-[var(--jade-soft)] text-[var(--jade)] border-[var(--glass-edge)]'
+                : 'bg-[var(--danger-soft)] text-[var(--danger)] border-[var(--glass-edge)]'
             }`}
           >
             {alert.type === 'success' ? (
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--jade)]" />
             ) : (
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+              <AlertCircle className="h-4 w-4 shrink-0 text-[var(--danger)]" />
             )}
             <span className="flex-1">{alert.message}</span>
             <button
@@ -276,12 +276,12 @@ export const AdminMyProfilePanel: React.FC = () => {
           {/* Section 1: Avatar & Quick Info */}
           <div className="pt-1">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-4 flex items-center gap-2">
-              <Camera className="h-3.5 w-3.5 text-amber-600" /> Profile Picture & Avatar
+              <Camera className="h-3.5 w-3.5 text-[var(--accent)]" /> Profile Picture & Avatar
             </h3>
             <div className="flex items-center gap-5">
               {/* Avatar circle */}
               <div className="relative group shrink-0">
-                <div className="h-20 w-20 rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-md bg-[var(--sheet-chip)] flex items-center justify-center text-2xl font-bold text-amber-700 dark:text-amber-400">
+                <div className="h-20 w-20 rounded-2xl overflow-hidden border-2 border-[var(--glass-edge)] shadow-md bg-[var(--sheet-chip)] flex items-center justify-center text-2xl font-bold text-[var(--accent)]">
                   {avatar ? (
                     <img
                       src={avatar}
@@ -323,7 +323,7 @@ export const AdminMyProfilePanel: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleRemovePhoto}
-                      className="px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-900/40 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-900/40 text-xs font-bold text-[var(--danger)] hover:bg-red-50 dark:hover:bg-red-950/20 transition flex items-center gap-1"
                     >
                       <Trash2 className="h-3 w-3" /> Remove
                     </button>
@@ -339,7 +339,7 @@ export const AdminMyProfilePanel: React.FC = () => {
           {/* Section 2: Personal Information Form */}
           <form onSubmit={handleSaveProfile} className="pt-6 space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-2 flex items-center gap-2">
-              <User className="h-3.5 w-3.5 text-amber-600" /> Personal Details
+              <User className="h-3.5 w-3.5 text-[var(--accent)]" /> Personal Details
             </h3>
 
             <div>
@@ -354,7 +354,7 @@ export const AdminMyProfilePanel: React.FC = () => {
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
                   placeholder="e.g. Ama Boateng"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition"
                 />
               </div>
             </div>
@@ -371,7 +371,7 @@ export const AdminMyProfilePanel: React.FC = () => {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="e.g. staff@store.com"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition"
                 />
               </div>
             </div>
@@ -387,7 +387,7 @@ export const AdminMyProfilePanel: React.FC = () => {
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="e.g. 0244123456"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition"
                 />
               </div>
             </div>
@@ -414,7 +414,7 @@ export const AdminMyProfilePanel: React.FC = () => {
             <button
               type="submit"
               disabled={isSavingProfile}
-              className="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="lux-btn lux-btn--primary w-full text-xs"
             >
               {isSavingProfile ? (
                 <>Saving Changes...</>
@@ -431,7 +431,7 @@ export const AdminMyProfilePanel: React.FC = () => {
           {/* Section 3: Password / PIN Change Form */}
           <form onSubmit={handleChangePassword} className="pt-6 space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--sheet-ink-5)] mb-1 flex items-center gap-2">
-              <KeyRound className="h-3.5 w-3.5 text-amber-600" /> Change Password / PIN
+              <KeyRound className="h-3.5 w-3.5 text-[var(--accent)]" /> Change Password / PIN
             </h3>
             <p className="text-xs text-[var(--sheet-ink-4)]">
               Used when signing in to the admin portal or logging onto the POS counter station.
@@ -449,7 +449,7 @@ export const AdminMyProfilePanel: React.FC = () => {
                   value={currentPin}
                   onChange={e => setCurrentPin(e.target.value)}
                   placeholder="Enter current PIN / password"
-                  className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition"
                 />
                 <button
                   type="button"
@@ -474,7 +474,7 @@ export const AdminMyProfilePanel: React.FC = () => {
                     value={newPin}
                     onChange={e => setNewPin(e.target.value)}
                     placeholder="Min 4 characters"
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition"
                   />
                   <button
                     type="button"
@@ -498,7 +498,7 @@ export const AdminMyProfilePanel: React.FC = () => {
                     value={confirmPin}
                     onChange={e => setConfirmPin(e.target.value)}
                     placeholder="Re-enter new password"
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-[var(--sheet-line-strong)] bg-[var(--sheet-field)] text-sm font-medium text-[var(--sheet-ink)] outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition"
                   />
                   <button
                     type="button"

@@ -120,7 +120,7 @@ export function AdminAboutScreen(): React.ReactElement {
     <div className="mx-auto max-w-5xl space-y-6">
       <AdminPageHeader description="Application information, developer contact details, and software updates." />
 
-      <section className="flex flex-col gap-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-soft)] p-5 sm:flex-row sm:items-center md:p-6">
+      <section className="lux-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center md:p-6">
         <BrandMark name="SAD POS" className="h-14 w-14 shrink-0 rounded-xl text-sm" />
         <div className="min-w-0">
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--text-subtle)]">Point of sale system</p>

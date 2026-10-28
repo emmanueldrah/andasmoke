@@ -99,7 +99,7 @@ return (
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,25,38,0.42)] p-4" onClick={() => setSelected(null)}>
+        <div className="glass-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
           <div className="form-sheet w-full max-w-md rounded-xl border p-6" onClick={event => event.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-[var(--text-primary)]">Adjust stock</h2>

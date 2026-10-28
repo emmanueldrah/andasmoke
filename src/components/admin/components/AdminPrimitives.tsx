@@ -72,7 +72,7 @@ export function AdminStatusBadge({ label, tone = 'neutral' }: { label: string; t
 
 export function AdminEmptyState({ title, description, icon: Icon = Inbox, action }: { title: string; description: string; icon?: LucideIcon; action?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_60%,transparent)] px-6 py-12 text-center">
+    <div className="glass-inset flex flex-col items-center justify-center rounded-2xl border-dashed px-6 py-12 text-center">
       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]"><Icon className="h-5 w-5" /></div>
       <h3 className="mt-4 text-sm font-bold text-[var(--text-primary)]">{title}</h3>
       <p className="mt-1 max-w-sm text-xs leading-5 text-[var(--text-muted)]">{description}</p>
@@ -113,7 +113,7 @@ export function AdminStatStrip({
   }>;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--border-color)] sm:grid-cols-3 lg:grid-cols-5">
+    <div className="glass-panel grid grid-cols-2 gap-px overflow-hidden rounded-xl sm:grid-cols-3 lg:grid-cols-5">
       {stats.map(stat => {
         const Icon = stat.icon;
         const tone = stripTones[stat.tone || 'neutral'];

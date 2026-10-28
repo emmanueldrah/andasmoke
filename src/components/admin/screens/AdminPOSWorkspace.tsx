@@ -1294,7 +1294,7 @@ return (
                   <button type="button" key={lineKey(item)} onClick={() => addToCart(item)} className="pos-product-tile group lux-card overflow-hidden text-left transition duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
                     <div className="relative">
                       <img src={item.variant?.image || item.product.image} alt="" className="h-28 w-full object-cover" />
-                      <span className={`absolute right-2 top-2 rounded-md px-2 py-1 text-[11px] font-bold shadow-sm ${item.stock <= 5 ? 'bg-[var(--accent-strong)] text-[var(--accent-ink)]' : 'bg-[#102838] text-white'}`}>{item.stock} left</span>
+                      <span className={`absolute right-2 top-2 rounded-md border border-[var(--glass-edge)] bg-[var(--sheet-surface)] px-2 py-1 text-[11px] font-bold shadow-sm backdrop-blur-md ${item.stock <= 5 ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>{item.stock} left</span>
                     </div>
                     <div className="p-3">
                       <p className="line-clamp-2 min-h-10 text-sm font-semibold text-[var(--text-primary)]">{item.product.name}</p>

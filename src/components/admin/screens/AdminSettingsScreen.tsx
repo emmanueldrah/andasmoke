@@ -24,7 +24,7 @@ export function AdminSettingsScreen(): React.ReactElement {
             <p className="mt-1 text-sm leading-5 text-[var(--text-muted)]">Choose a display style for this device.</p>
           </div>
         </div>
-        <div className="mt-5 inline-flex max-w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-soft)] p-1" role="group" aria-label="Appearance theme">
+        <div className="glass-inset mt-5 inline-flex max-w-full rounded-lg p-1" role="group" aria-label="Appearance theme">
           <button
             type="button"
             aria-pressed={theme === 'light'}

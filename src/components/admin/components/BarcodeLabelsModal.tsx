@@ -591,7 +591,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,25,38,0.42)] p-2 sm:p-4">
+    <div className="glass-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="form-sheet print:hidden flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] border">
         <div className="flex items-center justify-between border-b border-[var(--sheet-line)] bg-[var(--sheet-panel)] px-5 py-4">
           <div className="flex items-center gap-3">

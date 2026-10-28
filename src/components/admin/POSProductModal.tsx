@@ -234,8 +234,8 @@ useEffect(() => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(5,24,36,0.32)] p-2 backdrop-blur-md sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="glass-panel flex max-h-[calc(100vh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--glass-edge)] text-[var(--text-primary)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
+    <div className="glass-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="form-sheet flex max-h-[calc(100vh-1rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[var(--glass-edge)] text-[var(--text-primary)]" role="dialog" aria-modal="true" aria-labelledby="pos-product-title">
         <header className="flex items-start justify-between gap-4 border-b border-[var(--border-color)] bg-[color-mix(in_srgb,var(--bg-card)_28%,transparent)] px-4 py-2.5 sm:px-5">
           <div>
             <p className="eyebrow text-[11px] font-black uppercase tracking-[0.22em]">Stockroom</p>

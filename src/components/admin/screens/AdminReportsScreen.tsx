@@ -149,7 +149,7 @@ export function AdminReportsScreen() {
       />
 
       {/* Report type tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-[var(--border-color)] pb-2">
+      <div className="glass-inset flex flex-wrap gap-2 rounded-xl p-1.5">
         <button
           onClick={() => setActiveReport('summary')}
           className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition ${

@@ -531,7 +531,7 @@ export const AdminPortal: React.FC = () => {
         {mobileNavOpen && (
           <div className="fixed inset-0 z-50 lg:hidden">
             <div
-              className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+              className="glass-dialog-backdrop absolute inset-0"
               onClick={() => setMobileNavOpen(false)}
               aria-hidden="true"
             />

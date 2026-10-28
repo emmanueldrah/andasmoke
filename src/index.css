@@ -6,32 +6,40 @@
   :root {
     --font-sans: "Manrope", "Segoe UI", sans-serif;
     --font-display: "Fraunces", Georgia, serif;
-    /* Icy glass: tinted backing carries contrast; reflection adds the light. */
-    --bg-main: rgba(228, 241, 248, 0.84);
-    --bg-card: rgba(247, 252, 255, 0.86);
-    --bg-card-alt: rgba(223, 239, 247, 0.82);
-    --bg-soft: rgba(226, 239, 246, 0.88);
-    --surface-main-solid: #e4f1f8;
-    --surface-solid: #f2f9fc;
-    --surface-alt-solid: #dfeff7;
-    --surface-soft-solid: #e2eff6;
-    --control-solid: #f7fcff;
-    --sheet-surface: rgba(241, 249, 253, 0.97);
-    --text-primary: #142f40;
-    --text-muted: #3b5566;
-    --text-subtle: #516978;
-    --border-color: rgba(57, 102, 126, 0.22);
-    --control-bg: rgba(247, 252, 255, 0.96);
-    --control-border: rgba(57, 102, 126, 0.34);
-    --disabled-bg: #dce7ed;
-    --disabled-ink: #4b6170;
-    --disabled-border: #bccdd7;
-    --table-action-bg: #edf6fb;
-    --accent: #0f6e7c;
-    --accent-strong: #116574;
-    --accent-soft: rgba(15, 110, 124, 0.12);
+    /* Champagne glass: deep gold ink stays separate from luminous metal. */
+    --bg-main: rgba(248, 239, 220, 0.28);
+    --bg-card: rgba(255, 250, 238, 0.72);
+    --bg-card-alt: rgba(245, 233, 211, 0.64);
+    --bg-soft: rgba(247, 237, 218, 0.68);
+    --surface-main-solid: #f7efdf;
+    --surface-solid: #faf4e8;
+    --surface-alt-solid: #f5e9d3;
+    --surface-soft-solid: #f7edda;
+    --control-solid: #fffaf0;
+    --sheet-surface: rgba(255, 250, 240, 0.9);
+    --text-primary: #30271f;
+    --text-muted: #594a38;
+    --text-subtle: #6a5943;
+    --border-color: rgba(142, 108, 48, 0.24);
+    --control-bg: rgba(255, 250, 240, 0.88);
+    --control-border: rgba(133, 97, 35, 0.4);
+    --disabled-solid: #e9dfcf;
+    --disabled-bg: rgba(233, 223, 207, 0.9);
+    --disabled-ink: #64543e;
+    --disabled-border: #c8b99f;
+    --table-action-bg: rgba(247, 237, 218, 0.94);
+    --sidebar-solid: #291e18;
+    /* Selected pills keep white on deep gold; primary actions use metal ink. */
+    --accent: #795414;
+    --accent-strong: #69470f;
+    --accent-soft: rgba(153, 112, 34, 0.1);
     --accent-ink: #ffffff;
-    --highlight: #136b80;
+    --gold-metal: #e6bb62;
+    --gold-light: #fff1c2;
+    --gold-deep: #c6933b;
+    --gold-ink: #2b1d0b;
+    --gold-button-background: linear-gradient(115deg, color-mix(in srgb, var(--gold-light) 92%, transparent) 0%, color-mix(in srgb, var(--gold-metal) 92%, transparent) 30%, color-mix(in srgb, var(--gold-light) 92%, transparent) 49%, color-mix(in srgb, var(--gold-metal) 92%, transparent) 72%, color-mix(in srgb, var(--gold-deep) 92%, transparent) 100%);
+    --highlight: #795414;
     --jade: #30644f;
     --jade-soft: rgba(48, 100, 79, 0.12);
     --violet: #725577;
@@ -42,22 +50,33 @@
     --danger: #a13b2d;
     --danger-ink: #ffffff;
     --danger-soft: rgba(161, 59, 45, 0.1);
-    --shadow-soft: 0 10px 28px -12px rgba(30, 66, 82, 0.16);
-    --shadow-card: 0 18px 40px -24px rgba(30, 66, 82, 0.26);
-    --glass-blur: 24px;
-    --glass-filter: blur(var(--glass-blur)) saturate(140%);
-    --glass-sheen: rgba(255, 255, 255, 0.48);
-    --glass-sheen-soft: rgba(255, 255, 255, 0.2);
-    --glass-reflection: rgba(255, 255, 255, 0.36);
-    --glass-edge: rgba(111, 158, 179, 0.32);
+    --shadow-soft: 0 10px 28px -14px rgba(105, 74, 28, 0.2);
+    --shadow-card: 0 20px 44px -24px rgba(100, 70, 26, 0.28), 0 2px 8px -5px rgba(173, 126, 42, 0.18);
+    --glass-blur: 30px;
+    --glass-filter: blur(var(--glass-blur)) saturate(125%);
+    --glass-sheen: rgba(255, 255, 250, 0.72);
+    --glass-sheen-soft: rgba(255, 255, 245, 0.22);
+    --glass-reflection: rgba(255, 252, 233, 0.24);
+    --glass-gold-reflection: rgba(232, 189, 98, 0.1);
+    --glass-edge: rgba(173, 129, 46, 0.32);
     --glass-background:
-      linear-gradient(132deg, var(--glass-reflection), transparent 28%, transparent 76%, var(--accent-soft)),
+      linear-gradient(132deg, var(--glass-reflection), transparent 28%, transparent 76%, var(--glass-gold-reflection)),
       linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
-    /* One upper-edge highlight and diffuse depth, not stacked white outlines. */
-    --clay-lift: inset 0 1px 0 var(--glass-sheen);
-    --clay-well: inset 0 1px 3px rgba(36, 69, 85, 0.1);
-    --clay-base: 0 1px 2px rgba(30, 66, 82, 0.08);
-    --clay-cast: 0 6px 16px -10px rgba(30, 66, 82, 0.22);
+    /* Insets borrow the parent frost rather than adding another full blur. */
+    --glass-inset-background: linear-gradient(135deg, var(--glass-sheen-soft), transparent 44%, var(--glass-gold-reflection)), var(--bg-soft);
+    --glass-sticky-background: linear-gradient(120deg, var(--glass-sheen-soft), transparent 48%, var(--glass-gold-reflection)), var(--sheet-surface);
+    --glass-chrome-filter: blur(12px) saturate(125%);
+    --dialog-overlay: rgba(65, 46, 22, 0.32);
+    --page-background:
+      radial-gradient(1200px 640px at 90% -14%, rgba(237, 195, 110, 0.3), transparent 64%),
+      radial-gradient(900px 600px at -8% 12%, rgba(221, 178, 98, 0.18), transparent 64%),
+      radial-gradient(900px 560px at 65% 110%, rgba(255, 249, 230, 0.68), transparent 66%),
+      linear-gradient(180deg, #fbf5e8 0%, #f0e4cc 55%, #fffaf0 100%);
+    /* A polished upper edge, quiet underside and diffuse amber depth. */
+    --clay-lift: inset 0 1px 0 var(--glass-sheen), inset 0 -1px 0 var(--glass-gold-reflection);
+    --clay-well: inset 0 1px 3px rgba(94, 66, 28, 0.1);
+    --clay-base: 0 1px 2px rgba(94, 66, 28, 0.08);
+    --clay-cast: 0 6px 16px -10px rgba(100, 70, 26, 0.24);
     /* The lounge mark, sitting behind every pane. Cut out to a transparent
        PNG so its white plate no longer washes out the background. */
     --mark-opacity: 0.07;
@@ -70,37 +89,43 @@
     min-height: 100%;
     height: 100%;
     overflow-y: auto;
-    background: #eaf5fa;
+    background: var(--surface-main-solid);
   }
 
   html.dark {
     color-scheme: dark;
-    /* Smoked sea-blue panes, cool opaque text and warm amber actions. */
-    --bg-main: rgba(7, 26, 39, 0.86);
-    --bg-card: rgba(14, 42, 58, 0.88);
-    --bg-card-alt: rgba(10, 33, 48, 0.86);
-    --bg-soft: rgba(17, 47, 63, 0.9);
+    /* Smoked blue glass with champagne edges and restrained gold reflections. */
+    --bg-main: rgba(7, 26, 39, 0.28);
+    --bg-card: rgba(14, 38, 54, 0.76);
+    --bg-card-alt: rgba(10, 29, 44, 0.7);
+    --bg-soft: rgba(17, 42, 57, 0.72);
     --surface-main-solid: #071a27;
     --surface-solid: #0e2a3a;
     --surface-alt-solid: #0a2130;
     --surface-soft-solid: #112f3f;
     --control-solid: #0b2433;
-    --sheet-surface: rgba(9, 31, 45, 0.97);
-    --text-primary: #f4f7fa;
-    --text-muted: #cedae4;
-    --text-subtle: #adc2d0;
-    --border-color: rgba(126, 177, 199, 0.24);
-    --control-bg: rgba(11, 36, 51, 0.97);
-    --control-border: rgba(126, 177, 199, 0.38);
-    --disabled-bg: #233b49;
+    --sheet-surface: rgba(9, 31, 45, 0.9);
+    --text-primary: #f6f3ec;
+    --text-muted: #d5dee4;
+    --text-subtle: #b1c3cf;
+    --border-color: rgba(191, 174, 128, 0.24);
+    --control-bg: rgba(11, 36, 51, 0.88);
+    --control-border: rgba(199, 180, 128, 0.4);
+    --disabled-solid: #233b49;
+    --disabled-bg: rgba(35, 59, 73, 0.9);
     --disabled-ink: #b8c9d4;
     --disabled-border: #405b6b;
-    --table-action-bg: #123040;
-    --accent: #e1aa70;
-    --accent-strong: #edc083;
-    --accent-soft: rgba(225, 170, 112, 0.12);
-    --accent-ink: #24180e;
-    --highlight: #edc083;
+    --table-action-bg: rgba(18, 48, 64, 0.94);
+    --sidebar-solid: #0a2130;
+    --accent: #efc36f;
+    --accent-strong: #f7d994;
+    --accent-soft: rgba(239, 195, 111, 0.12);
+    --accent-ink: #291e10;
+    --gold-metal: #e7b859;
+    --gold-light: #ffe4a1;
+    --gold-deep: #c6923c;
+    --gold-ink: #2b1d0b;
+    --highlight: #f7d994;
     --jade: #96c9ac;
     --jade-soft: rgba(150, 201, 172, 0.12);
     --violet: #c6acd0;
@@ -112,12 +137,19 @@
     --danger-ink: #2b160f;
     --danger-soft: rgba(242, 158, 135, 0.12);
     --shadow-soft: 0 12px 30px -14px rgba(0, 0, 0, 0.38);
-    --shadow-card: 0 18px 44px -22px rgba(0, 0, 0, 0.44);
-    --glass-blur: 24px;
-    --glass-sheen: rgba(187, 220, 238, 0.16);
-    --glass-sheen-soft: rgba(187, 220, 238, 0.07);
-    --glass-reflection: rgba(151, 202, 226, 0.12);
-    --glass-edge: rgba(126, 177, 199, 0.28);
+    --shadow-card: 0 20px 46px -22px rgba(0, 0, 0, 0.48), 0 2px 10px -6px rgba(211, 169, 86, 0.12);
+    --glass-blur: 30px;
+    --glass-sheen: rgba(245, 224, 174, 0.22);
+    --glass-sheen-soft: rgba(238, 215, 164, 0.07);
+    --glass-reflection: rgba(181, 205, 222, 0.1);
+    --glass-gold-reflection: rgba(224, 182, 99, 0.08);
+    --glass-edge: rgba(208, 183, 121, 0.28);
+    --dialog-overlay: rgba(2, 10, 18, 0.66);
+    --page-background:
+      radial-gradient(1100px 660px at 85% -10%, rgba(75, 118, 151, 0.24), transparent 66%),
+      radial-gradient(950px 660px at -10% 24%, rgba(196, 147, 66, 0.1), transparent 64%),
+      radial-gradient(800px 560px at 76% 110%, rgba(221, 178, 91, 0.08), transparent 68%),
+      linear-gradient(180deg, #102b3c 0%, #081d2c 48%, #051420 100%);
     --clay-well: inset 0 1px 3px rgba(0, 0, 0, 0.24);
     --clay-base: 0 1px 2px rgba(0, 0, 0, 0.2);
     --clay-cast: 0 6px 16px -10px rgba(0, 0, 0, 0.4);
@@ -140,11 +172,7 @@
     position: relative;
     min-height: 100dvh;
     min-width: 0;
-    background:
-      radial-gradient(1200px 640px at 90% -14%, rgba(67, 153, 192, 0.22), transparent 64%),
-      radial-gradient(900px 600px at -8% 12%, rgba(89, 178, 186, 0.16), transparent 64%),
-      radial-gradient(900px 560px at 65% 110%, rgba(228, 193, 138, 0.1), transparent 66%),
-      linear-gradient(180deg, #eaf5fa 0%, #e1eff6 55%, #f3f9fc 100%);
+    background: var(--page-background);
     color: var(--text-primary);
     overflow-x: clip;
     overflow-y: auto;
@@ -189,11 +217,7 @@
   }
 
   html.dark body {
-    background:
-      radial-gradient(1100px 660px at 85% -10%, rgba(45, 142, 180, 0.22), transparent 66%),
-      radial-gradient(950px 660px at -10% 24%, rgba(24, 112, 137, 0.14), transparent 64%),
-      radial-gradient(800px 560px at 76% 110%, rgba(188, 123, 64, 0.1), transparent 68%),
-      linear-gradient(180deg, #092536 0%, #061b29 48%, #04131f 100%);
+    background: var(--page-background);
     color: var(--text-primary);
   }
 
@@ -269,7 +293,7 @@
 
   .admin-shell__content {
     min-width: 0;
-    background: linear-gradient(180deg, transparent, var(--bg-main));
+    background: transparent;
   }
 
   /* Keep legacy utility classes readable while screens are migrated to tokens. */
@@ -302,22 +326,21 @@
     color: var(--text-subtle) !important;
   }
 
-  /* Legacy app panes only: never override sheets, their contents or controls.
-     The background exception beats old white utilities without imposing borders. */
-  #root :is(.bg-white, .bg-stone-50, .bg-gray-50, .bg-slate-50, .bg-zinc-50):not(.form-sheet, .form-sheet *, .lux-card, .glass-panel, button, a, input, select, textarea) {
-    background: var(--glass-background) !important;
-    border-color: var(--glass-edge);
-    box-shadow: var(--clay-lift), var(--shadow-soft);
-    backdrop-filter: var(--glass-filter);
-    -webkit-backdrop-filter: var(--glass-filter);
+  /* Legacy admin panes only, with no added blur on nested sections or paper. */
+  @media screen {
+    .admin-shell :is(.bg-white, .bg-stone-50, .bg-gray-50, .bg-slate-50, .bg-zinc-50):not(.form-sheet, .form-sheet *, .lux-card, .glass-panel, .glass-inset, .glass-dialog-backdrop, .admin-shell__frame, .admin-shell__content, button, a, input, select, textarea, [data-print-preview], [data-print-preview] *) {
+      background: var(--glass-inset-background) !important;
+      border-color: var(--glass-edge);
+      box-shadow: var(--clay-lift), var(--shadow-soft);
+    }
   }
 }
 
 @layer components {
-  /* ── Design system: Sea Glass ────────────────────────────────────────────── */
+  /* Champagne and smoked blue glass design system. */
 
   .form-sheet {
-    --sheet-head: var(--surface-solid);
+    --sheet-head: var(--bg-card);
     --sheet-line: var(--border-color);
     --sheet-line-strong: var(--control-border);
     --sheet-ink: var(--text-primary);
@@ -325,9 +348,9 @@
     --sheet-ink-3: var(--text-muted);
     --sheet-ink-4: var(--text-subtle);
     --sheet-ink-5: var(--text-subtle);
-    --sheet-hover: var(--surface-alt-solid);
+    --sheet-hover: var(--bg-card-alt);
     --sheet-panel: var(--bg-soft);
-    --sheet-chip: var(--surface-soft-solid);
+    --sheet-chip: var(--bg-soft);
     --sheet-button: var(--control-bg);
     --sheet-field: var(--control-bg);
     --sheet-field-focus: var(--control-bg);
@@ -335,17 +358,17 @@
     --sheet-solid-hover: var(--accent-strong);
     --sheet-solid-ink: var(--accent-ink);
     --sheet-divide: var(--border-color);
-    --sheet-sticky: var(--surface-solid);
+    --sheet-sticky: var(--sheet-surface);
     --sheet-check: var(--accent-soft);
-    --sheet-paper-bed: var(--surface-alt-solid);
+    --sheet-paper-bed: var(--bg-soft);
     color: var(--sheet-ink);
     background:
-      linear-gradient(132deg, var(--glass-reflection), transparent 28%),
+      linear-gradient(132deg, var(--glass-reflection), transparent 28%, transparent 76%, var(--glass-gold-reflection)),
       var(--sheet-surface);
-    border-color: var(--sheet-line);
-    box-shadow: var(--clay-lift), 0 24px 64px -20px rgba(3, 20, 31, 0.38);
-    backdrop-filter: var(--glass-filter);
+    border-color: var(--glass-edge);
+    box-shadow: var(--clay-lift), 0 24px 64px -24px rgba(20, 17, 12, 0.38);
     -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
   }
 
   .form-sheet :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]), select, textarea) {
@@ -370,24 +393,23 @@
   }
 
   .profile-management-page {
+    background: var(--glass-background);
     box-shadow: var(--clay-lift), var(--shadow-soft);
   }
 
   .profile-management-page__header {
-    background: var(--sheet-head);
-    backdrop-filter: var(--glass-filter);
-    -webkit-backdrop-filter: var(--glass-filter);
+    background: var(--glass-inset-background);
   }
 
-  /* ── Glass panes: full-strength tint under a restrained diagonal sheen ───── */
+  /* Transparent panes with specular edges and a single layer of frost. */
   .lux-card,
   .glass-panel {
     background: var(--glass-background);
     color: var(--text-primary);
     border: 1px solid var(--glass-edge);
     box-shadow: var(--clay-lift), var(--shadow-card);
-    backdrop-filter: var(--glass-filter);
     -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
   }
 
   .lux-card {
@@ -408,14 +430,15 @@
     color: var(--text-primary);
     border-color: var(--glass-edge);
     box-shadow: var(--clay-lift), var(--shadow-soft);
-    backdrop-filter: var(--glass-filter);
     -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
   }
 
   .brand-seal {
     /* A struck-metal emblem: bevelled rim, lit face, seated shadow. */
-    border-color: color-mix(in srgb, var(--accent-strong) 72%, var(--border-color));
-    background: linear-gradient(145deg, color-mix(in srgb, var(--accent-strong) 56%, white), var(--accent));
+    border-color: var(--gold-deep);
+    background: var(--gold-button-background);
+    color: var(--gold-ink);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.6),
       inset 0 -2px 0 rgba(62, 34, 17, 0.2),
@@ -510,14 +533,14 @@
   }
 
   .lux-btn--primary {
-    background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
-    color: var(--accent-ink);
-    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
-    box-shadow: var(--clay-lift), 0 6px 18px -10px color-mix(in srgb, var(--accent) 45%, transparent);
+    background: var(--gold-button-background);
+    color: var(--gold-ink);
+    border-color: var(--gold-deep);
+    box-shadow: inset 0 1px 0 rgba(255, 253, 230, 0.78), inset 0 -1px 0 rgba(116, 72, 18, 0.18), 0 8px 20px -12px color-mix(in srgb, var(--gold-deep) 54%, transparent);
   }
 
   .lux-btn--primary:hover:not(:disabled) { filter: brightness(1.04); }
-  .lux-btn--primary:active:not(:disabled) { box-shadow: inset 0 2px 6px rgba(60, 30, 6, 0.4); }
+  .lux-btn--primary:active:not(:disabled) { box-shadow: inset 0 2px 4px rgba(116, 72, 18, 0.18); }
 
   .lux-btn--ink {
     background: var(--bg-soft);
@@ -559,7 +582,8 @@
   }
 
   .lux-btn--danger:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--danger) 18%, transparent);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    border-color: var(--danger);
   }
 
   .lux-btn--sm {
@@ -586,10 +610,10 @@
       0 1px 2px color-mix(in srgb, var(--text-primary) 16%, transparent);
   }
 
-  .lux-chip--success { background: color-mix(in srgb, var(--jade) 20%, transparent); color: var(--jade); }
-  .lux-chip--warning { background: color-mix(in srgb, var(--highlight) 20%, transparent); color: var(--highlight); }
-  .lux-chip--danger { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
-  .lux-chip--info { background: color-mix(in srgb, var(--violet) 20%, transparent); color: var(--violet); }
+  .lux-chip--success { background: color-mix(in srgb, var(--jade) 10%, transparent); color: var(--jade); }
+  .lux-chip--warning { background: color-mix(in srgb, var(--highlight) 10%, transparent); color: var(--highlight); }
+  .lux-chip--danger { background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--danger); }
+  .lux-chip--info { background: color-mix(in srgb, var(--violet) 10%, transparent); color: var(--violet); }
   .lux-chip--neutral { background: color-mix(in srgb, var(--text-subtle) 20%, transparent); color: var(--text-muted); }
 
   .section-heading {
@@ -621,7 +645,7 @@
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 9999px;
-    background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+    background: linear-gradient(135deg, var(--gold-light), var(--gold-deep));
     box-shadow: 0 0 0 4px var(--accent-soft);
   }
 
@@ -637,9 +661,9 @@
     background:
       radial-gradient(128% 52% at 50% -6%, rgba(197, 150, 81, 0.24), transparent 64%),
       linear-gradient(177deg, rgba(48, 33, 25, 0.82) 0%, rgba(32, 22, 18, 0.78) 46%, rgba(24, 16, 13, 0.82) 100%);
-    backdrop-filter: blur(22px) saturate(150%);
-    -webkit-backdrop-filter: blur(22px) saturate(150%);
-    border-right: 1px solid rgba(255, 255, 255, 0.09);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+    border-right: 1px solid rgba(232, 189, 98, 0.2);
     box-shadow:
       inset -1px 0 0 rgba(255, 255, 255, 0.05),
       20px 0 56px -22px rgba(20, 12, 8, 0.6);
@@ -648,9 +672,9 @@
 
   html.dark .pos-sidebar {
     background:
-      radial-gradient(128% 52% at 50% -6%, rgba(32, 153, 184, 0.2), transparent 64%),
-      linear-gradient(177deg, rgba(11, 57, 75, 0.88) 0%, rgba(7, 39, 56, 0.84) 48%, rgba(5, 27, 41, 0.9) 100%);
-    border-right-color: rgba(255, 255, 255, 0.08);
+      radial-gradient(128% 52% at 50% -6%, rgba(224, 182, 99, 0.18), transparent 64%),
+      linear-gradient(177deg, rgba(15, 44, 63, 0.78) 0%, rgba(9, 31, 48, 0.76) 48%, rgba(6, 24, 39, 0.78) 100%);
+    border-right-color: rgba(208, 183, 121, 0.2);
     box-shadow:
       inset -1px 0 0 rgba(255, 255, 255, 0.04),
       20px 0 56px -22px rgba(0, 0, 0, 0.7);
@@ -720,7 +744,7 @@
     font-weight: 800;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.34);
+    color: rgba(247, 239, 228, 0.8);
   }
 
   .pos-nav-group-label::after {
@@ -996,7 +1020,7 @@
     gap: 0.625rem;
     padding: 0.5rem 0.625rem;
     border-radius: 0.7rem;
-    background: var(--bg-soft);
+    background: var(--glass-inset-background);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
@@ -1041,9 +1065,9 @@
     gap: 0.75rem;
     padding: 0.75rem 0.875rem;
     border-radius: 0.8rem;
-    background: linear-gradient(160deg, var(--accent-soft), transparent), var(--bg-soft);
+    background: linear-gradient(160deg, var(--glass-gold-reflection), transparent), var(--glass-inset-background);
     color: var(--text-primary);
-    border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border-color));
+    border: 1px solid color-mix(in srgb, var(--gold-deep) 38%, var(--border-color));
     box-shadow: var(--clay-lift), var(--shadow-soft);
   }
 
@@ -1061,13 +1085,13 @@
     gap: 0.6rem;
     min-height: 3.5rem;
     padding: 0.75rem 1rem;
-    border: 1px solid var(--accent);
+    border: 1px solid var(--gold-deep);
     border-radius: 0.85rem;
     font-size: 1rem;
     font-weight: 800;
-    color: var(--accent-ink);
-    background: linear-gradient(140deg, var(--accent), var(--accent-strong));
-    box-shadow: var(--clay-lift), 0 10px 24px -14px color-mix(in srgb, var(--accent) 56%, transparent);
+    color: var(--gold-ink);
+    background: var(--gold-button-background);
+    box-shadow: inset 0 1px 0 rgba(255, 253, 230, 0.78), inset 0 -1px 0 rgba(116, 72, 18, 0.18), 0 10px 24px -14px color-mix(in srgb, var(--gold-deep) 56%, transparent);
     cursor: pointer;
     transition: transform 120ms ease, filter 160ms ease, box-shadow 120ms ease;
   }
@@ -1075,19 +1099,19 @@
   .pos-pay:hover:not(:disabled) {
     filter: brightness(1.04);
     transform: translateY(-1px);
-    box-shadow: var(--clay-lift), 0 14px 28px -14px color-mix(in srgb, var(--accent) 64%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 253, 230, 0.86), inset 0 -1px 0 rgba(116, 72, 18, 0.18), 0 14px 28px -14px color-mix(in srgb, var(--gold-deep) 64%, transparent);
   }
 
   .pos-pay:active:not(:disabled) {
     transform: translateY(1px);
-    box-shadow: var(--clay-well);
+    box-shadow: inset 0 2px 4px rgba(116, 72, 18, 0.18);
   }
 
   .pos-pay__hint {
     margin-left: 0.25rem;
     padding: 0.15rem 0.4rem;
     border-radius: 0.3rem;
-    background: color-mix(in srgb, var(--accent-ink) 8%, transparent);
+    background: rgba(255, 251, 228, 0.36);
     color: inherit;
     font-size: max(11px, 0.6875rem);
     font-weight: 800;
@@ -1104,18 +1128,27 @@
       --bg-soft: var(--surface-soft-solid);
       --control-bg: var(--control-solid);
       --sheet-surface: var(--surface-solid);
+      --disabled-bg: var(--disabled-solid);
+      --table-action-bg: var(--surface-soft-solid);
+      --gold-button-background: linear-gradient(115deg, var(--gold-light), var(--gold-metal) 55%, var(--gold-deep));
       --glass-background: var(--surface-solid);
+      --glass-inset-background: var(--surface-soft-solid);
+      --glass-sticky-background: var(--surface-solid);
       --glass-reflection: transparent;
+      --glass-gold-reflection: transparent;
       --glass-filter: none;
+      --glass-chrome-filter: none;
+      --dialog-overlay: var(--surface-main-solid);
+      --page-background: var(--surface-main-solid);
       --mark-opacity: 0;
     }
 
     .pos-sidebar,
     html.dark .pos-sidebar {
-      background: var(--surface-solid);
-      color: var(--text-primary);
-      backdrop-filter: none;
+      background: var(--sidebar-solid);
+      color: #f7efe4;
       -webkit-backdrop-filter: none;
+      backdrop-filter: none;
     }
   }
 
@@ -1128,19 +1161,109 @@
       --bg-soft: var(--surface-soft-solid);
       --control-bg: var(--control-solid);
       --sheet-surface: var(--surface-solid);
+      --disabled-bg: var(--disabled-solid);
+      --table-action-bg: var(--surface-soft-solid);
+      --gold-button-background: linear-gradient(115deg, var(--gold-light), var(--gold-metal) 55%, var(--gold-deep));
       --glass-background: var(--surface-solid);
+      --glass-inset-background: var(--surface-soft-solid);
+      --glass-sticky-background: var(--surface-solid);
       --glass-reflection: transparent;
+      --glass-gold-reflection: transparent;
       --glass-filter: none;
+      --glass-chrome-filter: none;
+      --dialog-overlay: var(--surface-main-solid);
+      --page-background: var(--surface-main-solid);
       --mark-opacity: 0;
     }
 
     .pos-sidebar,
     html.dark .pos-sidebar {
-      background: var(--surface-solid);
-      color: var(--text-primary);
-      backdrop-filter: none;
+      background: var(--sidebar-solid);
+      color: #f7efe4;
       -webkit-backdrop-filter: none;
+      backdrop-filter: none;
     }
+  }
+}
+
+/* Surface hooks never alter layout, dialog positioning or printable paper. */
+@media screen {
+  .glass-inset:not([data-print-preview], [data-print-preview] *) {
+    background: var(--glass-inset-background);
+    color: var(--text-primary);
+    border: 1px solid var(--glass-edge);
+    border-radius: 0.8rem;
+    box-shadow: var(--clay-well), inset 0 1px 0 var(--glass-sheen-soft);
+  }
+
+  /* The dialog supplies the frost; its overlay adds no second blur layer. */
+  .glass-dialog-backdrop:not([data-print-preview], [data-print-preview] *) {
+    background: linear-gradient(135deg, var(--glass-gold-reflection), transparent 62%), var(--dialog-overlay);
+  }
+
+  .admin-login:not([data-print-preview], [data-print-preview] *) {
+    background: var(--page-background);
+    color: var(--text-primary);
+  }
+
+  .form-sheet > header:not([data-print-preview], [data-print-preview] *),
+  .form-sheet :is([class~="bg-[var(--sheet-head)]"], [class~="bg-[var(--sheet-panel)]"], [class~="bg-[var(--sheet-chip)]"]):not(input, select, textarea, button, a, [data-print-preview], [data-print-preview] *) {
+    background: var(--glass-inset-background);
+    box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
+  }
+
+  /* Sticky actions stay almost opaque even when the surrounding pane is clear. */
+  .form-sheet > :is(footer, [class~="border-t"]):not([data-print-preview], [data-print-preview] *),
+  .form-sheet :is(.sticky, [class~="bg-[var(--sheet-sticky)]"]):not([data-print-preview], [data-print-preview] *) {
+    background: var(--glass-sticky-background);
+    box-shadow: var(--clay-lift);
+    -webkit-backdrop-filter: var(--glass-chrome-filter);
+    backdrop-filter: var(--glass-chrome-filter);
+  }
+
+  .admin-shell :is(.section-heading, .eyebrow):not([data-print-preview], [data-print-preview] *) {
+    color: var(--accent);
+  }
+
+  /* Filled selections remain translucent without fading their text. */
+  .admin-shell :is([class~="bg-[var(--accent)]"], [class~="bg-[var(--accent-strong)]"], [class~="bg-[var(--sheet-solid)]"]):not([data-print-preview], [data-print-preview] *) {
+    background: color-mix(in srgb, var(--accent) 92%, transparent);
+    color: var(--accent-ink);
+    box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
+  }
+
+  .admin-shell [class~="bg-[var(--danger)]"]:not([data-print-preview], [data-print-preview] *) {
+    background: color-mix(in srgb, var(--danger) 92%, transparent);
+    color: var(--danger-ink);
+  }
+
+  .admin-shell .lux-chip--neutral:not([data-print-preview], [data-print-preview] *) {
+    background: var(--glass-inset-background);
+    color: var(--text-muted);
+    box-shadow: inset 0 1px 0 var(--glass-sheen-soft), inset 0 0 0 1px var(--glass-edge);
+  }
+
+  .admin-shell table:not([data-print-preview], [data-print-preview] *) {
+    color: var(--text-primary);
+  }
+
+  .admin-shell table thead:not([data-print-preview], [data-print-preview] *) {
+    background: var(--glass-inset-background);
+    color: var(--text-muted);
+    box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
+  }
+
+  .admin-shell table thead.sticky:not([data-print-preview], [data-print-preview] *) {
+    background: var(--glass-sticky-background);
+  }
+
+  .admin-shell table th:not([data-print-preview], [data-print-preview] *) {
+    color: var(--text-muted);
+    border-color: var(--border-color);
+  }
+
+  .admin-shell table td:not([data-print-preview], [data-print-preview] *) {
+    border-color: var(--border-color);
   }
 }
 
@@ -1260,16 +1383,21 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--control-border) transparent;
-  background: var(--bg-soft);
+  background: var(--glass-inset-background);
   color: var(--text-primary);
+  box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
 }
 
 .pos-workspace .pos-ticket__footer {
   flex: 0 0 auto;
   padding: 12px 14px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--glass-edge);
   border-radius: 0 0 0.95rem 0.95rem;
-  background: var(--surface-solid);
+  background: var(--glass-sticky-background);
+  color: var(--text-primary);
+  box-shadow: var(--clay-lift);
+  -webkit-backdrop-filter: var(--glass-chrome-filter);
+  backdrop-filter: var(--glass-chrome-filter);
 }
 
 @media (min-width: 1280px) {
@@ -1304,8 +1432,9 @@
   background: var(--glass-background);
   color: var(--text-primary);
   box-shadow: var(--clay-lift), var(--shadow-soft);
-  backdrop-filter: var(--glass-filter);
-  -webkit-backdrop-filter: var(--glass-filter);
+  /* The catalogue pane already supplies the full frost. */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   text-align: left;
   cursor: pointer;
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
@@ -1357,7 +1486,8 @@
   flex-wrap: wrap;
   gap: 4px;
   max-width: 100%;
-  background: var(--bg-soft);
+  background: var(--glass-inset-background);
+  box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
 }
 
 .pos-workspace .pos-sale-switch button {
@@ -1367,7 +1497,7 @@
 }
 
 .pos-workspace .pos-sale-switch button[aria-pressed="true"] {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--accent) 92%, transparent);
   color: var(--accent-ink);
   box-shadow: var(--clay-lift);
 }
@@ -1384,7 +1514,7 @@
 }
 
 .pos-workspace .pos-history-table thead {
-  background: var(--bg-soft);
+  background: var(--glass-inset-background);
   color: var(--text-muted);
 }
 
@@ -1392,7 +1522,7 @@
   font-size: max(11px, 0.6875rem);
   font-weight: 800;
   color: var(--text-muted);
-  background: var(--bg-soft);
+  background: transparent;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -1408,7 +1538,9 @@
   position: sticky;
   right: 0;
   z-index: 1;
-  background: var(--table-action-bg);
+  background: linear-gradient(120deg, var(--glass-sheen-soft), transparent 48%), var(--table-action-bg);
+  -webkit-backdrop-filter: var(--glass-chrome-filter);
+  backdrop-filter: var(--glass-chrome-filter);
   box-shadow: inset 1px 0 0 var(--border-color), -8px 0 14px -12px rgba(0, 0, 0, 0.3);
 }
 
