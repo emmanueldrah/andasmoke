@@ -1,6 +1,6 @@
 {
   "name": "anda-smoke-hub-pos",
-  "version": "1.1.4602",
+  "version": "1.1.4603",
   "author": "Anda C Smoke Hub",
   "description": "Point of sale for Anda C Smoke Hub: till, stock, staff and reports, on this machine and in sync with the website.",
   "private": true,

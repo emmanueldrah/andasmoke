@@ -768,7 +768,7 @@ export const BarcodeLabelsModal: React.FC<BarcodeLabelsModalProps> = ({
                             </td>
                             <td className="px-3 py-2.5 text-right font-black text-[var(--sheet-ink)]">GH₵ {Number(item.price).toFixed(2)}</td>
                             <td className="px-3 py-2.5 text-center">
-                              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.stockCount <= 0 ? 'bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-300' : item.stockCount <= 5 ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'bg-[var(--sheet-chip)] text-[var(--sheet-ink-2)]'}`}>
+                              <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.stockCount <= 0 ? 'bg-[var(--danger-soft)] text-[var(--danger)]' : item.stockCount <= 5 ? 'bg-[var(--accent-soft)] text-[var(--accent)]' : 'bg-[var(--sheet-chip)] text-[var(--sheet-ink-2)]'}`}>
                                 {item.stockCount}
                               </span>
                             </td>

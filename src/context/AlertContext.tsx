@@ -60,10 +60,10 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const alertColors = {
-    success: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-200 dark:border-green-800', text: 'text-green-900 dark:text-green-100', icon: 'text-green-600 dark:text-green-400' },
-    error: { bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-800', text: 'text-red-900 dark:text-red-100', icon: 'text-red-600 dark:text-red-400' },
-    warning: { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-900 dark:text-amber-100', icon: 'text-amber-600 dark:text-amber-400' },
-    info: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-200 dark:border-blue-800', text: 'text-blue-900 dark:text-blue-100', icon: 'text-blue-600 dark:text-blue-400' },
+    success: { border: 'color-mix(in srgb, var(--jade) 38%, var(--border-color))', icon: 'text-[var(--jade)]' },
+    error: { border: 'color-mix(in srgb, var(--danger) 38%, var(--border-color))', icon: 'text-[var(--danger)]' },
+    warning: { border: 'color-mix(in srgb, var(--accent) 38%, var(--border-color))', icon: 'text-[var(--accent)]' },
+    info: { border: 'color-mix(in srgb, var(--violet) 38%, var(--border-color))', icon: 'text-[var(--violet)]' },
   };
 
   return (
@@ -75,7 +75,8 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return (
             <div
               key={alert.id}
-              className={`alert-enter pointer-events-auto p-4 rounded-lg border ${colors.bg} ${colors.border} ${colors.text} shadow-lg backdrop-blur-sm`}
+              className="alert-enter glass-notice pointer-events-auto p-4 rounded-lg border text-[var(--text-primary)]"
+              style={{ borderColor: colors.border }}
             >
                 <div className="flex gap-3">
                   <div className="flex-shrink-0 pt-0.5">
@@ -91,14 +92,14 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     {alert.action && (
                       <button
                         onClick={alert.action.onClick}
-                        className={`text-sm font-medium ${colors.text} hover:underline transition-opacity hover:opacity-75`}
+                        className="text-sm font-medium text-[var(--text-primary)] hover:text-[var(--accent)] hover:underline transition-colors"
                       >
                         {alert.action.label}
                       </button>
                     )}
                     <button
                       onClick={() => removeAlert(alert.id)}
-                      className={`${colors.text} hover:opacity-60 transition-opacity p-1`}
+                      className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors p-1"
                       aria-label="Dismiss alert"
                     >
                       <X className="w-4 h-4" />

@@ -6,30 +6,30 @@
   :root {
     --font-sans: "Manrope", "Segoe UI", sans-serif;
     --font-display: "Fraunces", Georgia, serif;
-    /* Champagne glass: deep gold ink stays separate from luminous metal. */
-    --bg-main: rgba(248, 239, 220, 0.28);
-    --bg-card: rgba(255, 250, 238, 0.72);
-    --bg-card-alt: rgba(245, 233, 211, 0.64);
-    --bg-soft: rgba(247, 237, 218, 0.68);
+    /* Clear champagne glass, not cream paint. Ink never inherits pane alpha. */
+    --bg-main: rgba(248, 239, 220, 0.08);
+    --bg-card: rgba(255, 250, 238, 0.38);
+    --bg-card-alt: rgba(245, 233, 211, 0.26);
+    --bg-soft: rgba(247, 237, 218, 0.18);
     --surface-main-solid: #f7efdf;
     --surface-solid: #faf4e8;
     --surface-alt-solid: #f5e9d3;
     --surface-soft-solid: #f7edda;
     --control-solid: #fffaf0;
-    --sheet-surface: rgba(255, 250, 240, 0.9);
+    --sheet-surface: rgba(255, 250, 240, 0.64);
     --text-primary: #30271f;
-    --text-muted: #594a38;
-    --text-subtle: #6a5943;
+    --text-muted: #51412f;
+    --text-subtle: #5c4b35;
     --border-color: rgba(142, 108, 48, 0.24);
-    --control-bg: rgba(255, 250, 240, 0.88);
+    --control-bg: rgba(255, 250, 240, 0.32);
     --control-border: rgba(133, 97, 35, 0.4);
     --disabled-solid: #e9dfcf;
-    --disabled-bg: rgba(233, 223, 207, 0.9);
-    --disabled-ink: #64543e;
+    --disabled-bg: rgba(233, 223, 207, 0.42);
+    --disabled-ink: #5c4b35;
     --disabled-border: #c8b99f;
-    --table-action-bg: rgba(247, 237, 218, 0.94);
+    --table-action-bg: rgba(247, 237, 218, 0.58);
     --sidebar-solid: #291e18;
-    /* Selected pills keep white on deep gold; primary actions use metal ink. */
+    /* Deep gold is readable ink; pale gold is only a translucent reflection. */
     --accent: #795414;
     --accent-strong: #69470f;
     --accent-soft: rgba(153, 112, 34, 0.1);
@@ -38,43 +38,48 @@
     --gold-light: #fff1c2;
     --gold-deep: #c6933b;
     --gold-ink: #2b1d0b;
-    --gold-button-background: linear-gradient(115deg, color-mix(in srgb, var(--gold-light) 92%, transparent) 0%, color-mix(in srgb, var(--gold-metal) 92%, transparent) 30%, color-mix(in srgb, var(--gold-light) 92%, transparent) 49%, color-mix(in srgb, var(--gold-metal) 92%, transparent) 72%, color-mix(in srgb, var(--gold-deep) 92%, transparent) 100%);
-    --highlight: #795414;
-    --jade: #30644f;
-    --jade-soft: rgba(48, 100, 79, 0.12);
-    --violet: #725577;
-    --violet-strong: #806084;
-    --violet-soft: rgba(114, 85, 119, 0.1);
+    --glass-action-ink: #69470f;
+    --gold-button-background:
+      linear-gradient(118deg, var(--glass-sheen-soft), transparent 25%, var(--glass-reflection) 46%, transparent 49%),
+      linear-gradient(115deg, color-mix(in srgb, var(--gold-metal) 18%, transparent), color-mix(in srgb, var(--gold-light) 8%, transparent) 48%, color-mix(in srgb, var(--gold-deep) 16%, transparent)),
+      var(--control-bg);
+    --highlight: #69470f;
+    --jade: #28543f;
+    --jade-soft: rgba(40, 84, 63, 0.1);
+    --violet: #62446a;
+    --violet-strong: #705177;
+    --violet-soft: rgba(98, 68, 106, 0.1);
     --olive: #526b46;
     --olive-strong: #5a724d;
-    --danger: #a13b2d;
+    --danger: #8a3225;
     --danger-ink: #ffffff;
-    --danger-soft: rgba(161, 59, 45, 0.1);
-    --shadow-soft: 0 10px 28px -14px rgba(105, 74, 28, 0.2);
-    --shadow-card: 0 20px 44px -24px rgba(100, 70, 26, 0.28), 0 2px 8px -5px rgba(173, 126, 42, 0.18);
-    --glass-blur: 30px;
-    --glass-filter: blur(var(--glass-blur)) saturate(125%);
-    --glass-sheen: rgba(255, 255, 250, 0.72);
-    --glass-sheen-soft: rgba(255, 255, 245, 0.22);
-    --glass-reflection: rgba(255, 252, 233, 0.24);
-    --glass-gold-reflection: rgba(232, 189, 98, 0.1);
+    --danger-soft: rgba(138, 50, 37, 0.1);
+    --shadow-soft: 0 8px 22px -14px rgba(105, 74, 28, 0.3);
+    --shadow-card: 0 18px 42px -24px rgba(100, 70, 26, 0.32), 0 3px 10px -6px rgba(173, 126, 42, 0.2);
+    --glass-blur: 22px;
+    --glass-filter: blur(var(--glass-blur)) saturate(135%);
+    --glass-sheen: rgba(255, 255, 250, 0.92);
+    --glass-sheen-soft: rgba(255, 255, 245, 0.18);
+    --glass-reflection: rgba(255, 252, 233, 0.22);
+    --glass-gold-reflection: rgba(232, 189, 98, 0.08);
     --glass-edge: rgba(173, 129, 46, 0.32);
-    --glass-background:
-      linear-gradient(132deg, var(--glass-reflection), transparent 28%, transparent 76%, var(--glass-gold-reflection)),
-      linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
-    /* Insets borrow the parent frost rather than adding another full blur. */
-    --glass-inset-background: linear-gradient(135deg, var(--glass-sheen-soft), transparent 44%, var(--glass-gold-reflection)), var(--bg-soft);
-    --glass-sticky-background: linear-gradient(120deg, var(--glass-sheen-soft), transparent 48%, var(--glass-gold-reflection)), var(--sheet-surface);
-    --glass-chrome-filter: blur(12px) saturate(125%);
-    --dialog-overlay: rgba(65, 46, 22, 0.32);
+    /* One angled light cut is the signature, shared by every pane and control. */
+    --glass-cut: linear-gradient(118deg, var(--glass-reflection), transparent 23%, transparent 39%, var(--glass-sheen-soft) 46%, transparent 47%, transparent 76%, var(--glass-gold-reflection));
+    --glass-background: var(--glass-cut), linear-gradient(160deg, var(--bg-card), var(--bg-card-alt));
+    /* Insets borrow the parent frost rather than stacking opaque fills or blur. */
+    --glass-inset-background: var(--glass-cut), var(--bg-soft);
+    --glass-control-background: var(--glass-cut), var(--control-bg);
+    --glass-selected-background: linear-gradient(118deg, var(--accent-soft), transparent 70%), var(--glass-control-background);
+    --glass-sticky-background: var(--glass-cut), var(--table-action-bg);
+    --glass-chrome-filter: blur(16px) saturate(135%);
+    --dialog-overlay: rgba(65, 46, 22, 0.2);
     --page-background:
-      radial-gradient(1200px 640px at 90% -14%, rgba(237, 195, 110, 0.3), transparent 64%),
-      radial-gradient(900px 600px at -8% 12%, rgba(221, 178, 98, 0.18), transparent 64%),
-      radial-gradient(900px 560px at 65% 110%, rgba(255, 249, 230, 0.68), transparent 66%),
+      linear-gradient(118deg, transparent 16%, rgba(205, 163, 82, 0.12) 32%, rgba(255, 253, 240, 0.56) 42%, transparent 43%, transparent 66%, rgba(225, 187, 108, 0.14) 80%, transparent 94%),
+      radial-gradient(ellipse at 92% 6%, rgba(237, 195, 110, 0.22), transparent 56%),
       linear-gradient(180deg, #fbf5e8 0%, #f0e4cc 55%, #fffaf0 100%);
-    /* A polished upper edge, quiet underside and diffuse amber depth. */
-    --clay-lift: inset 0 1px 0 var(--glass-sheen), inset 0 -1px 0 var(--glass-gold-reflection);
-    --clay-well: inset 0 1px 3px rgba(94, 66, 28, 0.1);
+    /* Bright upper/left rims and a shaded underside give the pane thickness. */
+    --clay-lift: inset 0 1px 0 var(--glass-sheen), inset 1px 0 0 var(--glass-sheen-soft), inset 0 -1px 0 var(--glass-gold-reflection), inset -1px 0 0 var(--glass-gold-reflection);
+    --clay-well: inset 0 1px 0 var(--glass-sheen), inset 0 -1px 0 rgba(94, 66, 28, 0.1), 0 2px 5px -3px rgba(94, 66, 28, 0.18);
     --clay-base: 0 1px 2px rgba(94, 66, 28, 0.08);
     --clay-cast: 0 6px 16px -10px rgba(100, 70, 26, 0.24);
     /* The lounge mark, sitting behind every pane. Cut out to a transparent
@@ -94,28 +99,28 @@
 
   html.dark {
     color-scheme: dark;
-    /* Smoked blue glass with champagne edges and restrained gold reflections. */
-    --bg-main: rgba(7, 26, 39, 0.28);
-    --bg-card: rgba(14, 38, 54, 0.76);
-    --bg-card-alt: rgba(10, 29, 44, 0.7);
-    --bg-soft: rgba(17, 42, 57, 0.72);
+    /* Clear smoked glass over a dark optical backing, with champagne rims. */
+    --bg-main: rgba(7, 26, 39, 0.08);
+    --bg-card: rgba(14, 38, 54, 0.44);
+    --bg-card-alt: rgba(10, 29, 44, 0.38);
+    --bg-soft: rgba(17, 42, 57, 0.18);
     --surface-main-solid: #071a27;
     --surface-solid: #0e2a3a;
     --surface-alt-solid: #0a2130;
     --surface-soft-solid: #112f3f;
     --control-solid: #0b2433;
-    --sheet-surface: rgba(9, 31, 45, 0.9);
+    --sheet-surface: rgba(9, 31, 45, 0.7);
     --text-primary: #f6f3ec;
     --text-muted: #d5dee4;
-    --text-subtle: #b1c3cf;
+    --text-subtle: #c4d1da;
     --border-color: rgba(191, 174, 128, 0.24);
-    --control-bg: rgba(11, 36, 51, 0.88);
+    --control-bg: rgba(11, 36, 51, 0.3);
     --control-border: rgba(199, 180, 128, 0.4);
     --disabled-solid: #233b49;
-    --disabled-bg: rgba(35, 59, 73, 0.9);
-    --disabled-ink: #b8c9d4;
+    --disabled-bg: rgba(35, 59, 73, 0.42);
+    --disabled-ink: #c4d1da;
     --disabled-border: #405b6b;
-    --table-action-bg: rgba(18, 48, 64, 0.94);
+    --table-action-bg: rgba(18, 48, 64, 0.58);
     --sidebar-solid: #0a2130;
     --accent: #efc36f;
     --accent-strong: #f7d994;
@@ -125,32 +130,32 @@
     --gold-light: #ffe4a1;
     --gold-deep: #c6923c;
     --gold-ink: #2b1d0b;
+    --glass-action-ink: #ffe4a1;
     --highlight: #f7d994;
-    --jade: #96c9ac;
-    --jade-soft: rgba(150, 201, 172, 0.12);
-    --violet: #c6acd0;
-    --violet-strong: #d6bfe0;
-    --violet-soft: rgba(198, 172, 208, 0.12);
+    --jade: #afdcc0;
+    --jade-soft: rgba(175, 220, 192, 0.1);
+    --violet: #d6bce0;
+    --violet-strong: #e0ccea;
+    --violet-soft: rgba(214, 188, 224, 0.1);
     --olive: #c8bf93;
     --olive-strong: #d6cea5;
-    --danger: #f29e87;
+    --danger: #ffc3b1;
     --danger-ink: #2b160f;
-    --danger-soft: rgba(242, 158, 135, 0.12);
+    --danger-soft: rgba(255, 195, 177, 0.1);
     --shadow-soft: 0 12px 30px -14px rgba(0, 0, 0, 0.38);
     --shadow-card: 0 20px 46px -22px rgba(0, 0, 0, 0.48), 0 2px 10px -6px rgba(211, 169, 86, 0.12);
-    --glass-blur: 30px;
-    --glass-sheen: rgba(245, 224, 174, 0.22);
-    --glass-sheen-soft: rgba(238, 215, 164, 0.07);
-    --glass-reflection: rgba(181, 205, 222, 0.1);
-    --glass-gold-reflection: rgba(224, 182, 99, 0.08);
+    --glass-blur: 22px;
+    --glass-sheen: rgba(240, 231, 208, 0.38);
+    --glass-sheen-soft: rgba(207, 224, 237, 0.06);
+    --glass-reflection: rgba(181, 205, 222, 0.07);
+    --glass-gold-reflection: rgba(224, 182, 99, 0.04);
     --glass-edge: rgba(208, 183, 121, 0.28);
-    --dialog-overlay: rgba(2, 10, 18, 0.66);
+    --dialog-overlay: rgba(2, 10, 18, 0.48);
     --page-background:
-      radial-gradient(1100px 660px at 85% -10%, rgba(75, 118, 151, 0.24), transparent 66%),
-      radial-gradient(950px 660px at -10% 24%, rgba(196, 147, 66, 0.1), transparent 64%),
-      radial-gradient(800px 560px at 76% 110%, rgba(221, 178, 91, 0.08), transparent 68%),
+      linear-gradient(118deg, transparent 16%, rgba(95, 132, 156, 0.08) 32%, rgba(184, 209, 225, 0.1) 42%, transparent 43%, transparent 66%, rgba(196, 147, 66, 0.05) 80%, transparent 94%),
+      radial-gradient(ellipse at 92% 6%, rgba(75, 118, 151, 0.12), transparent 56%),
       linear-gradient(180deg, #102b3c 0%, #081d2c 48%, #051420 100%);
-    --clay-well: inset 0 1px 3px rgba(0, 0, 0, 0.24);
+    --clay-well: inset 0 1px 0 var(--glass-sheen-soft), inset 0 -1px 0 rgba(0, 0, 0, 0.2), 0 2px 5px -3px rgba(0, 0, 0, 0.32);
     --clay-base: 0 1px 2px rgba(0, 0, 0, 0.2);
     --clay-cast: 0 6px 16px -10px rgba(0, 0, 0, 0.4);
     /* The emblem is almost entirely black, so on a near-black page it would
@@ -362,9 +367,7 @@
     --sheet-check: var(--accent-soft);
     --sheet-paper-bed: var(--bg-soft);
     color: var(--sheet-ink);
-    background:
-      linear-gradient(132deg, var(--glass-reflection), transparent 28%, transparent 76%, var(--glass-gold-reflection)),
-      var(--sheet-surface);
+    background: var(--glass-cut), var(--sheet-surface);
     border-color: var(--glass-edge);
     box-shadow: var(--clay-lift), 0 24px 64px -24px rgba(20, 17, 12, 0.38);
     -webkit-backdrop-filter: var(--glass-filter);
@@ -438,7 +441,7 @@
     /* A struck-metal emblem: bevelled rim, lit face, seated shadow. */
     border-color: var(--gold-deep);
     background: var(--gold-button-background);
-    color: var(--gold-ink);
+    color: var(--glass-action-ink);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.6),
       inset 0 -2px 0 rgba(62, 34, 17, 0.2),
@@ -478,7 +481,7 @@
     min-height: 40px;
     border-radius: 0.72rem;
     border: 1px solid var(--control-border);
-    background: var(--control-bg);
+    background: var(--glass-control-background);
     padding: 0.62rem 0.82rem;
     font-size: 0.9rem;
     font-weight: 600;
@@ -491,7 +494,7 @@
   .lux-select:focus {
     outline: none;
     border-color: var(--accent);
-    background: var(--control-bg);
+    background: var(--glass-control-background);
     color: var(--text-primary);
     box-shadow: var(--clay-well), 0 0 0 3px var(--accent-soft);
   }
@@ -520,7 +523,7 @@
     border: 1px solid transparent;
     cursor: pointer;
     white-space: nowrap;
-    background: var(--control-bg);
+    background: var(--glass-control-background);
     color: var(--text-primary);
     box-shadow: var(--clay-lift), var(--clay-cast);
     transition: filter 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
@@ -534,7 +537,7 @@
 
   .lux-btn--primary {
     background: var(--gold-button-background);
-    color: var(--gold-ink);
+    color: var(--glass-action-ink);
     border-color: var(--gold-deep);
     box-shadow: inset 0 1px 0 rgba(255, 253, 230, 0.78), inset 0 -1px 0 rgba(116, 72, 18, 0.18), 0 8px 20px -12px color-mix(in srgb, var(--gold-deep) 54%, transparent);
   }
@@ -552,7 +555,7 @@
   .lux-btn--ink:hover:not(:disabled) { filter: brightness(1.15); }
 
   .lux-btn--outline {
-    background: var(--control-bg);
+    background: var(--glass-control-background);
     color: var(--text-primary);
     border-color: var(--control-border);
     box-shadow: var(--clay-lift), var(--clay-base);
@@ -992,7 +995,7 @@
     min-height: 3.25rem;
     border-radius: 0.85rem;
     border: 1px solid var(--control-border);
-    background: var(--control-bg);
+    background: var(--glass-control-background);
     font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
@@ -1008,7 +1011,7 @@
   .pos-scan:focus {
     outline: none;
     border-color: var(--accent);
-    background: var(--control-bg);
+    background: var(--glass-control-background);
     color: var(--text-primary);
     box-shadow: var(--clay-well), 0 0 0 3px var(--accent-soft);
   }
@@ -1040,7 +1043,7 @@
     flex-shrink: 0;
     border-radius: 0.5rem;
     border: 1px solid var(--control-border);
-    background: var(--control-bg);
+    background: var(--glass-control-background);
     color: var(--text-primary);
     cursor: pointer;
     box-shadow: var(--clay-lift), var(--clay-base);
@@ -1089,7 +1092,7 @@
     border-radius: 0.85rem;
     font-size: 1rem;
     font-weight: 800;
-    color: var(--gold-ink);
+    color: var(--glass-action-ink);
     background: var(--gold-button-background);
     box-shadow: inset 0 1px 0 rgba(255, 253, 230, 0.78), inset 0 -1px 0 rgba(116, 72, 18, 0.18), 0 10px 24px -14px color-mix(in srgb, var(--gold-deep) 56%, transparent);
     cursor: pointer;
@@ -1111,7 +1114,7 @@
     margin-left: 0.25rem;
     padding: 0.15rem 0.4rem;
     border-radius: 0.3rem;
-    background: rgba(255, 251, 228, 0.36);
+    background: var(--glass-inset-background);
     color: inherit;
     font-size: max(11px, 0.6875rem);
     font-weight: 800;
@@ -1130,9 +1133,12 @@
       --sheet-surface: var(--surface-solid);
       --disabled-bg: var(--disabled-solid);
       --table-action-bg: var(--surface-soft-solid);
-      --gold-button-background: linear-gradient(115deg, var(--gold-light), var(--gold-metal) 55%, var(--gold-deep));
+      --gold-button-background: var(--control-solid);
+      --glass-cut: linear-gradient(transparent, transparent);
       --glass-background: var(--surface-solid);
       --glass-inset-background: var(--surface-soft-solid);
+      --glass-control-background: var(--control-solid);
+      --glass-selected-background: var(--control-solid);
       --glass-sticky-background: var(--surface-solid);
       --glass-reflection: transparent;
       --glass-gold-reflection: transparent;
@@ -1163,9 +1169,12 @@
       --sheet-surface: var(--surface-solid);
       --disabled-bg: var(--disabled-solid);
       --table-action-bg: var(--surface-soft-solid);
-      --gold-button-background: linear-gradient(115deg, var(--gold-light), var(--gold-metal) 55%, var(--gold-deep));
+      --gold-button-background: var(--control-solid);
+      --glass-cut: linear-gradient(transparent, transparent);
       --glass-background: var(--surface-solid);
       --glass-inset-background: var(--surface-soft-solid);
+      --glass-control-background: var(--control-solid);
+      --glass-selected-background: var(--control-solid);
       --glass-sticky-background: var(--surface-solid);
       --glass-reflection: transparent;
       --glass-gold-reflection: transparent;
@@ -1188,6 +1197,77 @@
 
 /* Surface hooks never alter layout, dialog positioning or printable paper. */
 @media screen {
+  /* Detached notices need their own frost, not a fixed brown/blue fill. */
+  .glass-notice:not([data-print-preview], [data-print-preview] *) {
+    background: var(--glass-cut), var(--sheet-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--glass-edge);
+    border-radius: 1rem;
+    box-shadow: var(--clay-lift), var(--shadow-card);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+  }
+
+  /* Reflective faces on native fields and secondary controls, with no extra
+     full-pane blur. Transparent icon-only actions remain intentionally clear. */
+  :is(.admin-shell, .admin-login, .form-sheet) :is(
+    :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"])),
+    select, textarea, .lux-btn--outline, .lux-btn--ink, .pos-qty,
+    :where(button)[class~="bg-[var(--bg-soft)]"], :where(button)[class~="bg-[var(--control-bg)]"], :where(button)[class~="bg-[var(--sheet-button)]"]
+  ):not(:disabled, [data-print-preview], [data-print-preview] *) {
+    background: var(--glass-control-background);
+    color: var(--text-primary);
+    border-color: var(--control-border);
+    box-shadow: var(--clay-well);
+  }
+
+  :is(.admin-shell, .admin-login, .form-sheet) :is(
+    :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"])), select, textarea
+  ):focus:not(:disabled, [data-print-preview], [data-print-preview] *) {
+    border-color: var(--accent);
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: var(--clay-well), 0 0 0 3px var(--accent-soft);
+  }
+
+  :is(.admin-shell, .admin-login, .form-sheet) :is(
+    .lux-btn--outline, .lux-btn--ink, .pos-qty,
+    :where(button)[class~="bg-[var(--bg-soft)]"], :where(button)[class~="bg-[var(--control-bg)]"], :where(button)[class~="bg-[var(--sheet-button)]"]
+  ):hover:not(:disabled, [data-print-preview], [data-print-preview] *) {
+    background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--glass-control-background);
+    border-color: var(--accent);
+    box-shadow: var(--clay-lift), var(--shadow-soft);
+  }
+
+  :is(.admin-shell, .admin-login, .form-sheet) button:focus-visible:not(:disabled, [data-print-preview], [data-print-preview] *) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  :is(.admin-shell, .admin-login, .form-sheet) :is(.lux-btn--primary, .pos-pay):not(:disabled, [data-print-preview], [data-print-preview] *) {
+    background: var(--gold-button-background);
+    color: var(--glass-action-ink);
+    border-color: var(--gold-deep);
+    box-shadow: var(--clay-lift), var(--clay-cast);
+  }
+
+  :is(.admin-shell, .admin-login, .form-sheet) .pos-pay:hover:not(:disabled, [data-print-preview], [data-print-preview] *) {
+    box-shadow: var(--clay-lift), var(--shadow-card);
+  }
+
+  /* Keep the pressed face below hover elevation, including primary actions. */
+  :is(.admin-shell, .admin-login, .form-sheet) :is(.lux-btn, .lux-btn--primary, .pos-qty, .pos-pay):active:not(:disabled, [data-print-preview], [data-print-preview] *) {
+    box-shadow: var(--clay-well);
+  }
+
+  :is(.admin-shell, .admin-login) :is(.lux-card, .glass-panel, .pos-product-tile):not([data-print-preview], [data-print-preview] *) {
+    background: var(--glass-background);
+  }
+
+  .admin-shell :is(table, .pos-total) {
+    font-variant-numeric: tabular-nums;
+  }
+
   .glass-inset:not([data-print-preview], [data-print-preview] *) {
     background: var(--glass-inset-background);
     color: var(--text-primary);
@@ -1206,13 +1286,19 @@
     color: var(--text-primary);
   }
 
+  .admin-login [class~="bg-gradient-to-tr"] {
+    background: var(--gold-button-background);
+    color: var(--glass-action-ink);
+    box-shadow: var(--clay-lift), inset 0 0 0 1px var(--glass-edge);
+  }
+
   .form-sheet > header:not([data-print-preview], [data-print-preview] *),
-  .form-sheet :is([class~="bg-[var(--sheet-head)]"], [class~="bg-[var(--sheet-panel)]"], [class~="bg-[var(--sheet-chip)]"]):not(input, select, textarea, button, a, [data-print-preview], [data-print-preview] *) {
+  .form-sheet :is([class~="bg-[var(--sheet-head)]"], [class~="bg-[var(--sheet-panel)]"], [class~="bg-[var(--sheet-chip)]"], [class~="bg-[var(--sheet-button)]"], [class~="bg-[var(--sheet-field)]"]):not(input, select, textarea, button, a, [data-print-preview], [data-print-preview] *) {
     background: var(--glass-inset-background);
     box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
   }
 
-  /* Sticky actions stay almost opaque even when the surrounding pane is clear. */
+  /* Sticky actions retain their own frost while keeping the material clear. */
   .form-sheet > :is(footer, [class~="border-t"]):not([data-print-preview], [data-print-preview] *),
   .form-sheet :is(.sticky, [class~="bg-[var(--sheet-sticky)]"]):not([data-print-preview], [data-print-preview] *) {
     background: var(--glass-sticky-background);
@@ -1225,16 +1311,17 @@
     color: var(--accent);
   }
 
-  /* Filled selections remain translucent without fading their text. */
-  .admin-shell :is([class~="bg-[var(--accent)]"], [class~="bg-[var(--accent-strong)]"], [class~="bg-[var(--sheet-solid)]"]):not([data-print-preview], [data-print-preview] *) {
-    background: color-mix(in srgb, var(--accent) 92%, transparent);
-    color: var(--accent-ink);
-    box-shadow: inset 0 1px 0 var(--glass-sheen-soft);
+  /* Selection is a gold glass rim and opaque ink, never a painted pill. */
+  .admin-shell :is([class~="bg-[var(--accent)]"], [class~="bg-[var(--accent-strong)]"], [class~="bg-[var(--sheet-solid)]"]):not(:disabled, [data-print-preview], [data-print-preview] *) {
+    background: var(--glass-selected-background);
+    color: var(--accent-strong);
+    box-shadow: var(--clay-lift), inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
   }
 
-  .admin-shell [class~="bg-[var(--danger)]"]:not([data-print-preview], [data-print-preview] *) {
-    background: color-mix(in srgb, var(--danger) 92%, transparent);
-    color: var(--danger-ink);
+  .admin-shell [class~="bg-[var(--danger)]"]:not(:disabled, [data-print-preview], [data-print-preview] *) {
+    background: linear-gradient(var(--danger-soft), var(--danger-soft)), var(--glass-control-background);
+    color: var(--danger);
+    box-shadow: var(--clay-lift), inset 0 0 0 1px var(--danger);
   }
 
   .admin-shell .lux-chip--neutral:not([data-print-preview], [data-print-preview] *) {
@@ -1280,9 +1367,9 @@
   gap: 0.75rem;
   width: 100%;
   min-height: 42px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color);
   border-radius: 0.75rem;
-  background: transparent;
+  background: var(--glass-inset-background);
   color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 700;
@@ -1300,7 +1387,7 @@
 
 .admin-shell .admin-shell__nav-link.is-active,
 .admin-shell .admin-shell__nav-link.is-active:hover:not(:disabled) {
-  background: linear-gradient(115deg, var(--accent-soft), transparent), var(--bg-card);
+  background: var(--glass-selected-background);
   border-color: color-mix(in srgb, var(--accent) 38%, var(--border-color));
   color: var(--text-primary);
   box-shadow: var(--clay-lift), inset 2px 0 0 var(--accent);
@@ -1497,9 +1584,9 @@
 }
 
 .pos-workspace .pos-sale-switch button[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--accent) 92%, transparent);
-  color: var(--accent-ink);
-  box-shadow: var(--clay-lift);
+  background: var(--glass-selected-background);
+  color: var(--accent-strong);
+  box-shadow: var(--clay-lift), inset 0 0 0 1px var(--glass-edge);
 }
 
 .pos-workspace .pos-sale-switch button:focus-visible {

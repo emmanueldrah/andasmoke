@@ -57,7 +57,7 @@ function composite(foreground, backing) {
 }
 
 for (const [theme, selector] of [['light', /:root\s*\{([\s\S]*?)\n\s*\}/], ['dark', /html\.dark\s*\{([\s\S]*?)\n\s*\}/]]) {
-  test(`${theme} translucent panes and metallic gold actions preserve text contrast`, () => {
+  test(`${theme} translucent panes and semantic tints preserve text contrast`, () => {
     const tokens = themeTokens(selector);
     const block = css.match(selector)[1];
     const page = block.match(/--page-background:([\s\S]*?);/)[1];
@@ -104,6 +104,80 @@ test('page, card, nested panel, field and dialog backings are translucent in bot
       assert(alpha > 0 && alpha < 1, `${token} alpha must be between 0 and 1`);
     }
   }
+});
+
+test('clear glass does not regress to nearly opaque paint on panels or controls', () => {
+  const caps = { 'bg-main': 0.1, 'bg-card': 0.5, 'bg-card-alt': 0.5, 'bg-soft': 0.25, 'control-bg': 0.4, 'sheet-surface': 0.75, 'disabled-bg': 0.5, 'table-action-bg': 0.65 };
+  for (const selector of [/:root\s*\{([\s\S]*?)\n\s*\}/, /html\.dark\s*\{([\s\S]*?)\n\s*\}/]) {
+    const block = css.match(selector)[1];
+    for (const [token, cap] of Object.entries(caps)) {
+      const declaration = block.split(`--${token}:`)[1].split(';')[0];
+      const alpha = Number(declaration.slice(declaration.lastIndexOf(',') + 1).replace(')', '').trim());
+      assert(alpha > 0 && alpha <= cap, `${token}: ${alpha} exceeds clear-glass cap ${cap}`);
+    }
+  }
+  assert.match(css, /--glass-cut:\s*linear-gradient\(118deg/);
+  assert.match(css, /--glass-control-background:\s*var\(--glass-cut\), var\(--control-bg\)/);
+  assert.match(css, /--glass-selected-background:[^;]*var\(--glass-control-background\)/);
+});
+
+for (const [theme, selector] of [['light', /:root\s*\{([\s\S]*?)\n\s*\}/], ['dark', /html\.dark\s*\{([\s\S]*?)\n\s*\}/]]) {
+  test(`${theme} clear gold actions keep opaque ink readable across reflection stops`, () => {
+    const tokens = themeTokens(selector);
+    const block = css.match(selector)[1];
+    const rgba = key => block.split(`--${key}:`)[1].split(';')[0].match(/rgba\(([^)]+)\)/)[1].split(',').map(Number);
+    const tint = hex => [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16));
+    const page = block.match(/--page-background:([\s\S]*?);/)[1];
+    const canvases = [...page.matchAll(/#[\da-f]{6}/gi)].map(match => match[0]);
+    const glows = [...page.matchAll(/rgba\(([^)]+)\)/g)].map(match => match[1].split(',').map(Number));
+    for (const canvas of [...canvases, ...canvases.map(c => glows.reduce((bg, glow) => composite(glow, bg), c))]) {
+      for (const [gold, alpha] of [['gold-metal', 0.18], ['gold-light', 0.08], ['gold-deep', 0.16]]) {
+        const button = composite([...tint(tokens[gold]), alpha], composite(rgba('control-bg'), canvas));
+        for (const reflection of [[0, 0, 0, 0], rgba('glass-reflection'), rgba('glass-sheen-soft')]) {
+          const ratio = contrast(tokens['glass-action-ink'], composite(reflection, button));
+          assert(ratio >= 4.5, `${theme} gold glass action contrast: ${ratio.toFixed(2)}:1`);
+        }
+      }
+    }
+  });
+}
+
+test('notifications and error surfaces use shared themed glass without fixed fills', () => {
+  for (const file of ['../src/context/ToastContext.tsx', '../src/context/AlertContext.tsx', '../src/components/common/ErrorBoundary.tsx']) {
+    const source = readFileSync(new URL(file, import.meta.url), 'utf8');
+    assert.match(source, /glass-notice/);
+    assert.doesNotMatch(source, /bg-\[rgba\(30,25,21|bg-blue-50|bg-stone-100|text-\[#FAF7F2\]/);
+  }
+  assert.match(css, /--glass-control-background:\s*var\(--control-solid\)/);
+  assert.match(css, /--glass-cut:\s*linear-gradient\(transparent, transparent\)/);
+});
+
+test('glass fields retain focus rings and color-valued Tailwind sheet aliases', () => {
+  const sheet = css.match(/\.form-sheet\s*\{([\s\S]*?)\n\s*\}/)[1];
+  for (const alias of ['sheet-field', 'sheet-field-focus', 'sheet-button']) {
+    assert.match(sheet, new RegExp(`--${alias}:\\s*var\\(--control-bg\\)`));
+  }
+  const screenHooks = css.slice(css.indexOf('/* Surface hooks'));
+  assert.match(screenHooks, /\):focus:not\(:disabled,[^}]*outline:\s*2px solid var\(--accent\);[^}]*box-shadow:[^}]*var\(--accent-soft\)/);
+  const accounts = readFileSync(new URL('../src/components/admin/screens/AdminAccountsManagementScreen.tsx', import.meta.url), 'utf8');
+  const role = accounts.slice(accounts.indexOf('id="profile-role"'), accounts.indexOf('id="profile-role"') + 300);
+  assert.match(role, /readOnly/);
+  assert.doesNotMatch(role, /opacity-60/);
+  assert.match(css, /\.pos-pay__hint\s*\{[^}]*background:\s*var\(--glass-inset-background\)/);
+});
+
+test('unlayered glass controls preserve hover and pressed elevation without selector inflation', () => {
+  const hooks = css.slice(css.indexOf('/* Surface hooks'));
+  assert.match(hooks, /:where\(input:not\(\[type="checkbox"\]\)[^\n]*\),/);
+  const primary = hooks.indexOf(':is(.lux-btn--primary, .pos-pay):not');
+  const hover = hooks.indexOf('.pos-pay:hover:not(:disabled, [data-print-preview], [data-print-preview] *)');
+  const pressed = hooks.indexOf(':is(.lux-btn, .lux-btn--primary, .pos-qty, .pos-pay):active:not(:disabled, [data-print-preview], [data-print-preview] *)');
+  assert(primary >= 0 && hover > primary && pressed > hover);
+  const controls = hooks.slice(0, primary);
+  assert.doesNotMatch(controls, /\bbutton\[class~/, 'button types must not inflate hover specificity above active');
+  assert.equal([...controls.matchAll(/:where\(button\)\[class~/g)].length, 6);
+  assert.match(hooks.slice(hover, hooks.indexOf('}', hover)), /box-shadow:\s*var\(--clay-lift\), var\(--shadow-card\)/);
+  assert.match(hooks.slice(pressed, hooks.indexOf('}', pressed)), /box-shadow:\s*var\(--clay-well\)/);
 });
 
 test('payment stays in a separate nonshrinking footer, after scrollable settlement', () => {

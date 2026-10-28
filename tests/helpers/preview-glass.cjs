@@ -243,6 +243,15 @@ function installPreview(fixtures, origin, channel) {
 
 const delay = () => new Promise(resolve => setTimeout(resolve, SETTLE_MS));
 const execute = (fn, ...args) => win.webContents.executeJavaScript(`(${fn.toString()})(${args.map(arg => JSON.stringify(arg)).join(',')})`, true);
+async function debugCommand(method, params) {
+  let timer;
+  try {
+    return await Promise.race([
+      win.webContents.debugger.sendCommand(method, params),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`CDP timed out: ${method}`)), 15_000); }),
+    ]);
+  } finally { clearTimeout(timer); }
+}
 async function waitFor(fn, description, timeout = 10_000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -376,7 +385,7 @@ function inspectRenderer(expectedTheme, needsFooter) {
     return backgroundCache.get(element);
   };
   const hasBlur = filter => /blur\([\d.]+px\)/.test(filter) && !/blur\(0(?:px)?\)/.test(filter);
-  const glass = all('.admin-shell__sidebar, .admin-shell__header, main .lux-card, main .glass-panel, .form-sheet, .admin-login .glass-panel').filter(visible).slice(0, 24).map(element => {
+  const glass = all('.admin-shell__sidebar, .admin-shell__header, main .lux-card, main .glass-panel, .form-sheet, .admin-login .glass-panel, .glass-notice').filter(visible).slice(0, 24).map(element => {
     const s = getComputedStyle(element), b = background(element);
     const filter = s.backdropFilter;
     // Only product tiles intentionally borrow the catalogue's full frost.
@@ -384,8 +393,12 @@ function inspectRenderer(expectedTheme, needsFooter) {
     const inheritedFilter = parentPane ? getComputedStyle(parentPane).backdropFilter : null;
     return { ...identify(element), rect: rectOf(element), backgroundColor: s.backgroundColor, backgroundImage: s.backgroundImage, backdropFilter: filter, inheritedFilter, opacity: s.opacity, borderColor: s.borderColor, color: s.color,
       blurred: hasBlur(filter) || Boolean(parentPane && hasBlur(inheritedFilter)), translucent: b.colors.some(c => c[3] < 0.999),
+      maximumOwnAlpha: Math.max(...b.colors.map(c => c[3])),
       gradientStops: b.gradients, unmodeled: b.unmodeled };
   });
+  const clearControls = all('.lux-input, .lux-select, .pos-scan, .lux-btn, .pos-qty, .pos-sale-switch button, .form-sheet input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"])').filter(visible).filter(element => !element.closest('[data-print-preview]')).slice(0, 30).map(element => ({
+    ...identify(element), maximumOwnAlpha: Math.max(...background(element).colors.map(c => c[3])), opacity: getComputedStyle(element).opacity,
+  }));
   const rootStyle = getComputedStyle(document.documentElement);
   const primary = parseColor(rootStyle.getPropertyValue('--text-primary'));
   const dialogs = all('.glass-dialog-backdrop .form-sheet').filter(visible).map(element => {
@@ -411,6 +424,8 @@ function inspectRenderer(expectedTheme, needsFooter) {
   add('placeholder', inputs.filter(element => element.placeholder && !element.value), '::placeholder');
   add('active-chip', all('[aria-pressed="true"], .lux-chip, nav .is-active'), null, 3);
   add('primary-gold-button', all('.lux-btn--primary, .pos-pay'), null, 3);
+  add('notice-text', all('.glass-notice p'), null, 3);
+  add('payment-keyboard-hint', all('.pos-pay__hint'));
   const contrast = representatives.map(({ kind, element, pseudo }) => {
     const s = getComputedStyle(element, pseudo);
     const foreground = parseColor(s.color);
@@ -459,7 +474,7 @@ function inspectRenderer(expectedTheme, needsFooter) {
       }
       return true;
     }).slice(0, 15).map(element => ({ ...identify(element), rect: rectOf(element) })),
-    glass, dialogs, labels, contrast, needsFooter, footerVisible, footerRect, payRect,
+    glass, clearControls, dialogs, labels, contrast, needsFooter, footerVisible, footerRect, payRect,
     loginClipped: all('.admin-login main input, .admin-login main button, .admin-login main h1, .admin-login main h2, .admin-login main label, .admin-login main p').filter(visible).filter(element => {
       const pane = element.closest('.glass-panel');
       if (!pane) return false;
@@ -474,6 +489,9 @@ function inspectRenderer(expectedTheme, needsFooter) {
 }
 
 async function capture(theme, size, page, variant = 'page', needsFooter = false) {
+  // Commit an offscreen frame before sampling styles, avoiding paused paint
+  // transitions that can otherwise mix old-theme ink with new-theme glass.
+  await win.webContents.capturePage();
   await delay();
   const name = `${theme}-${size.name}-${page.toLowerCase().replace(/\s+/g, '-')}-${variant}`;
   const inspection = await execute(inspectRenderer, theme, needsFooter);
@@ -487,7 +505,9 @@ async function capture(theme, size, page, variant = 'page', needsFooter = false)
   check(`${name}:has-glass-panes`, inspection.glass.length > 0, inspection.glass.length);
   for (const pane of inspection.glass) {
     check(`${name}:glass-pane`, pane.blurred && pane.translucent, pane);
+    check(`${name}:clear-pane-material`, pane.maximumOwnAlpha <= 0.8, pane);
   }
+  for (const control of inspection.clearControls) check(`${name}:clear-control-material`, control.maximumOwnAlpha <= 0.75 && Number(control.opacity) >= 0.99, control);
   for (const dialog of inspection.dialogs) check(`${name}:dialog-active-theme`, dialog.themeInkMatches, dialog);
   for (const label of inspection.labels) check(`${name}:label-opacity`, label.opacity >= 0.99, label);
   if (needsFooter) {
@@ -522,12 +542,37 @@ async function populateBasket() {
 async function setTheme(theme) {
   await navigate('Settings');
   await click(theme, '[aria-label="Appearance theme"]');
+  await win.webContents.capturePage();
   await delay(); // CSS color transitions may outlast a single 180ms settle.
+  await waitFor(() => {
+    const active = document.querySelector('.admin-shell__nav-link.is-active');
+    return active && getComputedStyle(active).color === getComputedStyle(document.body).color;
+  }, 'active navigation ink to finish the theme transition');
   check(`settings-button:${theme}`, await execute(mode => {
     const group = document.querySelector('[aria-label="Appearance theme"]');
     return [...group.querySelectorAll('button')].some(button => button.textContent.trim().toLowerCase() === mode && button.getAttribute('aria-pressed') === 'true') && localStorage.getItem('anda_theme_mode') === mode;
   }, theme), theme);
   await scrollTop();
+}
+async function buttonStateCaptures(theme, size) {
+  const { root } = await debugCommand('DOM.getDocument');
+  const inspect = selector => execute(css => {
+    const element = document.querySelector(css);
+    const style = getComputedStyle(element);
+    return { shadow: style.boxShadow, transform: style.transform, active: element.matches(':active'), hover: element.matches(':hover') };
+  }, selector);
+  for (const [selector, name] of [['.lux-btn--outline', 'secondary'], ['.pos-qty', 'quantity'], ['.pos-pay', 'payment']]) {
+    const { nodeId } = await debugCommand('DOM.querySelector', { nodeId: root.nodeId, selector });
+    if (!nodeId) throw new Error(`State audit control not found: ${selector}`);
+    await debugCommand('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover'] });
+    await capture(theme, size, 'Counter', `${name}-hover`);
+    const hovered = await inspect(selector);
+    await debugCommand('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover', 'active'] });
+    await capture(theme, size, 'Counter', `${name}-pressed`);
+    const pressed = await inspect(selector);
+    check(`${theme}:${name}:pressed-glass-elevation`, hovered.hover && pressed.active && hovered.shadow !== pressed.shadow && pressed.transform === 'matrix(1, 0, 0, 1, 0, 1)', { hovered, pressed });
+    await debugCommand('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] });
+  }
 }
 async function profileCapture(theme, size) {
   await execute(() => {
@@ -544,6 +589,14 @@ async function dialogCapture(theme, size, page, button, variant, closeButton) {
   await click(button, 'main');
   check(`${theme}:${size.name}:${variant}:opened`, await execute(() => Boolean(document.querySelector('.glass-dialog-backdrop .form-sheet'))), button);
   await capture(theme, size, page, variant);
+  if (variant === 'barcode-labels') {
+    await click('2. Preview & layout', '.glass-dialog-backdrop');
+    await capture(theme, size, page, 'barcode-paper-preview');
+    check(`${theme}:${size.name}:paper-stays-white`, await execute(() => {
+      const paper = document.querySelector('[data-print-preview]');
+      return Boolean(paper && getComputedStyle(paper).backgroundColor === 'rgb(255, 255, 255)' && getComputedStyle(paper).backdropFilter === 'none');
+    }), 'Printable paper is deliberately exempt from glass.');
+  }
   await click(closeButton, '.glass-dialog-backdrop');
   check(`${theme}:${size.name}:${variant}:closed-without-save`, await execute(() => !document.querySelector('.glass-dialog-backdrop .form-sheet')), closeButton);
   await scrollTop();
@@ -661,6 +714,12 @@ async function run() {
   await win.loadURL(TARGET.href);
   if (LOGIN_ONLY) await waitFor(() => Boolean(document.querySelector('.admin-login input[type="password"]')), 'sign-in fixture');
   else await waitFor(() => Boolean(document.querySelector('.admin-shell__header h1')), 'authenticated admin portal');
+  // Attach only after navigation: an empty offscreen frame can stall CDP.
+  // Focus emulation never shows the till or touches a real session.
+  contents.debugger.attach('1.3');
+  await debugCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
+  await debugCommand('DOM.enable');
+  await debugCommand('CSS.enable');
   check('preload-installed-before-app', Boolean(results.preloadReady), results.preloadReady);
   check('no-real-desktop-bridge', await execute(() => !window.andaPos), 'Desktop sync, updates and printer bridge must not exist.');
   for (const theme of LOGIN_ONLY ? [] : ['light', 'dark']) {
@@ -676,7 +735,23 @@ async function run() {
         if (page === 'Counter') await populateBasket();
         const standardFooter = page === 'Counter' && size.name === '1440x900';
         await capture(theme, size, page, 'page', standardFooter);
-        if (page === 'Counter' && standardFooter) await counterExtras(theme, size);
+        if (page === 'Counter' && standardFooter) {
+          await execute(() => document.querySelector('.pos-scan').focus({ preventScroll: true }));
+          await capture(theme, size, page, 'field-focus');
+          const focus = await execute(() => {
+            const input = document.querySelector('.pos-scan');
+            const s = getComputedStyle(input);
+            return { focused: input === document.activeElement && input.matches(':focus'), outlineStyle: s.outlineStyle, outlineWidth: parseFloat(s.outlineWidth), color: s.outlineColor };
+          });
+          check(`${theme}:scan-field-focus-visible`, focus.focused && focus.outlineStyle !== 'none' && focus.outlineWidth >= 2, focus);
+          await execute(() => document.querySelector('.pos-scan').blur());
+          await buttonStateCaptures(theme, size);
+          await click('Refresh', '.admin-shell__header');
+          await waitFor(() => Boolean(document.querySelector('.glass-notice')), 'refresh notice');
+          await capture(theme, size, page, 'refresh-notice');
+          await click('Dismiss alert', '.glass-notice');
+          await counterExtras(theme, size);
+        }
         const detailed = size.name === '1440x900';
         const dialogSize = detailed || size.name === '390x844';
         if (page === 'Inventory' && dialogSize) await dialogCapture(theme, size, page, 'Adjust', 'adjust-stock', 'Close');

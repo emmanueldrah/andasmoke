@@ -614,7 +614,7 @@ export const AdminAccountsManagementScreen: React.FC = () => {
               id="profile-role"
               type="text"
               value={ROLE_LABEL[currentAdminProfile.role] ?? currentAdminProfile.role}
-              className="lux-input opacity-60 cursor-not-allowed"
+              className="lux-input cursor-default"
               readOnly
             />
           </div>

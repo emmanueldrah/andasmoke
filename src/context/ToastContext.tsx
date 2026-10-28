@@ -54,20 +54,20 @@ const ToastItem: React.FC<{ toast: Toast; onRemove: (id: string) => void }> = ({
   }, [toast.persistent, startTimer]);
 
   const iconColor =
-    toast.type === 'success' ? 'text-[#C59B67]' :
-    toast.type === 'error'   ? 'text-[#E07A5F]' :
-                               'text-[#9E5A38]';
+    toast.type === 'success' ? 'text-[var(--jade)]' :
+    toast.type === 'error'   ? 'text-[var(--danger)]' :
+                               'text-[var(--accent)]';
 
   const barColor =
-    toast.type === 'success' ? 'bg-[#C59B67]' :
-    toast.type === 'error'   ? 'bg-[#E07A5F]' :
-                               'bg-[#9E5A38]';
+    toast.type === 'success' ? 'bg-[var(--jade)]' :
+    toast.type === 'error'   ? 'bg-[var(--danger)]' :
+                               'bg-[var(--accent)]';
 
   return (
     <div
       onMouseEnter={toast.persistent ? undefined : pauseTimer}
       onMouseLeave={toast.persistent ? undefined : resumeTimer}
-      className="toast-enter relative overflow-hidden pointer-events-auto flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-[rgba(30,25,21,0.82)] text-[#FAF7F2] border border-white/10 shadow-xl backdrop-blur-xl backdrop-saturate-150"
+      className="toast-enter glass-notice relative overflow-hidden pointer-events-auto flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-[var(--text-primary)] border"
     >
       <div className="flex items-center gap-2">
         {toast.type === 'success' && <CheckCircle2 className={`w-4 h-4 ${iconColor} shrink-0`} />}
@@ -78,7 +78,7 @@ const ToastItem: React.FC<{ toast: Toast; onRemove: (id: string) => void }> = ({
 
       <button
         onClick={() => onRemove(toast.id)}
-        className="text-[#FAF7F2]/40 hover:text-[#FAF7F2] transition-colors shrink-0 cursor-pointer"
+        className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors shrink-0 cursor-pointer"
         aria-label="Dismiss"
       >
         <X className="w-3.5 h-3.5" />
