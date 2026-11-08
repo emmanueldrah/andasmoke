@@ -212,6 +212,37 @@ async function pullCloudProducts(cloudOrigin: string, cloudAuthorization: string
       inArray(posSyncQueue.status, ['PENDING', 'FAILED']),
     ));
   const dirtyIds = new Set(dirtyQueue.map(item => String(item.payload.id || '')));
+
+  // A sale, refund or void still waiting to sync has already moved this till's
+  // stock. The cloud copy does not reflect that movement yet, so pulling it over
+  // the local quantity would roll the stock back until the queue catches up.
+  // Treat every product touched by a pending sale correction as dirty too.
+  const pendingSales = await db.select({ action: posSyncQueue.action, payload: posSyncQueue.payload })
+    .from(posSyncQueue)
+    .where(and(
+      inArray(posSyncQueue.action, ['POS_ORDER', 'POS_REFUND', 'POS_VOID_LINE']),
+      inArray(posSyncQueue.status, ['PENDING', 'FAILED']),
+    ));
+  const refundOrderIds = new Set<string>();
+  for (const entry of pendingSales) {
+    const items = Array.isArray(entry.payload?.items) ? entry.payload.items : [];
+    for (const line of items) {
+      const productId = String(line?.product?.id || '');
+      if (productId) dirtyIds.add(productId);
+    }
+    if (entry.payload?.productId) dirtyIds.add(String(entry.payload.productId));
+    if (entry.action === 'POS_REFUND' && entry.payload?.orderId) refundOrderIds.add(String(entry.payload.orderId));
+  }
+  if (refundOrderIds.size > 0) {
+    const refundOrders = await db.select({ items: orders.items }).from(orders).where(inArray(orders.id, [...refundOrderIds]));
+    for (const order of refundOrders) {
+      for (const line of Array.isArray(order.items) ? order.items : []) {
+        const productId = String(line?.product?.id || '');
+        if (productId) dirtyIds.add(productId);
+      }
+    }
+  }
+
   const localProducts = await db.select().from(products);
   const localById = new Map(localProducts.map(product => [product.id, product]));
   const cloudIds = new Set<string>();
@@ -432,33 +463,76 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         return res.status(409).json({ error: 'Sign in while online to connect this till to the website.' });
       }
       try {
-        const url = new URL('/api/orders', cloudOrigin);
-        url.searchParams.set('limit', '500');
-        const response = await fetch(url, {
-          headers: { Authorization: cloudAuthorization, Accept: 'application/json' },
-          signal: AbortSignal.timeout(15_000),
-        });
-        const body = await readCloudJson(response, 'Could not refresh sales history from the website.');
-        const remoteOrders = Array.isArray(body.orders) ? body.orders : [];
+        // Sales made on another till arrive here. Page through the whole history
+        // (the cloud caps a page at 500) so a fresh install is not limited to the
+        // most recent sales.
+        const remoteOrders: Record<string, any>[] = [];
+        let offset = 0;
+        while (true) {
+          const url = new URL('/api/orders', cloudOrigin);
+          url.searchParams.set('limit', '500');
+          url.searchParams.set('offset', String(offset));
+          const response = await fetch(url, {
+            headers: { Authorization: cloudAuthorization, Accept: 'application/json' },
+            signal: AbortSignal.timeout(15_000),
+          });
+          const body = await readCloudJson(response, 'Could not refresh sales history from the website.');
+          if (!Array.isArray(body.orders)) {
+            throw new Error('Could not refresh sales history from the website. It replied without a sales list.');
+          }
+          const page = body.orders as Record<string, any>[];
+          remoteOrders.push(...page);
+          if (page.length < 500) break;
+          offset += page.length;
+        }
+
+        // A refund, void or delete still waiting to sync owns its sale's current
+        // state. Pulling the cloud's older copy over it would undo the correction
+        // on this till until the queue catches up, so those sales are left alone.
+        const pendingCorrections = await db.select({ action: posSyncQueue.action, payload: posSyncQueue.payload })
+          .from(posSyncQueue)
+          .where(and(
+            inArray(posSyncQueue.action, ['POS_REFUND', 'POS_VOID_LINE', 'POS_ORDER_DELETE', 'POS_ORDERS_CLEAR']),
+            inArray(posSyncQueue.status, ['PENDING', 'FAILED']),
+          ));
+        const clearPending = pendingCorrections.some(entry => entry.action === 'POS_ORDERS_CLEAR');
+        const protectedIds = new Set<string>();
+        const protectedKeys = new Set<string>();
+        for (const entry of pendingCorrections) {
+          if (entry.payload?.orderId) protectedIds.add(String(entry.payload.orderId));
+          if (entry.payload?.idempotencyKey) protectedKeys.add(String(entry.payload.idempotencyKey));
+        }
+
         let updated = 0;
         for (const remote of remoteOrders) {
           const id = String(remote.id || '');
-          if (!id) continue;
+          if (!id || clearPending) continue;
+          if (protectedIds.has(id) || (remote.idempotencyKey && protectedKeys.has(String(remote.idempotencyKey)))) continue;
+          const minor = (major: unknown, pesewas: unknown) =>
+            pesewas != null ? Number(pesewas) : Math.round(Number(major || 0) * 100);
           const localOrder = {
             id,
             orderNumber: String(remote.orderNumber || ''),
             createdAt: new Date(String(remote.createdAt || new Date())),
             items: Array.isArray(remote.items) ? remote.items : [],
             subtotal: Number(remote.subtotal || 0),
+            subtotalPesewas: minor(remote.subtotal, remote.subtotalPesewas),
             shippingFee: Number(remote.shippingFee || 0),
             discount: Number(remote.discount || 0),
+            discountPesewas: minor(remote.discount, remote.discountPesewas),
             total: Number(remote.total || 0),
-            paymentMethod: String(remote.paymentMethod || 'cash-on-delivery'),
-            paymentStatus: 'paid',
+            // Reports and shift reconciliation read the pesewa columns. Without
+            // them a sale rung up on another till would show in the list but add
+            // nothing to this till's reports.
+            totalPesewas: minor(remote.total, remote.totalPesewas),
+            voidedLines: Array.isArray(remote.voidedLines) ? remote.voidedLines : [],
+            idempotencyKey: remote.idempotencyKey != null ? String(remote.idempotencyKey) : null,
+            paymentMethod: remote.paymentMethod === 'momo-mtn' ? 'momo-mtn' as const : 'cash-on-delivery' as const,
+            paymentStatus: 'paid' as const,
             orderSource: 'pos',
-            deliveryMethod: String(remote.deliveryMethod || 'store-pickup'),
+            deliveryMethod: 'store-pickup' as const,
             shippingAddress: remote.shippingAddress || { fullName: 'Walk-in customer', phone: '', city: 'In-store', area: 'POS counter' },
-            status: String(remote.status || 'completed'),
+            status: String(remote.status) === 'Refunded' ? 'Refunded' as const : 'Delivered' as const,
             appliedPromoCode: remote.appliedPromoCode ?? null,
             paymentReference: remote.paymentReference ?? null,
             paymentSenderPhone: remote.paymentSenderPhone ?? null,
@@ -497,7 +571,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           const id = String(remote.id || remote.slug || '');
           if (!id) continue;
           const localCategory = {
-            id,
+            // The website may name a category beyond the till's built-in list;
+            // SQLite stores it as text, so keep the cloud's id verbatim.
+            id: id as typeof categories.$inferInsert['id'],
             slug: String(remote.slug || remote.id || ''),
             name: String(remote.name || ''),
             department: remote.department ?? null,
@@ -574,7 +650,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           const localPromo = {
             id,
             code,
-            discountType: String(remote.discountType || 'percentage'),
+            discountType: remote.discountType === 'fixed' ? 'fixed' as const : 'percentage' as const,
             discountValue: Number(remote.discountValue || 0),
             discountValuePesewas: remote.discountValuePesewas != null ? Number(remote.discountValuePesewas) : null,
             minSpend: remote.minSpend != null ? Number(remote.minSpend) : null,
@@ -683,6 +759,32 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             if (!productId) throw new Error('Product delete is missing its product ID.');
             endpoint = `${cloudOrigin}/api/products?id=${encodeURIComponent(productId)}`;
             method = 'DELETE';
+          } else if (item.action === 'POS_REFUND') {
+            endpoint = `${cloudOrigin}/api/orders?action=refund`;
+            body = {
+              ...(item.payload.orderId ? { orderId: item.payload.orderId } : {}),
+              ...(item.payload.idempotencyKey ? { idempotencyKey: item.payload.idempotencyKey } : {}),
+              reason: item.payload.reason,
+            };
+          } else if (item.action === 'POS_VOID_LINE') {
+            endpoint = `${cloudOrigin}/api/orders?action=void-line`;
+            body = {
+              ...(item.payload.orderId ? { orderId: item.payload.orderId } : {}),
+              ...(item.payload.idempotencyKey ? { idempotencyKey: item.payload.idempotencyKey } : {}),
+              productId: item.payload.productId,
+              ...(item.payload.variantId ? { variantId: item.payload.variantId } : {}),
+              quantity: item.payload.quantity,
+              reason: item.payload.reason,
+            };
+          } else if (item.action === 'POS_ORDER_DELETE') {
+            const params = item.payload.idempotencyKey
+              ? `idempotencyKey=${encodeURIComponent(String(item.payload.idempotencyKey))}`
+              : `id=${encodeURIComponent(String(item.payload.orderId || ''))}`;
+            endpoint = `${cloudOrigin}/api/orders?${params}`;
+            method = 'DELETE';
+          } else if (item.action === 'POS_ORDERS_CLEAR') {
+            endpoint = `${cloudOrigin}/api/orders?action=clear-all`;
+            method = 'DELETE';
           }
 
           const cloudResponse = await fetch(endpoint, {
@@ -730,7 +832,12 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           const duplicateOrder = item.action === 'POS_ORDER'
             && cloudResponse.status === 409
             && /already|idempotenc/i.test(bodyText);
-          if (cloudResponse.ok || alreadyExists || duplicateOrder || (item.action === 'PRODUCT_DELETE' && cloudResponse.status === 404)) {
+          // A correction that the cloud already applied (or whose sale is no
+          // longer there) is finished, not failed: retrying it forever would
+          // wedge the queue behind a refund that already happened.
+          const isCorrection = item.action === 'POS_REFUND' || item.action === 'POS_VOID_LINE' || item.action === 'POS_ORDER_DELETE';
+          const correctionDone = isCorrection && (cloudResponse.status === 404 || (cloudResponse.status === 409 && /already/i.test(bodyText)));
+          if (cloudResponse.ok || alreadyExists || duplicateOrder || correctionDone || (item.action === 'PRODUCT_DELETE' && cloudResponse.status === 404)) {
             await db.update(posSyncQueue)
               .set({
                 status: 'SYNCED',

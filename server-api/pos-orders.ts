@@ -142,6 +142,16 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         const [updated] = tx.update(orders).set({ status: 'Refunded', updatedAt: new Date() }).where(eq(orders.id, order.id)).returning().all();
         return updated;
       });
+      // A refund moves stock back and changes the takings, so it has to reach
+      // every other till too. It rides the same queue as the sale: offline it
+      // waits, online the cloud restores its stock and marks the sale refunded.
+      if (refunded?.idempotencyKey) {
+        await db.insert(posSyncQueue).values({
+          action: 'POS_REFUND',
+          payload: { orderId: refunded.id, idempotencyKey: refunded.idempotencyKey, reason: refundReason },
+          idempotencyKey: `POS_REFUND:${refunded.id}`,
+        });
+      }
       return res.status(200).json(refunded);
     }
 
@@ -415,7 +425,21 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         tx.insert(auditLogs).values({ action: 'POS_SALE_COMPLETED', entityType: 'order', entityId: order.id, actorName: auth.adminName, metadata: { orderNumber, total, saleType: sale.saleType ?? 'retail', wholesaleQuantity: verifiedItems.filter(item => item.priceType === 'wholesale').reduce((sum, item) => sum + item.quantity, 0), wholesaleBuyer: sale.saleType === 'wholesale' ? sale.shippingAddress.fullName : null, idempotencyKey: sale.idempotencyKey, deviceId: sale.deviceId || null, adminId: auth.sub, paymentMethod: sale.paymentMethod, voidedLines: linesVoided } }).run();
         tx.insert(posSyncQueue).values({
           action: 'POS_ORDER',
-          payload: sale as Record<string, unknown>,
+          // The till's own id and receipt number travel with the sale so the
+          // cloud keeps the same identity. Without them the cloud minted a new
+          // id and the next pull re-imported the sale as a second history row.
+          // The applied tenders travel too, so a split payment stays split.
+          payload: {
+            ...sale,
+            id: order.id,
+            orderNumber: order.orderNumber,
+            tenders: appliedTenders.map(tender => ({
+              method: tender.method,
+              amount: tender.amount,
+              ...(tender.reference ? { reference: tender.reference } : {}),
+              ...(tender.senderPhone ? { senderPhone: tender.senderPhone } : {}),
+            })),
+          } as Record<string, unknown>,
           idempotencyKey: sale.idempotencyKey,
           status: 'PENDING',
         }).run();
@@ -497,8 +521,25 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           metadata: { orderNumber: order.orderNumber, adminId: auth.sub, reason: voidReason, productId, variantId: variantId ?? null, quantity: parsed.data.quantity, productName: line.product?.name ?? null },
         }).run();
 
-        return { orderId, productId, variantId: variantId ?? null, quantity: parsed.data.quantity, reason: voidReason, stockAfter: quantityAfter };
+        return { orderId, productId, variantId: variantId ?? null, quantity: parsed.data.quantity, reason: voidReason, stockAfter: quantityAfter, idempotencyKey: order.idempotencyKey };
       });
+
+      // Like a refund, a voided line puts stock back, so the correction has to
+      // travel to the cloud and from there to every other till.
+      if (voided.idempotencyKey) {
+        await db.insert(posSyncQueue).values({
+          action: 'POS_VOID_LINE',
+          payload: {
+            orderId: voided.orderId,
+            idempotencyKey: voided.idempotencyKey,
+            productId: voided.productId,
+            ...(voided.variantId ? { variantId: voided.variantId } : {}),
+            quantity: voided.quantity,
+            reason: voided.reason,
+          },
+          idempotencyKey: `POS_VOID_LINE:${voided.orderId}:${voided.productId}:${voided.variantId ?? ''}:${voided.quantity}`,
+        });
+      }
 
       return res.status(201).json({ voided: true, ...voided });
     }
@@ -515,10 +556,21 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           tx.delete(posPayments).where(inArray(posPayments.orderId, orderIds)).run();
           tx.delete(inventoryMovements).where(inArray(inventoryMovements.orderId, orderIds)).run();
           tx.delete(orders).where(inArray(orders.id, orderIds)).run();
+          // Clearing history also cancels sale corrections still waiting to
+          // sync, so a queued sale cannot recreate history that was just wiped.
+          tx.delete(posSyncQueue).where(and(
+            inArray(posSyncQueue.action, ['POS_ORDER', 'POS_REFUND', 'POS_VOID_LINE', 'POS_ORDER_DELETE']),
+            inArray(posSyncQueue.status, ['PENDING', 'FAILED']),
+          )).run();
           tx.insert(auditLogs).values({
             action: 'POS_SALES_CLEARED', entityType: 'order', entityId: 'all', actorName: auth.adminName,
             metadata: { count: orderIds.length, adminId: auth.sub },
           }).run();
+        });
+        await db.insert(posSyncQueue).values({
+          action: 'POS_ORDERS_CLEAR',
+          payload: {},
+          idempotencyKey: `POS_ORDERS_CLEAR:${Date.now()}:${randomBytes(4).toString('hex')}`,
         });
         return res.status(200).json({ deleted: orderIds.length });
       }
@@ -534,6 +586,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           action: 'POS_SALE_DELETED', entityType: 'order', entityId: id, actorName: auth.adminName,
           metadata: { orderNumber: order.orderNumber, adminId: auth.sub },
         }).run();
+      });
+      // The delete travels to the cloud so the sale stays gone on every till;
+      // otherwise the next pull would simply re-import it from the website.
+      await db.insert(posSyncQueue).values({
+        action: 'POS_ORDER_DELETE',
+        payload: { orderId: order.id, ...(order.idempotencyKey ? { idempotencyKey: order.idempotencyKey } : {}) },
+        idempotencyKey: `POS_ORDER_DELETE:${order.id}`,
       });
       return res.status(200).json({ deleted: 1, order });
     }

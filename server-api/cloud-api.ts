@@ -550,20 +550,25 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
       return res.status(200).json({ deleted: deleted.count });
     }
     const id = getQuery(req.query, 'id');
-    if (!id) return res.status(400).json({ error: 'An order ID is required.' });
+    const idempotencyKey = getQuery(req.query, 'idempotencyKey');
+    if (!id && !idempotencyKey) return res.status(400).json({ error: 'An order ID or idempotency key is required.' });
     const deleted = await withCloudTransaction(async client => {
-      const { rows } = await client.query('SELECT * FROM orders WHERE id = $1 FOR UPDATE', [id]);
+      const { rows } = id
+        ? await client.query('SELECT * FROM orders WHERE id = $1 FOR UPDATE', [id])
+        : await client.query('SELECT * FROM orders WHERE idempotency_key = $1 FOR UPDATE', [idempotencyKey]);
       if (!rows[0]) throw Object.assign(new Error('Order not found.'), { statusCode: 404 });
-      await client.query('DELETE FROM pos_payments WHERE order_id = $1', [id]);
-      await client.query('DELETE FROM inventory_movements WHERE order_id = $1', [id]);
-      await client.query('DELETE FROM orders WHERE id = $1', [id]);
-      await client.query('INSERT INTO audit_logs(id,action,entity_type,entity_id,actor_name,metadata) VALUES($1,$2,$3,$4,$5,$6::jsonb)', [randomUUID(), 'POS_SALE_DELETED', 'order', id, auth.adminName, JSON.stringify({ orderNumber: rows[0].order_number, adminId: auth.sub })]);
+      const targetId = rows[0].id;
+      await client.query('DELETE FROM pos_payments WHERE order_id = $1', [targetId]);
+      await client.query('DELETE FROM inventory_movements WHERE order_id = $1', [targetId]);
+      await client.query('DELETE FROM orders WHERE id = $1', [targetId]);
+      await client.query('INSERT INTO audit_logs(id,action,entity_type,entity_id,actor_name,metadata) VALUES($1,$2,$3,$4,$5,$6::jsonb)', [randomUUID(), 'POS_SALE_DELETED', 'order', targetId, auth.adminName, JSON.stringify({ orderNumber: rows[0].order_number, adminId: auth.sub })]);
       return rows[0];
     });
     return res.status(200).json({ deleted: 1, order: fromDbRow(deleted) });
   }
   if (req.method === 'GET') {
-    const limit = Math.min(Math.max(Number(getQuery(req.query, 'limit')) || 50, 1), 100);
+    const limit = Math.min(Math.max(Number(getQuery(req.query, 'limit')) || 50, 1), 500);
+    const offset = Math.max(Number(getQuery(req.query, 'offset')) || 0, 0);
     const id = getQuery(req.query, 'id');
     const values: unknown[] = [];
     const conditions: string[] = [];
@@ -572,19 +577,23 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
       values.push(auth.adminName || auth.email);
       conditions.push(`order_source = 'pos' AND cashier_name = $${values.length}`);
     }
-    values.push(limit);
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    const { rows } = await pool.query(`SELECT * FROM orders ${where} ORDER BY created_at DESC LIMIT $${values.length}`, values);
+    values.push(limit, offset);
+    const { rows } = await pool.query(`SELECT * FROM orders ${where} ORDER BY created_at DESC LIMIT $${values.length - 1} OFFSET $${values.length}`, values);
     return res.status(200).json(id ? (rows[0] ? fromDbRow(rows[0]) : { error: 'Order not found' }) : { orders: rows.map(fromDbRow) });
   }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   if (getQuery(req.query, 'action') === 'refund') {
     if (!['Super Admin','Store Manager'].includes(auth.adminRole)) return res.status(403).json({ error: 'Only a manager can refund a sale.' });
-    const parsed = z.object({ orderId: z.string().uuid(), reason: z.string().trim().min(3).max(200) }).safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ error: 'A refund reason is required.' });
+    const parsed = z.object({ orderId: z.string().uuid().optional(), idempotencyKey: z.string().trim().min(1).max(160).optional(), reason: z.string().trim().min(3).max(200) }).safeParse(req.body);
+    if (!parsed.success || (!parsed.data.orderId && !parsed.data.idempotencyKey)) return res.status(400).json({ error: 'A refund reason and the sale to refund are required.' });
     const refunded = await withCloudTransaction(async client => {
-      const { rows } = await client.query('SELECT * FROM orders WHERE id = $1 FOR UPDATE', [parsed.data.orderId]);
+      // A till queues refunds against the sale's idempotency key, because the
+      // cloud row may have been created moments earlier by the sale sync itself.
+      const { rows } = parsed.data.orderId
+        ? await client.query('SELECT * FROM orders WHERE id = $1 FOR UPDATE', [parsed.data.orderId])
+        : await client.query('SELECT * FROM orders WHERE idempotency_key = $1 FOR UPDATE', [parsed.data.idempotencyKey]);
       const order = rows[0];
       if (!order || order.order_source !== 'pos') throw Object.assign(new Error('POS sale not found.'), { statusCode: 404 });
       if (order.status === 'Refunded') throw Object.assign(new Error('This sale has already been refunded.'), { statusCode: 409 });
@@ -620,9 +629,63 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
     return res.status(200).json(fromDbRow(refunded));
   }
 
+  if (getQuery(req.query, 'action') === 'void-line') {
+    if (!['Super Admin','Store Manager'].includes(auth.adminRole)) return res.status(403).json({ error: 'Only a manager can void a sale line.' });
+    const parsed = z.object({
+      orderId: z.string().uuid().optional(),
+      idempotencyKey: z.string().trim().min(1).max(160).optional(),
+      productId: z.string().min(1),
+      variantId: z.string().min(1).optional(),
+      quantity: z.number().int().positive(),
+      reason: z.string().trim().min(3).max(200),
+    }).safeParse(req.body);
+    if (!parsed.success || (!parsed.data.orderId && !parsed.data.idempotencyKey)) return res.status(400).json({ error: 'A completed sale, the line, and a reason are all required to void a line.' });
+    const voided = await withCloudTransaction(async client => {
+      const { rows } = parsed.data.orderId
+        ? await client.query('SELECT * FROM orders WHERE id = $1 FOR UPDATE', [parsed.data.orderId])
+        : await client.query('SELECT * FROM orders WHERE idempotency_key = $1 FOR UPDATE', [parsed.data.idempotencyKey]);
+      const order = rows[0];
+      if (!order || order.order_source !== 'pos') throw Object.assign(new Error('POS sale not found.'), { statusCode: 404 });
+      if (order.status === 'Refunded') throw Object.assign(new Error('This POS sale has already been refunded.'), { statusCode: 409 });
+      const line = (order.items || []).find((item: PgRow) => item.product?.id === parsed.data.productId && (!parsed.data.variantId || item.selectedVariant?.id === parsed.data.variantId));
+      if (!line) throw Object.assign(new Error('That line is not on this sale.'), { statusCode: 404 });
+      const voidKey = `${parsed.data.productId}:${parsed.data.variantId ?? ''}:${parsed.data.quantity}`;
+      const voidedLines: string[] = Array.isArray(order.voided_lines) ? order.voided_lines : [];
+      if (voidedLines.includes(voidKey)) throw Object.assign(new Error('That line has already been voided.'), { statusCode: 409 });
+      const { rows: productRows } = await client.query('SELECT * FROM products WHERE id = $1 FOR UPDATE', [parsed.data.productId]);
+      const product = productRows[0];
+      if (!product) throw Object.assign(new Error('Product not found.'), { statusCode: 404 });
+      let quantityAfter: number;
+      if (parsed.data.variantId) {
+        const variants: PgRow[] = Array.isArray(product.variants) ? product.variants : [];
+        const prior = variants.find(variant => variant.id === parsed.data.variantId);
+        if (!prior) throw Object.assign(new Error('That variation no longer exists.'), { statusCode: 404 });
+        const nextVariants = variants.map(variant => variant.id === parsed.data.variantId
+          ? { ...variant, stockCount: Number(variant.stockCount || 0) + parsed.data.quantity, inStock: true }
+          : variant);
+        quantityAfter = nextVariants.reduce((sum, variant) => sum + Number(variant.stockCount || 0), 0);
+        await client.query('UPDATE products SET variants=$1::jsonb, stock_count=$2, in_stock=true, updated_at=now() WHERE id=$3', [JSON.stringify(nextVariants), quantityAfter, parsed.data.productId]);
+        await client.query("INSERT INTO inventory_movements(id,product_id,variant_id,order_id,movement_type,quantity,quantity_before,quantity_after,actor_name,reason) VALUES($1,$2,$3,$4,'POS_LINE_VOID',$5,$6,$7,$8,$9)", [randomUUID(), parsed.data.productId, parsed.data.variantId, order.id, parsed.data.quantity, Number(prior.stockCount || 0), Number(prior.stockCount || 0) + parsed.data.quantity, auth.adminName, `Line void: ${parsed.data.reason}`]);
+      } else {
+        const before = Number(product.stock_count || 0);
+        quantityAfter = before + parsed.data.quantity;
+        await client.query('UPDATE products SET stock_count=$1, in_stock=true, updated_at=now() WHERE id=$2', [quantityAfter, parsed.data.productId]);
+        await client.query("INSERT INTO inventory_movements(id,product_id,order_id,movement_type,quantity,quantity_before,quantity_after,actor_name,reason) VALUES($1,$2,$3,'POS_LINE_VOID',$4,$5,$6,$7,$8)", [randomUUID(), parsed.data.productId, order.id, parsed.data.quantity, before, quantityAfter, auth.adminName, `Line void: ${parsed.data.reason}`]);
+      }
+      await client.query('UPDATE orders SET voided_lines=$1::jsonb, updated_at=now() WHERE id=$2', [JSON.stringify([...voidedLines, voidKey]), order.id]);
+      await client.query("INSERT INTO audit_logs(id,action,entity_type,entity_id,actor_name,metadata) VALUES($1,'POS_LINE_VOIDED','order',$2,$3,$4::jsonb)", [randomUUID(), order.id, auth.adminName, JSON.stringify({ orderNumber: order.order_number, adminId: auth.sub, reason: parsed.data.reason, productId: parsed.data.productId, variantId: parsed.data.variantId ?? null, quantity: parsed.data.quantity })]);
+      return { orderId: order.id, productId: parsed.data.productId, variantId: parsed.data.variantId ?? null, quantity: parsed.data.quantity, reason: parsed.data.reason, stockAfter: quantityAfter };
+    });
+    return res.status(201).json({ voided: true, ...voided });
+  }
+
   if (getQuery(req.query, 'channel') !== 'pos') return res.status(400).json({ error: 'This endpoint accepts counter sales only.' });
   const saleSchema = z.object({
-    items: z.array(z.object({ product: z.object({ id: z.string(), price: z.coerce.number() }), quantity: z.number().int().positive(), selectedVariant: z.object({ id: z.string() }).optional() })).min(1),
+    // A till sends its own sale id and receipt number so every device keeps the
+    // same row instead of re-importing the sale under a fresh cloud identity.
+    id: z.string().uuid().optional(),
+    orderNumber: z.string().trim().min(1).max(40).optional(),
+    items: z.array(z.object({ product: z.object({ id: z.string(), price: z.coerce.number() }), quantity: z.number().int().positive(), selectedVariant: z.object({ id: z.string() }).optional(), priceType: z.enum(['retail', 'wholesale']).optional(), wholesaleUnitPrice: z.coerce.number().positive().optional() })).min(1),
     subtotal: z.coerce.number().positive(), shippingFee: z.coerce.number().min(0), discount: z.coerce.number().min(0), total: z.coerce.number().positive(),
     appliedPromoCode: z.string().trim().max(50).optional(), paymentMethod: z.enum(['cash-on-delivery','momo-mtn']),
     paymentReference: z.string().trim().max(100).optional(), paymentSenderPhone: z.string().trim().max(50).optional(), cashReceived: z.coerce.number().nonnegative().optional(),
@@ -657,9 +720,16 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
       const retail = Number(product.price_pesewas ?? requireMinor(variant?.price ?? product.price, 'price'));
       const wholesale = variant?.wholesalePrice != null ? requireMinor(variant.wholesalePrice, 'wholesale price') : product.wholesale_price != null ? requireMinor(product.wholesale_price, 'wholesale price') : null;
       const entered = requireMinor(item.product.price, 'price');
-      const unit = wholesale != null && Math.abs(entered - wholesale) <= 1 ? wholesale : retail;
+      // Mirror the till's line pricing so a wholesale or negotiated sale keeps
+      // the exact total it was rung up with instead of failing the price check.
+      const priceType = item.priceType ?? (wholesale != null && Math.abs(entered - wholesale) <= 1 ? 'wholesale' : 'retail');
+      const negotiated = item.wholesaleUnitPrice == null ? null : requireMinor(item.wholesaleUnitPrice, 'wholesale amount');
+      if (priceType === 'wholesale' && wholesale == null && negotiated == null) throw Object.assign(new Error(`Wholesale price is not set for ${product.name}.`), { statusCode: 409 });
+      if (negotiated != null && priceType !== 'wholesale') throw Object.assign(new Error('A wholesale amount can only be used on a wholesale line.'), { statusCode: 409 });
+      if (negotiated != null && negotiated > retail) throw Object.assign(new Error(`Wholesale amount cannot exceed the retail price for ${product.name}.`), { statusCode: 409 });
+      const unit = priceType === 'wholesale' ? negotiated ?? wholesale! : retail;
       subtotal += unit * item.quantity;
-      verifiedItems.push({ product:{id:product.id,name:product.name,brand:product.brand,price:toMajor(unit),image:variant?.image||product.image,unit:product.unit,category:product.category,inStock:Boolean(product.in_stock),stockCount:Number(product.stock_count)}, quantity:item.quantity, selectedVariant:variant?{id:variant.id,name:variant.name,price:toMajor(unit),inStock:Boolean(variant.inStock)}:undefined });
+      verifiedItems.push({ product:{id:product.id,name:product.name,brand:product.brand,price:toMajor(unit),image:variant?.image||product.image,unit:product.unit,category:product.category,inStock:Boolean(product.in_stock),stockCount:Number(product.stock_count)}, quantity:item.quantity, selectedVariant:variant?{id:variant.id,name:variant.name,price:toMajor(unit),inStock:Boolean(variant.inStock)}:undefined, priceType });
     }
     let discount = 0;
     let promo: PgRow | undefined;
@@ -686,9 +756,9 @@ async function ordersHandler(req: ApiRequest, res: ApiResponse): Promise<unknown
     if (allocated !== total) throw Object.assign(new Error('The payments do not match the sale total.'), {statusCode:400});
     for (const [productId, quantity] of quantities) { const p=byId.get(productId)!; if (!p.in_stock || Number(p.stock_count)<quantity) throw Object.assign(new Error(`Insufficient stock for ${p.name}.`),{statusCode:409}); }
     for (const [key, quantity] of variantQuantities) { const [productId,variantId]=key.split(':'); const p=byId.get(productId)!; const variant=(p.variants||[]).find((entry:PgRow)=>entry.id===variantId); if(!variant||!variant.inStock||Number(variant.stockCount||0)<quantity) throw Object.assign(new Error('A selected variation has insufficient stock.'),{statusCode:409}); }
-    const orderId=randomUUID();
+    const orderId=sale.id||randomUUID();
     const date=new Date();
-    const orderNumber=`POS-${String(date.getFullYear()).slice(-2)}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}-${randomUUID().slice(0,6).toUpperCase()}`;
+    const orderNumber=sale.orderNumber||`POS-${String(date.getFullYear()).slice(-2)}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}-${randomUUID().slice(0,6).toUpperCase()}`;
     const paymentMethod=applied[0]?.method||sale.paymentMethod;
     const paymentReference=applied.find(t=>t.method==='momo-mtn')?.reference||sale.paymentReference||null;
     const paymentSender=applied.find(t=>t.method==='momo-mtn')?.senderPhone||sale.paymentSenderPhone||null;

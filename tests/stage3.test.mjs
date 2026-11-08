@@ -1977,3 +1977,329 @@ function extract(source, startMarker) {
     .replace(/\s+as\s+(?:const|[A-Za-z_$][\w$]*(?:<[^<>]*>)?(?:\[\])?)(?:\s*\|\s*[A-Za-z_$][\w$]*(?:\[\])?)*(?:\s*\|\s*null)?/g, '');
   return body;
 }
+
+/**
+ * A faithful in-memory stand-in for the hosted cloud API. It keeps products and
+ * orders the way the website does, so a till can push to it and pull from it and
+ * the test proves the whole cross-device loop, not just the request shape.
+ */
+function installMockCloud() {
+  const store = { products: new Map(), orders: new Map() };
+  const requests = [];
+  const originalFetch = globalThis.fetch;
+  const json = (status, payload) => new Response(JSON.stringify(payload), { status, headers: { 'Content-Type': 'application/json' } });
+  const findOrder = (query, body) => {
+    const id = query.id || body?.orderId;
+    const key = query.idempotencyKey || body?.idempotencyKey;
+    if (id && store.orders.has(id)) return store.orders.get(id);
+    if (key) return [...store.orders.values()].find(order => order.idempotencyKey === key);
+    return undefined;
+  };
+  const moveStock = (productId, delta) => {
+    const product = store.products.get(productId);
+    if (!product) return;
+    product.stockCount = Math.max(0, Number(product.stockCount || 0) + delta);
+    product.inStock = product.stockCount > 0;
+    product.updatedAt = new Date().toISOString();
+  };
+
+  globalThis.fetch = async (rawUrl, options = {}) => {
+    const url = new URL(String(rawUrl));
+    const method = options.method || 'GET';
+    const query = Object.fromEntries(url.searchParams.entries());
+    const body = options.body ? JSON.parse(options.body) : {};
+    requests.push({ path: url.pathname, method, query, body });
+    const resource = url.pathname.replace(/^\/api\//, '');
+
+    if (resource === 'products') {
+      if (method === 'GET') {
+        const all = [...store.products.values()];
+        const offset = Number(query.offset || 0);
+        const limit = Number(query.limit || 500);
+        return json(200, { products: all.slice(offset, offset + limit) });
+      }
+      if (method === 'POST') {
+        const product = { ...body, updatedAt: new Date().toISOString() };
+        store.products.set(String(body.id), product);
+        return json(201, product);
+      }
+      if (method === 'PATCH') {
+        const product = store.products.get(query.id);
+        if (!product) return json(404, { error: 'Product not found' });
+        Object.assign(product, body, { updatedAt: new Date().toISOString() });
+        return json(200, product);
+      }
+      if (method === 'DELETE') {
+        store.products.delete(query.id);
+        return json(200, { success: true, id: query.id });
+      }
+    }
+
+    if (resource === 'orders') {
+      if (method === 'GET') {
+        const all = [...store.orders.values()].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+        const offset = Number(query.offset || 0);
+        const limit = Number(query.limit || 500);
+        return json(200, { orders: all.slice(offset, offset + limit) });
+      }
+      if (method === 'DELETE' && query.action === 'clear-all') {
+        const count = store.orders.size;
+        store.orders.clear();
+        return json(200, { deleted: count });
+      }
+      if (method === 'DELETE') {
+        const order = findOrder(query, body);
+        if (!order) return json(404, { error: 'Order not found.' });
+        store.orders.delete(order.id);
+        return json(200, { deleted: 1, order });
+      }
+      if (method === 'POST' && query.action === 'refund') {
+        const order = findOrder(query, body);
+        if (!order) return json(404, { error: 'POS sale not found.' });
+        if (order.status === 'Refunded') return json(409, { error: 'This sale has already been refunded.' });
+        for (const item of order.items || []) moveStock(item.product?.id, Number(item.quantity || 0));
+        order.status = 'Refunded';
+        order.updatedAt = new Date().toISOString();
+        return json(200, order);
+      }
+      if (method === 'POST' && query.action === 'void-line') {
+        const order = findOrder(query, body);
+        if (!order) return json(404, { error: 'POS sale not found.' });
+        const voidKey = `${body.productId}:${body.variantId ?? ''}:${body.quantity}`;
+        order.voidedLines = Array.isArray(order.voidedLines) ? order.voidedLines : [];
+        if (order.voidedLines.includes(voidKey)) return json(409, { error: 'That line has already been voided.' });
+        moveStock(body.productId, Number(body.quantity || 0));
+        order.voidedLines.push(voidKey);
+        order.updatedAt = new Date().toISOString();
+        return json(201, { voided: true, orderId: order.id, productId: body.productId, quantity: body.quantity });
+      }
+      if (method === 'POST' && query.channel === 'pos') {
+        const existing = [...store.orders.values()].find(order => order.idempotencyKey === body.idempotencyKey);
+        if (existing) return json(201, existing);
+        const id = body.id || `cloud-${Math.random().toString(36).slice(2)}`;
+        const order = {
+          id,
+          orderNumber: body.orderNumber || `POS-CLOUD-${id}`,
+          items: body.items || [],
+          subtotal: body.subtotal, subtotalPesewas: Math.round(Number(body.subtotal || 0) * 100),
+          shippingFee: 0, discount: body.discount || 0, discountPesewas: Math.round(Number(body.discount || 0) * 100),
+          total: body.total, totalPesewas: Math.round(Number(body.total || 0) * 100),
+          paymentMethod: body.paymentMethod || 'cash-on-delivery', paymentStatus: 'paid',
+          orderSource: 'pos', deliveryMethod: 'store-pickup', shippingAddress: body.shippingAddress,
+          status: 'Delivered', appliedPromoCode: body.appliedPromoCode ?? null,
+          paymentReference: body.paymentReference ?? null, paymentSenderPhone: body.paymentSenderPhone ?? null,
+          idempotencyKey: body.idempotencyKey, cashierName: 'Ama Boateng', voidedLines: [],
+          tenders: body.tenders || [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        };
+        store.orders.set(id, order);
+        for (const item of order.items) moveStock(item.product?.id, -Number(item.quantity || 0));
+        return json(201, order);
+      }
+    }
+    return json(404, { error: 'API route not found' });
+  };
+
+  return { store, requests, restore: () => { globalThis.fetch = originalFetch; } };
+}
+
+const flushQueue = (api, token) => callApi(api.posSync, {
+  method: 'POST', query: { action: 'flush' }, token, cloudToken: 'Bearer cloud-staff-token', body: {},
+});
+const pullOrders = (api, token) => callApi(api.posSync, {
+  method: 'POST', query: { action: 'pull-orders' }, token, cloudToken: 'Bearer cloud-staff-token', body: {},
+});
+const pullProducts = (api, token) => callApi(api.posSync, {
+  method: 'POST', query: { action: 'pull-products' }, token, cloudToken: 'Bearer cloud-staff-token', body: {},
+});
+
+function ringSale(api, token, productId, key, quantity = 3) {
+  return callApi(api.orders, {
+    method: 'POST', query: { channel: 'pos' }, token,
+    body: {
+      idempotencyKey: key,
+      subtotal: 10 * quantity, shippingFee: 0, discount: 0, total: 10 * quantity,
+      paymentMethod: 'cash-on-delivery', cashReceived: 10 * quantity, shippingAddress: WALLET,
+      items: [{ product: { id: productId, price: 10 }, quantity }],
+      tenders: [
+        { method: 'cash-on-delivery', amount: 1000 * quantity - 1000 },
+        { method: 'momo-mtn', amount: 1000, reference: 'MM-CROSS', senderPhone: '0244000000' },
+      ],
+    },
+  });
+}
+
+test('a sale keeps its identity and split tenders across tills and pulls back without duplicating', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cross-sale-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const cloud = installMockCloud();
+  try {
+    const { ownerToken } = await seedTill(api);
+    await makeProduct(api, ownerToken);
+    // The product create is queued too; push it so the cloud knows the product.
+    await flushQueue(api, ownerToken);
+
+    const sale = await ringSale(api, ownerToken, 'p1', `POS-cross-${Date.now()}-abcdefgh`);
+    assert.equal(sale.status, 201, `sale failed: ${JSON.stringify(sale.body)}`);
+    const flushed = await flushQueue(api, ownerToken);
+    assert.equal(flushed.body.flushed, 1);
+
+    // The cloud row carries the till's own id and receipt number, and the split
+    // survives the push instead of collapsing into a single tender.
+    const cloudOrder = cloud.store.orders.get(sale.body.id);
+    assert.ok(cloudOrder, 'the cloud keeps the sale under the till id');
+    assert.equal(cloudOrder.orderNumber, sale.body.orderNumber);
+    assert.equal(cloudOrder.tenders.length, 2, 'both tenders travel with the sale');
+    assert.equal(cloud.store.products.get('p1').stockCount, 97, 'the cloud stock draws down');
+
+    // Pulling the history back must update the same row, not add a second copy,
+    // and the pesewa totals must arrive so reports on this till count the sale.
+    const pulled = await pullOrders(api, ownerToken);
+    assert.equal(pulled.status, 200);
+    const sqlite = api.getSqliteHandle();
+    const rows = sqlite.prepare('SELECT id, total_pesewas FROM orders WHERE idempotency_key = ?').all(sale.body.idempotencyKey);
+    assert.equal(rows.length, 1, 'the sale is not duplicated on pull');
+    assert.equal(rows[0].total_pesewas, 3000, 'the pulled sale keeps its pesewa total');
+  } finally {
+    cloud.restore();
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a refund reaches the cloud and returns as Refunded on the next pull', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cross-refund-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const cloud = installMockCloud();
+  try {
+    const { ownerToken } = await seedTill(api);
+    await makeProduct(api, ownerToken);
+    await flushQueue(api, ownerToken);
+    const sale = await ringSale(api, ownerToken, 'p1', `POS-refund-${Date.now()}-abcdefgh`);
+    await flushQueue(api, ownerToken);
+
+    const refunded = await callApi(api.orders, {
+      method: 'POST', query: { action: 'refund' }, token: ownerToken,
+      body: { orderId: sale.body.id, reason: 'Customer changed their mind' },
+    });
+    assert.equal(refunded.status, 200, `refund failed: ${JSON.stringify(refunded.body)}`);
+    assert.equal(api.getSqliteHandle().prepare('SELECT stock_count FROM products WHERE id = ?').get('p1').stock_count, 100);
+
+    const flushed = await flushQueue(api, ownerToken);
+    assert.equal(flushed.body.flushed, 1);
+    const refundRequest = cloud.requests.find(request => request.query.action === 'refund');
+    assert.ok(refundRequest, 'the refund was pushed to the cloud');
+    assert.equal(refundRequest.body.idempotencyKey, sale.body.idempotencyKey);
+    assert.equal(cloud.store.orders.get(sale.body.id).status, 'Refunded');
+    assert.equal(cloud.store.products.get('p1').stockCount, 100, 'the cloud stock is restored');
+
+    await pullOrders(api, ownerToken);
+    const local = api.getSqliteHandle().prepare('SELECT status FROM orders WHERE id = ?').get(sale.body.id);
+    assert.equal(local.status, 'Refunded', 'the pulled history agrees the sale is refunded');
+  } finally {
+    cloud.restore();
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a pending refund or sale is not rolled back by an older cloud pull', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cross-guard-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const cloud = installMockCloud();
+  try {
+    const { ownerToken } = await seedTill(api);
+    await makeProduct(api, ownerToken);
+    await flushQueue(api, ownerToken);
+    const sale = await ringSale(api, ownerToken, 'p1', `POS-guard-${Date.now()}-abcdefgh`);
+    await flushQueue(api, ownerToken);
+
+    // Refund locally but do NOT flush: the cloud still says Delivered with 97.
+    await callApi(api.orders, {
+      method: 'POST', query: { action: 'refund' }, token: ownerToken,
+      body: { orderId: sale.body.id, reason: 'Held for the customer' },
+    });
+    // Make the cloud copy look newer than the local edit, so only the guard can
+    // stop the pull from undoing the refund and the restored stock.
+    cloud.store.products.get('p1').updatedAt = new Date(Date.now() + 60_000).toISOString();
+
+    await pullOrders(api, ownerToken);
+    assert.equal(api.getSqliteHandle().prepare('SELECT status FROM orders WHERE id = ?').get(sale.body.id).status, 'Refunded', 'the pending refund owns the sale state');
+
+    await pullProducts(api, ownerToken);
+    assert.equal(api.getSqliteHandle().prepare('SELECT stock_count FROM products WHERE id = ?').get('p1').stock_count, 100, 'the restored stock is not rolled back');
+  } finally {
+    cloud.restore();
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a voided line travels to the cloud and shows on the next pull', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cross-void-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const cloud = installMockCloud();
+  try {
+    const { ownerToken } = await seedTill(api);
+    await makeProduct(api, ownerToken);
+    await flushQueue(api, ownerToken);
+    const sale = await ringSale(api, ownerToken, 'p1', `POS-void-${Date.now()}-abcdefgh`);
+    await flushQueue(api, ownerToken);
+
+    const voided = await callApi(api.orders, {
+      method: 'POST', query: { action: 'void-line' }, token: ownerToken,
+      body: { orderId: sale.body.id, productId: 'p1', quantity: 1, reason: 'Rung up by mistake' },
+    });
+    assert.equal(voided.status, 201, `void failed: ${JSON.stringify(voided.body)}`);
+    await flushQueue(api, ownerToken);
+    const cloudOrder = cloud.store.orders.get(sale.body.id);
+    assert.equal(cloudOrder.voidedLines.length, 1, 'the cloud records the voided line');
+    assert.equal(cloud.store.products.get('p1').stockCount, 98, 'the cloud puts the voided unit back');
+
+    await pullOrders(api, ownerToken);
+    const local = api.getSqliteHandle().prepare('SELECT voided_lines FROM orders WHERE id = ?').get(sale.body.id);
+    assert.equal(JSON.parse(local.voided_lines).length, 1, 'the pulled sale shows the voided line');
+  } finally {
+    cloud.restore();
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('deleting sales clears them from the cloud so they stay gone on every till', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'anda-cross-delete-'));
+  process.env.ANDA_DATA_DIR = dir;
+  const api = freshBundle();
+  const cloud = installMockCloud();
+  try {
+    const { ownerToken } = await seedTill(api);
+    await makeProduct(api, ownerToken);
+    await flushQueue(api, ownerToken);
+    const first = await ringSale(api, ownerToken, 'p1', `POS-del-a-${Date.now()}-abcdefgh`);
+    const second = await ringSale(api, ownerToken, 'p1', `POS-del-b-${Date.now()}-abcdefgh`, 2);
+    await flushQueue(api, ownerToken);
+    assert.equal(cloud.store.orders.size, 2);
+
+    const deleted = await callApi(api.orders, { method: 'DELETE', query: { id: first.body.id }, token: ownerToken });
+    assert.equal(deleted.status, 200);
+    await flushQueue(api, ownerToken);
+    assert.equal(cloud.store.orders.size, 1, 'the single delete reached the cloud');
+    await pullOrders(api, ownerToken);
+    assert.equal(api.getSqliteHandle().prepare('SELECT COUNT(*) AS n FROM orders').get().n, 1, 'the deleted sale is not re-imported');
+
+    const cleared = await callApi(api.orders, { method: 'DELETE', query: { action: 'clear-all' }, token: ownerToken });
+    assert.equal(cleared.status, 200);
+    await flushQueue(api, ownerToken);
+    assert.equal(cloud.store.orders.size, 0, 'clear-all reached the cloud');
+    await pullOrders(api, ownerToken);
+    assert.equal(api.getSqliteHandle().prepare('SELECT COUNT(*) AS n FROM orders').get().n, 0, 'history stays cleared after a pull');
+    void second;
+  } finally {
+    cloud.restore();
+    api.closeDataLayer();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
